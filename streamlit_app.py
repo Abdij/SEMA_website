@@ -5,7 +5,7 @@ import streamlit as st
 # -------------------------
 st.set_page_config(
     page_title="SEMA | Somalia Explosive Management Authority",
-    page_icon="💣",
+    page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
@@ -13,12 +13,14 @@ st.set_page_config(
 # -------------------------
 # BRAND COLORS
 # -------------------------
-SEMA_RED = "#CC0000"
-SEMA_BLUE = "#003366"
+SEMA_RED = "#C1121F"
+SEMA_BLUE = "#4189DD"
+SEMA_LIGHT_BLUE = "#EAF4FB"
+SEMA_DARK_BLUE = "#4189DD"
 SEMA_WHITE = "#FFFFFF"
-SEMA_BLACK = "#000000"
-SEMA_GRAY = "#666666"
-SEMA_LIGHT_BG = "#F5F5F5"
+SEMA_BLACK = "#111111"
+SEMA_GRAY = "#5F6B76"
+SEMA_BORDER = "#D9E7F2"
 
 # -------------------------
 # CUSTOM CSS
@@ -37,232 +39,316 @@ st.markdown(
     }}
 
     .block-container {{
-        padding-top: 1rem;
+        max-width: 1320px;
+        padding-top: 0.6rem;
         padding-bottom: 2rem;
-        max-width: 1300px;
     }}
 
-    .main-header {{
+    .topbar {{
+        background: {SEMA_DARK_BLUE};
+        color: {SEMA_WHITE};
+        padding: 0.55rem 1rem;
+        border-radius: 14px 14px 0 0;
+        font-size: 0.88rem;
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }}
+
+    .header {{
         background: {SEMA_WHITE};
-        border-bottom: 3px solid {SEMA_RED};
-        padding: 1rem 0 1.2rem 0;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        border: 1px solid {SEMA_BORDER};
+        border-top: none;
+        border-radius: 0 0 18px 18px;
+        padding: 1.1rem 1.2rem 1rem 1.2rem;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.04);
         margin-bottom: 1rem;
     }}
 
-    .logo-wrap {{
+    .header-grid {{
         display: flex;
+        justify-content: space-between;
         align-items: center;
         gap: 1rem;
+        flex-wrap: wrap;
     }}
 
-    .logo-badge {{
-        width: 62px;
-        height: 62px;
-        border-radius: 14px;
-        background: {SEMA_BLUE};
+    .brand {{
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+    }}
+
+    .brand-mark {{
+        width: 64px;
+        height: 64px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, {SEMA_DARK_BLUE} 0%, {SEMA_BLUE} 100%);
         color: {SEMA_WHITE};
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.8rem;
         font-weight: 800;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+        font-size: 1.25rem;
+        box-shadow: 0 8px 18px rgba(11,37,69,0.18);
     }}
 
-    .logo-text h1 {{
-        font-size: 1.8rem;
-        font-weight: 800;
-        color: {SEMA_BLUE};
+    .brand-title {{
         margin: 0;
-        line-height: 1.1;
+        color: {SEMA_DARK_BLUE};
+        font-size: 1.85rem;
+        font-weight: 800;
+        line-height: 1.05;
     }}
 
-    .logo-text p {{
-        font-size: 0.88rem;
+    .brand-sub {{
+        margin: 0.2rem 0 0 0;
         color: {SEMA_RED};
-        margin: 0.25rem 0 0 0;
-        font-weight: 600;
+        font-size: 0.92rem;
+        font-weight: 700;
+        letter-spacing: 0.2px;
     }}
 
-    .nav-bar {{
+    .nav {{
         display: flex;
-        gap: 1.5rem;
+        gap: 1.2rem;
+        flex-wrap: wrap;
         justify-content: flex-end;
         align-items: center;
-        flex-wrap: wrap;
-        padding-top: 0.7rem;
     }}
 
-    .nav-item {{
+    .nav a {{
         color: {SEMA_BLACK};
-        font-weight: 600;
-        font-size: 0.95rem;
         text-decoration: none;
+        font-size: 0.95rem;
+        font-weight: 700;
     }}
 
-    .nav-item:hover {{
+    .nav a:hover {{
         color: {SEMA_RED};
     }}
 
     .hero {{
-        background: linear-gradient(135deg, {SEMA_BLUE} 0%, #001a33 100%);
+        background:
+            linear-gradient(120deg, rgba(11,37,69,0.96) 0%, rgba(46,134,193,0.95) 100%);
         color: {SEMA_WHITE};
-        border-radius: 22px;
+        border-radius: 24px;
         padding: 3rem 2.2rem;
-        margin: 1rem 0 2rem 0;
+        margin: 1.1rem 0 1.6rem 0;
+        box-shadow: 0 14px 36px rgba(11,37,69,0.16);
     }}
 
-    .pill {{
+    .hero-grid {{
+        display: grid;
+        grid-template-columns: 1.35fr 0.65fr;
+        gap: 2rem;
+        align-items: center;
+    }}
+
+    .badge {{
         display: inline-block;
-        background: {SEMA_RED};
+        background: rgba(255,255,255,0.14);
         color: {SEMA_WHITE};
-        padding: 0.35rem 0.9rem;
+        border: 1px solid rgba(255,255,255,0.2);
+        padding: 0.38rem 0.9rem;
         border-radius: 999px;
-        font-size: 0.8rem;
-        font-weight: 600;
+        font-size: 0.82rem;
+        font-weight: 700;
         margin-right: 0.5rem;
         margin-bottom: 0.5rem;
     }}
 
-    .hero-title {{
-        font-size: 3rem;
+    .hero h1 {{
+        font-size: 3.1rem;
+        line-height: 1.06;
+        margin: 0.7rem 0 0.95rem 0;
         font-weight: 800;
-        line-height: 1.1;
-        margin-top: 0.6rem;
-        margin-bottom: 1rem;
     }}
 
-    .hero-sub {{
-        font-size: 1.08rem;
-        line-height: 1.7;
+    .hero p {{
         max-width: 850px;
-        opacity: 0.96;
+        font-size: 1.08rem;
+        line-height: 1.75;
+        margin-bottom: 1.4rem;
+        opacity: 0.98;
     }}
 
     .hero-actions {{
         display: flex;
-        gap: 1rem;
+        gap: 0.85rem;
         flex-wrap: wrap;
-        margin-top: 1.5rem;
     }}
 
     .btn-primary {{
+        display: inline-block;
         background: {SEMA_RED};
-        color: white;
-        padding: 0.85rem 1.4rem;
+        color: {SEMA_WHITE};
+        padding: 0.88rem 1.25rem;
         border-radius: 999px;
         text-decoration: none;
-        font-weight: 700;
-        display: inline-block;
+        font-weight: 800;
     }}
 
-    .btn-outline {{
-        border: 2px solid white;
-        color: white;
-        padding: 0.85rem 1.4rem;
+    .btn-secondary {{
+        display: inline-block;
+        background: rgba(255,255,255,0.1);
+        color: {SEMA_WHITE};
+        padding: 0.88rem 1.25rem;
         border-radius: 999px;
         text-decoration: none;
-        font-weight: 700;
-        display: inline-block;
+        font-weight: 800;
+        border: 1px solid rgba(255,255,255,0.24);
+    }}
+
+    .hero-panel {{
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.18);
+        border-radius: 20px;
+        padding: 1.25rem;
+    }}
+
+    .hero-panel h3 {{
+        margin-top: 0;
+        margin-bottom: 0.75rem;
+        font-size: 1.05rem;
+        color: {SEMA_WHITE};
+    }}
+
+    .hero-panel-item {{
+        padding: 0.78rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.12);
+    }}
+
+    .hero-panel-item:last-child {{
+        border-bottom: none;
+        padding-bottom: 0;
     }}
 
     .section-title {{
+        color: {SEMA_DARK_BLUE};
         font-size: 2rem;
         font-weight: 800;
-        color: {SEMA_BLUE};
-        margin-top: 2rem;
-        margin-bottom: 0.6rem;
+        margin-top: 1.7rem;
+        margin-bottom: 0.4rem;
     }}
 
     .section-sub {{
         color: {SEMA_GRAY};
-        margin-bottom: 1.5rem;
         font-size: 1rem;
+        margin-bottom: 1.3rem;
+    }}
+
+    .soft-block {{
+        background: {SEMA_LIGHT_BLUE};
+        border: 1px solid {SEMA_BORDER};
+        border-radius: 20px;
+        padding: 1.6rem;
+        margin: 1.3rem 0 1.8rem 0;
     }}
 
     .card {{
         background: {SEMA_WHITE};
-        border: 1px solid #e6e6e6;
-        border-left: 4px solid {SEMA_RED};
-        border-radius: 14px;
+        border: 1px solid {SEMA_BORDER};
+        border-radius: 18px;
         padding: 1.25rem;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        box-shadow: 0 8px 22px rgba(0,0,0,0.04);
         height: 100%;
+    }}
+
+    .card-accent {{
+        border-top: 4px solid {SEMA_RED};
     }}
 
     .card h3 {{
-        color: {SEMA_BLUE};
-        margin-bottom: 0.6rem;
-        font-size: 1.2rem;
+        color: {SEMA_DARK_BLUE};
+        font-size: 1.16rem;
+        margin-bottom: 0.65rem;
     }}
 
-    .stat-card {{
+    .card p {{
+        color: {SEMA_BLACK};
+        line-height: 1.65;
+        font-size: 0.97rem;
+    }}
+
+    .metric-box {{
         background: {SEMA_WHITE};
-        border-radius: 14px;
-        border-left: 4px solid {SEMA_RED};
-        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-        padding: 1.3rem;
+        border: 1px solid {SEMA_BORDER};
+        border-left: 5px solid {SEMA_RED};
+        border-radius: 16px;
+        padding: 1.25rem;
         height: 100%;
+        box-shadow: 0 8px 22px rgba(0,0,0,0.04);
     }}
 
-    .stat-number {{
-        color: {SEMA_BLUE};
+    .metric-number {{
+        color: {SEMA_DARK_BLUE};
         font-weight: 800;
         font-size: 2rem;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.35rem;
     }}
 
-    .highlight-box {{
-        background: {SEMA_LIGHT_BG};
-        border-radius: 18px;
-        padding: 1.8rem;
-        margin-top: 1.5rem;
-        margin-bottom: 2rem;
+    .strip {{
+        background: {SEMA_DARK_BLUE};
+        color: {SEMA_WHITE};
+        border-radius: 20px;
+        padding: 1.6rem;
+        margin-top: 1.8rem;
+        margin-bottom: 1.6rem;
     }}
 
     .news-card {{
         background: {SEMA_WHITE};
-        border-radius: 14px;
-        border: 1px solid #e5e5e5;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        border: 1px solid {SEMA_BORDER};
+        border-radius: 18px;
         overflow: hidden;
         height: 100%;
+        box-shadow: 0 8px 22px rgba(0,0,0,0.04);
     }}
 
     .news-top {{
-        background: {SEMA_BLUE};
-        color: white;
-        padding: 1.2rem;
-        font-weight: 700;
-        font-size: 1rem;
+        background: linear-gradient(135deg, {SEMA_DARK_BLUE} 0%, {SEMA_BLUE} 100%);
+        color: {SEMA_WHITE};
+        padding: 1rem 1.15rem;
+        font-weight: 800;
     }}
 
     .news-body {{
-        padding: 1.2rem;
+        padding: 1.15rem;
     }}
 
     .news-date {{
         color: {SEMA_RED};
-        font-weight: 700;
-        font-size: 0.85rem;
-        margin-bottom: 0.6rem;
+        font-size: 0.83rem;
+        font-weight: 800;
+        margin-bottom: 0.55rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
     }}
 
-    .cta-box {{
-        background: {SEMA_LIGHT_BG};
-        border-radius: 18px;
+    .list-clean {{
+        margin: 0;
+        padding-left: 1.1rem;
+        color: {SEMA_BLACK};
+        line-height: 1.75;
+    }}
+
+    .cta {{
+        background: linear-gradient(135deg, {SEMA_LIGHT_BLUE} 0%, {SEMA_WHITE} 100%);
+        border: 1px solid {SEMA_BORDER};
+        border-radius: 22px;
         padding: 2rem;
         text-align: center;
         margin-top: 2rem;
     }}
 
     .footer {{
-        background: {SEMA_BLACK};
-        color: white;
-        border-radius: 18px;
-        padding: 2rem;
         margin-top: 2rem;
+        background: {SEMA_BLUE};
+        color: {SEMA_WHITE};
+        border-radius: 22px;
+        padding: 2rem;
     }}
 
     .footer h4 {{
@@ -271,13 +357,14 @@ st.markdown(
     }}
 
     .footer p, .footer li {{
-        color: #d9d9d9;
+        color: #e6e6e6;
         font-size: 0.95rem;
+        line-height: 1.6;
     }}
 
     .footer ul {{
         list-style: none;
-        padding-left: 0;
+        padding: 0;
         margin: 0;
     }}
 
@@ -285,14 +372,17 @@ st.markdown(
         margin-bottom: 0.45rem;
     }}
 
-    .small-muted {{
+    .muted {{
         color: {SEMA_GRAY};
-        font-size: 0.95rem;
+        font-size: 0.94rem;
     }}
 
-    @media (max-width: 768px) {{
-        .hero-title {{
-            font-size: 2.1rem;
+    @media (max-width: 900px) {{
+        .hero-grid {{
+            grid-template-columns: 1fr;
+        }}
+        .hero h1 {{
+            font-size: 2.25rem;
         }}
     }}
 </style>
@@ -303,59 +393,31 @@ st.markdown(
 # -------------------------
 # HEADER
 # -------------------------
-h1, h2 = st.columns([1.3, 2])
-
-with h1:
-    st.markdown(
-        """
-        <div class="logo-wrap">
-            <div class="logo-badge">SE</div>
-            <div class="logo-text">
-                <h1>SEMA</h1>
-                <p>Somalia Explosive Management Authority</p>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-with h2:
-    st.markdown(
-        """
-        <div class="nav-bar">
-            <span class="nav-item">Home</span>
-            <span class="nav-item">About Us</span>
-            <span class="nav-item">Mandate</span>
-            <span class="nav-item">Operations</span>
-            <span class="nav-item">Statistics</span>
-            <span class="nav-item">News</span>
-            <span class="nav-item">Publications</span>
-            <span class="nav-item">Contact</span>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-# -------------------------
-# HERO
-# -------------------------
 st.markdown(
-    """
-    <div class="hero">
-        <div>
-            <span class="pill">Ministry of Interior</span>
-            <span class="pill">Federal Government of Somalia</span>
-        </div>
-        <div class="hero-title">Somalia National Mine Action Center</div>
-        <div class="hero-sub">
-            SEMA leads national coordination for mine action and explosive hazard management in Somalia.
-            The authority supports regulation, planning, information management, public awareness,
-            operator engagement, and strategic action to reduce the humanitarian and development impact
-            of mines, ERW, and other explosive threats.
-        </div>
-        <div class="hero-actions">
-            <span class="btn-primary">National Priorities</span>
-            <span class="btn-outline">Explore Operations</span>
+    f"""
+    <div class="topbar">
+        <div>Official Portal of the Somalia Explosive Management Authority</div>
+        <div>Federal Government of Somalia | Mine Action Coordination | Public Information</div>
+    </div>
+    <div class="header">
+        <div class="header-grid">
+            <div class="brand">
+                <div class="brand-mark">SEMA</div>
+                <div>
+                    <div class="brand-title">SEMA</div>
+                    <div class="brand-sub">Somalia Explosive Management Authority</div>
+                </div>
+            </div>
+            <div class="nav">
+                <a href="#">Home</a>
+                <a href="#">About</a>
+                <a href="#">Mandate</a>
+                <a href="#">Operations</a>
+                <a href="#">Operators</a>
+                <a href="#">Publications</a>
+                <a href="#">News</a>
+                <a href="#">Contact</a>
+            </div>
         </div>
     </div>
     """,
@@ -363,32 +425,76 @@ st.markdown(
 )
 
 # -------------------------
-# INTRO STATS
+# HERO
 # -------------------------
-st.markdown('<div class="section-title">National Contamination Overview</div>', unsafe_allow_html=True)
 st.markdown(
-    '<div class="section-sub">A snapshot of the explosive contamination challenge affecting safety, access, and development.</div>',
+    """
+    <div class="hero">
+        <div class="hero-grid">
+            <div>
+                <span class="badge">National Authority</span>
+                <span class="badge">Mine Action Coordination</span>
+                <span class="badge">Public Safety</span>
+                <h1>Leading Somalia’s National Response to Explosive Hazards</h1>
+                <p>
+                    SEMA provides national leadership for mine action and explosive hazard management,
+                    supporting policy direction, standards, coordination, public information, operator
+                    engagement, and strategic prioritization to protect communities and enable safer recovery.
+                </p>
+                <div class="hero-actions">
+                    <span class="btn-primary">Explore National Priorities</span>
+                    <span class="btn-secondary">View Publications</span>
+                </div>
+            </div>
+            <div class="hero-panel">
+                <h3>Institutional Focus</h3>
+                <div class="hero-panel-item"><strong>Policy & Oversight</strong><br>National leadership, standards, and sector coordination.</div>
+                <div class="hero-panel-item"><strong>Operations Support</strong><br>Prioritization, information management, and partner engagement.</div>
+                <div class="hero-panel-item"><strong>Public Information</strong><br>Awareness, updates, publications, and official guidance.</div>
+                <div class="hero-panel-item"><strong>Safer Recovery</strong><br>Reducing explosive risk for communities, infrastructure, and development.</div>
+            </div>
+        </div>
+    </div>
+    """,
     unsafe_allow_html=True,
 )
 
-s1, s2 = st.columns(2)
-with s1:
+# -------------------------
+# QUICK OVERVIEW
+# -------------------------
+st.markdown('<div class="section-title">National Overview</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="section-sub">A public-facing snapshot of contamination, institutional responsibility, and national mine action priorities.</div>',
+    unsafe_allow_html=True,
+)
+
+o1, o2, o3 = st.columns(3)
+with o1:
     st.markdown(
         """
-        <div class="stat-card">
-            <div class="stat-number">about 30%</div>
-            <p>of the territory of Somalia is estimated to be contaminated by mines and unexploded ordnance.</p>
+        <div class="metric-box">
+            <div class="metric-number">30%</div>
+            <p>Estimated territorial impact from mines and unexploded ordnance in affected areas.</p>
         </div>
         """,
         unsafe_allow_html=True,
     )
-
-with s2:
+with o2:
     st.markdown(
         """
-        <div class="stat-card">
-            <div class="stat-number">more than 139,000 km²</div>
-            <p>of land and 14,000 km of water bodies require survey, assessment, or clearance attention.</p>
+        <div class="metric-box">
+            <div class="metric-number">139,000+ km²</div>
+            <p>Land requiring survey, prioritization, assessment, or clearance attention.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+with o3:
+    st.markdown(
+        """
+        <div class="metric-box">
+            <div class="metric-number">National Coordination</div>
+            <p>Institutional support for planning, standards, public information, and operator engagement.</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -397,85 +503,45 @@ with s2:
 # -------------------------
 # MANDATE
 # -------------------------
-st.markdown('<div class="section-title">Institutional Mandate</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-title">Mandate, Mission and Vision</div>', unsafe_allow_html=True)
 st.markdown(
-    '<div class="section-sub">SEMA provides national leadership, coordination, and oversight for explosive hazard management across Somalia.</div>',
+    '<div class="section-sub">Structured like leading mine-action institutions: clear authority, public mandate, and strategic direction.</div>',
     unsafe_allow_html=True,
 )
 
 m1, m2, m3 = st.columns(3)
-with m1:
-    st.markdown(
-        """
-        <div class="card">
-            <h3>Mission</h3>
-            <p>
-                To protect lives, livelihoods, and infrastructure by coordinating and strengthening
-                Somalia’s mine action response through effective policy, regulation, technical standards,
-                and public safety measures.
-            </p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-with m2:
-    st.markdown(
-        """
-        <div class="card">
-            <h3>Vision</h3>
-            <p>
-                A Somalia where communities can live, move, and develop free from the threat of mines,
-                explosive remnants of war, and other explosive hazards.
-            </p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-with m3:
-    st.markdown(
-        """
-        <div class="card">
-            <h3>Partnerships</h3>
-            <p>
-                SEMA works with federal and state institutions, humanitarian operators, donors, civil
-                society, and communities to ensure coordinated and sustainable mine action outcomes.
-            </p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+content = [
+    (
+        "Mandate",
+        "SEMA serves as the national authority for coordination and oversight of mine action and explosive hazard management in Somalia, supporting policy direction, regulation, standards, and institutional alignment.",
+    ),
+    (
+        "Mission",
+        "To reduce the humanitarian, social, and development impact of explosive hazards through effective coordination, technical leadership, public communication, and support to national mine action priorities.",
+    ),
+    (
+        "Vision",
+        "A Somalia where communities, institutions, and development actors can operate safely and confidently, free from the threat posed by mines and explosive remnants of war.",
+    ),
+]
+for col, item in zip([m1, m2, m3], content):
+    with col:
+        st.markdown(
+            f"""
+            <div class="card card-accent">
+                <h3>{item[0]}</h3>
+                <p>{item[1]}</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
 # -------------------------
-# MOST MINED COUNTRY / IMPACT
+# KEY FUNCTIONS
 # -------------------------
+st.markdown('<div class="section-title">Core Institutional Functions</div>', unsafe_allow_html=True)
 st.markdown(
-    """
-    <div class="highlight-box">
-        <div class="section-title" style="margin-top:0;">The National Impact of Explosive Contamination</div>
-        <div class="section-sub" style="margin-bottom:1rem;">
-            Decades of conflict and insecurity have left Somalia heavily affected by explosive hazards,
-            limiting access, threatening civilians, and slowing recovery and development.
-        </div>
-    """,
-    unsafe_allow_html=True,
-)
-
-i1, i2, i3, i4 = st.columns(4)
-i1.metric("Dangerous areas identified", "94,566 ha")
-i2.metric("Civilian incidents", "982")
-i3.metric("People injured", "1,003")
-i4.metric("Deaths", "385")
-
-st.markdown("</div>", unsafe_allow_html=True)
-
-# -------------------------
-# CORE FUNCTIONS
-# -------------------------
-st.markdown('<div class="section-title">Core Functions of the Center</div>', unsafe_allow_html=True)
-st.markdown(
-    '<div class="section-sub">SEMA implements the functions entrusted to the authority in support of national mine action objectives.</div>',
+    '<div class="section-sub">Inspired by the strongest mine-action authority websites: practical, structured, and partner-facing.</div>',
     unsafe_allow_html=True,
 )
 
@@ -483,12 +549,12 @@ f1, f2, f3 = st.columns(3)
 f4, f5, f6 = st.columns(3)
 
 functions = [
-    ("Certification of operators", "Providing oversight and certification support for mine action operators and processes."),
-    ("Inspection of territories", "Assessing hazardous locations and supporting evidence-based prioritization of action."),
-    ("Activities planning", "Planning, organizing, and coordinating mine action interventions and national priorities."),
-    ("Information management", "Managing data and information relevant to contamination, operations, and decision-making."),
-    ("Education and information", "Raising public awareness of explosive risks and promoting safer community behavior."),
-    ("Scientific and technical support", "Supporting technical standards, quality approaches, and operational effectiveness."),
+    ("National Coordination", "Convening and aligning mine action stakeholders across government, operators, donors, and communities."),
+    ("Standards and Guidance", "Supporting national standards, technical guidance, and quality-oriented implementation practices."),
+    ("Information Management", "Managing public and institutional information relevant to contamination, priorities, and sector performance."),
+    ("Operator Engagement", "Facilitating coordination with implementing partners, technical operators, and sector actors."),
+    ("Risk Education Support", "Promoting public information and awareness around explosive hazards and safer behavior."),
+    ("Strategic Planning", "Supporting prioritization, national planning, and institutional visibility for mine action outcomes."),
 ]
 
 for col, item in zip([f1, f2, f3, f4, f5, f6], functions):
@@ -504,73 +570,122 @@ for col, item in zip([f1, f2, f3, f4, f5, f6], functions):
         )
 
 # -------------------------
-# ACTIVITY IN NUMBERS
+# PUBLIC PRIORITIES STRIP
 # -------------------------
-st.markdown('<div class="section-title">SEMA Activity in Numbers</div>', unsafe_allow_html=True)
 st.markdown(
-    '<div class="section-sub">Illustrative institutional and operational indicators demonstrating the scale of mine action effort.</div>',
+    """
+    <div class="strip">
+        <h3 style="margin-top:0;margin-bottom:0.6rem;">Public Priorities</h3>
+        <div style="line-height:1.8;">
+            Safer communities • Better access for development • Stronger national coordination • Clearer public information • Stronger institutional visibility
+        </div>
+    </div>
+    """,
     unsafe_allow_html=True,
 )
 
-n1, n2, n3 = st.columns(3)
-n4, n5, n6 = st.columns(3)
+# -------------------------
+# NATIONAL IMPACT
+# -------------------------
+st.markdown('<div class="section-title">National Impact and Context</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="section-sub">A formal institutional section commonly seen on high-performing authority websites.</div>',
+    unsafe_allow_html=True,
+)
 
-stats = [
-    ("145,934+ ha", "of dangerous areas were inspected"),
-    ("56", "EOD operators were certified"),
-    ("940", "certificates were issued"),
-    ("53,000+", "reports were validated"),
-    ("94,566", "training sessions were held"),
-    ("2,247,972+", "participants were reached"),
-]
+st.markdown('<div class="soft-block">', unsafe_allow_html=True)
+i1, i2, i3, i4 = st.columns(4)
+i1.metric("Dangerous areas identified", "94,566 ha")
+i2.metric("Civilian incidents", "982")
+i3.metric("People injured", "1,003")
+i4.metric("Deaths", "385")
+st.markdown(
+    """
+    <div class="muted" style="margin-top:1rem;">
+        Explosive contamination affects civilian safety, mobility, livelihoods, service delivery, and recovery.
+        A strong national authority website should make this context visible, credible, and easy to understand.
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+st.markdown("</div>", unsafe_allow_html=True)
 
-for col, stat in zip([n1, n2, n3, n4, n5, n6], stats):
-    with col:
-        st.markdown(
-            f"""
-            <div class="stat-card">
-                <div class="stat-number">{stat[0]}</div>
-                <p>{stat[1]}</p>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+# -------------------------
+# OPERATIONS / PROGRAMMING
+# -------------------------
+st.markdown('<div class="section-title">Operations and Programming</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="section-sub">A structured section for institutions, partners, and operators looking for clarity on SEMA’s role.</div>',
+    unsafe_allow_html=True,
+)
+
+p1, p2 = st.columns([1.15, 0.85])
+with p1:
+    st.markdown(
+        """
+        <div class="card">
+            <h3>How SEMA Supports the Sector</h3>
+            <ul class="list-clean">
+                <li>Supports national mine action coordination and visibility</li>
+                <li>Facilitates policy and strategic direction</li>
+                <li>Promotes standards, guidance, and institutional accountability</li>
+                <li>Strengthens information management and public communication</li>
+                <li>Engages operators and partners in national priorities</li>
+                <li>Supports public awareness and institutional outreach</li>
+            </ul>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+with p2:
+    st.markdown(
+        """
+        <div class="card">
+            <h3>Priority Themes</h3>
+            <p>Survey and prioritization</p>
+            <p>Coordination with operators</p>
+            <p>Public information and awareness</p>
+            <p>Technical guidance and standards</p>
+            <p>Partnerships and donor engagement</p>
+            <p>Institutional reporting and visibility</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 # -------------------------
 # NEWS
 # -------------------------
-st.markdown('<div class="section-title">Latest News</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-title">Latest News and Official Updates</div>', unsafe_allow_html=True)
 st.markdown(
-    '<div class="section-sub">Institutional updates, operator coordination, risk education, and field engagement highlights.</div>',
+    '<div class="section-sub">Strong mine-action websites keep updates visible and institutionally framed for partners and the public.</div>',
     unsafe_allow_html=True,
 )
 
-news1, news2, news3 = st.columns(3)
-
-news_items = [
+n1, n2, n3 = st.columns(3)
+news = [
     (
         "March 20, 2026",
-        "Field inspection mission reviewed priority demand areas in Mogadishu",
-        "SEMA teams continued technical engagement in support of survey, prioritization, and operational coordination."
+        "SEMA reviews priority explosive hazard concerns with regional stakeholders",
+        "The authority continued public and institutional engagement to support coordinated national priorities and safer access.",
     ),
     (
         "March 15, 2026",
-        "SEMA leadership met mine action operators to address operational constraints",
-        "The meeting focused on coordination, field implementation challenges, and national response alignment."
+        "Operator coordination meeting highlights implementation challenges and sector needs",
+        "SEMA convened partners to strengthen alignment, clarify priorities, and reinforce operational coordination.",
     ),
     (
         "March 10, 2026",
-        "Public information materials on explosive hazards distributed to communities",
-        "Risk education remains a critical pillar of the national response to explosive contamination."
+        "Public information materials distributed to strengthen awareness of explosive hazards",
+        "Awareness remains a critical component of protecting communities and reducing preventable harm.",
     ),
 ]
-
-for col, item in zip([news1, news2, news3], news_items):
+for col, item in zip([n1, n2, n3], news):
     with col:
         st.markdown(
             f"""
             <div class="news-card">
-                <div class="news-top">SEMA Update</div>
+                <div class="news-top">Official Update</div>
                 <div class="news-body">
                     <div class="news-date">{item[0]}</div>
                     <h3>{item[1]}</h3>
@@ -582,55 +697,66 @@ for col, item in zip([news1, news2, news3], news_items):
         )
 
 # -------------------------
-# PUBLICATIONS / RESOURCES
+# PUBLICATIONS
 # -------------------------
 st.markdown('<div class="section-title">Publications and Resources</div>', unsafe_allow_html=True)
 st.markdown(
-    '<div class="section-sub">Key institutional and technical resources for partners, operators, and the public.</div>',
+    '<div class="section-sub">This section mirrors the strongest sector sites by making institutional documents easy to find.</div>',
     unsafe_allow_html=True,
 )
 
-p1, p2, p3 = st.columns(3)
-with p1:
-    st.markdown(
-        """
-        <div class="card">
-            <h3>Annual Reports</h3>
-            <p>Institutional reporting on progress, partnerships, priorities, and implementation milestones.</p>
+r1, r2, r3, r4 = st.columns(4)
+resources = [
+    ("Annual Reports", "Official reporting on progress, priorities, and institutional performance."),
+    ("National Strategy", "Strategic direction for Somalia’s mine action coordination and response."),
+    ("Standards & Guidance", "Technical and institutional references supporting quality and consistency."),
+    ("Public Awareness Materials", "Information resources for communities, partners, and public outreach."),
+]
+for col, item in zip([r1, r2, r3, r4], resources):
+    with col:
+        st.markdown(
+            f"""
+            <div class="card">
+                <h3>{item[0]}</h3>
+                <p>{item[1]}</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+# -------------------------
+# PARTNERSHIPS
+# -------------------------
+st.markdown('<div class="section-title">Partnerships</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="section-sub">Leading mine-action institutions present partnerships clearly to build trust and legitimacy.</div>',
+    unsafe_allow_html=True,
+)
+
+st.markdown(
+    """
+    <div class="soft-block">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;">
+            <div class="card"><h3>Government</h3><p>Federal and state institutions supporting national coordination and public safety.</p></div>
+            <div class="card"><h3>Operators</h3><p>Implementing partners contributing technical expertise and field delivery.</p></div>
+            <div class="card"><h3>Donors</h3><p>Partners supporting sustainable mine action outcomes and national capacity.</p></div>
+            <div class="card"><h3>Communities</h3><p>Local actors whose safety, access, and resilience remain central to the mission.</p></div>
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
-with p2:
-    st.markdown(
-        """
-        <div class="card">
-            <h3>Strategic Framework</h3>
-            <p>National direction for coordination, standards, prioritization, and sustainable mine action results.</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-with p3:
-    st.markdown(
-        """
-        <div class="card">
-            <h3>Guidelines and Standards</h3>
-            <p>Technical references and operational guidance supporting quality, safety, and accountability.</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 # -------------------------
 # CONTACT CTA
 # -------------------------
 st.markdown(
     """
-    <div class="cta-box">
-        <div class="section-title" style="margin-top:0;">Contact SEMA</div>
-        <p class="small-muted">
-            For official correspondence, coordination inquiries, or institutional engagement, contact the authority through the channels below.
+    <div class="cta">
+        <h2 style="margin-top:0;color:#0B2545;">Contact SEMA</h2>
+        <p class="muted" style="max-width:760px;margin:0 auto 1.2rem auto;">
+            For official correspondence, institutional coordination, media requests, publications,
+            or partner engagement, please use the official contact channels below.
         </p>
     </div>
     """,
@@ -652,24 +778,24 @@ st.markdown(
             <div>
                 <h4>SEMA</h4>
                 <p>Somalia Explosive Management Authority</p>
-                <p>Working toward a safer Somalia through coordinated explosive hazard management and mine action leadership.</p>
+                <p>Leading national coordination, institutional visibility, and public information on mine action and explosive hazard management in Somalia.</p>
             </div>
             <div>
-                <h4>Quick Links</h4>
+                <h4>Institution</h4>
                 <ul>
                     <li>About SEMA</li>
-                    <li>National Mandate</li>
-                    <li>Operations</li>
-                    <li>Statistics</li>
+                    <li>Mandate</li>
+                    <li>Leadership</li>
+                    <li>Partnerships</li>
                 </ul>
             </div>
             <div>
                 <h4>Resources</h4>
                 <ul>
+                    <li>News</li>
+                    <li>Publications</li>
                     <li>Annual Reports</li>
-                    <li>Strategic Framework</li>
-                    <li>Technical Guidance</li>
-                    <li>Public Awareness Materials</li>
+                    <li>Standards & Guidance</li>
                 </ul>
             </div>
             <div>
@@ -681,8 +807,8 @@ st.markdown(
                 </ul>
             </div>
         </div>
-        <hr style="margin:1.5rem 0;border-color:#333;">
-        <p style="text-align:center;margin:0;">© 2026 Somalia Explosive Management Authority (SEMA) — United for a safer tomorrow.</p>
+        <hr style="margin:1.5rem 0;border-color:#2a2a2a;">
+        <p style="text-align:center;margin:0;">© 2026 Somalia Explosive Management Authority (SEMA) — Official Institutional Website</p>
     </div>
     """,
     unsafe_allow_html=True,
