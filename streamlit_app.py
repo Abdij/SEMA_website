@@ -1,7 +1,3 @@
-import sqlite3
-from datetime import datetime
-
-import pandas as pd
 import streamlit as st
 
 # -------------------------
@@ -11,7 +7,7 @@ st.set_page_config(
     page_title="SEMA | Somalia Explosive Management Authority",
     page_icon="💣",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 # -------------------------
@@ -24,157 +20,6 @@ SEMA_BLACK = "#000000"
 SEMA_GRAY = "#666666"
 SEMA_LIGHT_BG = "#F5F5F5"
 
-STATUS_OPTIONS = ["Submitted", "Validated", "Dispatched", "Resolved"]
-SEVERITY_OPTIONS = ["Low", "Medium", "High", "Critical"]
-
-# -------------------------
-# DATABASE
-# -------------------------
-DB_PATH = "sema_reports.db"
-
-
-def get_connection():
-    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-
-def init_db():
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute(
-        """
-        CREATE TABLE IF NOT EXISTS reports (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            report_ref TEXT UNIQUE,
-            reporter_name TEXT NOT NULL,
-            phone TEXT NOT NULL,
-            email TEXT,
-            district TEXT NOT NULL,
-            exact_location TEXT NOT NULL,
-            latitude REAL,
-            longitude REAL,
-            hazard_type TEXT NOT NULL,
-            severity TEXT NOT NULL,
-            description TEXT NOT NULL,
-            people_at_risk INTEGER DEFAULT 0,
-            immediate_danger INTEGER DEFAULT 0,
-            status TEXT NOT NULL DEFAULT 'Submitted',
-            created_at TEXT NOT NULL,
-            updated_at TEXT NOT NULL
-        )
-        """
-    )
-    conn.commit()
-    conn.close()
-
-
-def generate_report_ref():
-    return f"SEMA-{datetime.utcnow().strftime('%Y%m%d%H%M%S%f')[:-3]}"
-
-
-def insert_report(data):
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute(
-        """
-        INSERT INTO reports (
-            report_ref, reporter_name, phone, email, district, exact_location,
-            latitude, longitude, hazard_type, severity, description,
-            people_at_risk, immediate_danger, status, created_at, updated_at
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-        (
-            data["report_ref"],
-            data["reporter_name"],
-            data["phone"],
-            data["email"],
-            data["district"],
-            data["exact_location"],
-            data["latitude"],
-            data["longitude"],
-            data["hazard_type"],
-            data["severity"],
-            data["description"],
-            data["people_at_risk"],
-            1 if data["immediate_danger"] else 0,
-            data["status"],
-            data["created_at"],
-            data["updated_at"],
-        ),
-    )
-    conn.commit()
-    conn.close()
-
-
-def get_all_reports():
-    conn = get_connection()
-    rows = conn.execute("SELECT * FROM reports ORDER BY created_at DESC").fetchall()
-    conn.close()
-    if not rows:
-        return pd.DataFrame()
-    return pd.DataFrame([dict(row) for row in rows])
-
-
-def update_report_status(report_id, new_status):
-    conn = get_connection()
-    conn.execute(
-        "UPDATE reports SET status = ?, updated_at = ? WHERE id = ?",
-        (new_status, datetime.utcnow().isoformat(), report_id),
-    )
-    conn.commit()
-    conn.close()
-
-
-def seed_demo_data():
-    df = get_all_reports()
-    if not df.empty:
-        return
-
-    demo_reports = [
-        {
-            "report_ref": "SEMA-DEMO-001",
-            "reporter_name": "Ahmed Noor",
-            "phone": "+25261111222",
-            "email": "ahmed@example.com",
-            "district": "Mogadishu",
-            "exact_location": "Near KM4 junction",
-            "latitude": 2.0469,
-            "longitude": 45.3182,
-            "hazard_type": "Unexploded ordnance",
-            "severity": "High",
-            "description": "Suspicious explosive item observed near roadside drainage area.",
-            "people_at_risk": 18,
-            "immediate_danger": True,
-            "status": "Submitted",
-            "created_at": datetime.utcnow().isoformat(),
-            "updated_at": datetime.utcnow().isoformat(),
-        },
-        {
-            "report_ref": "SEMA-DEMO-002",
-            "reporter_name": "Halima Yusuf",
-            "phone": "+25261222333",
-            "email": "halima@example.com",
-            "district": "Baidoa",
-            "exact_location": "Village school compound",
-            "latitude": None,
-            "longitude": None,
-            "hazard_type": "Abandoned ammunition",
-            "severity": "Medium",
-            "description": "Children reported metallic object inside an old storage area.",
-            "people_at_risk": 45,
-            "immediate_danger": False,
-            "status": "Validated",
-            "created_at": datetime.utcnow().isoformat(),
-            "updated_at": datetime.utcnow().isoformat(),
-        },
-    ]
-
-    for report in demo_reports:
-        insert_report(report)
-
-
 # -------------------------
 # CUSTOM CSS
 # -------------------------
@@ -183,7 +28,7 @@ st.markdown(
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-    html, body, [class*="css"]  {{
+    html, body, [class*="css"] {{
         font-family: 'Inter', sans-serif;
     }}
 
@@ -191,12 +36,38 @@ st.markdown(
         background-color: {SEMA_WHITE};
     }}
 
+    .block-container {{
+        padding-top: 1rem;
+        padding-bottom: 2rem;
+        max-width: 1300px;
+    }}
+
     .main-header {{
         background: {SEMA_WHITE};
         border-bottom: 3px solid {SEMA_RED};
-        padding: 1rem 0;
+        padding: 1rem 0 1.2rem 0;
         box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         margin-bottom: 1rem;
+    }}
+
+    .logo-wrap {{
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }}
+
+    .logo-badge {{
+        width: 62px;
+        height: 62px;
+        border-radius: 14px;
+        background: {SEMA_BLUE};
+        color: {SEMA_WHITE};
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        font-weight: 800;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.10);
     }}
 
     .logo-text h1 {{
@@ -204,115 +75,225 @@ st.markdown(
         font-weight: 800;
         color: {SEMA_BLUE};
         margin: 0;
-        letter-spacing: -0.5px;
+        line-height: 1.1;
     }}
 
     .logo-text p {{
-        font-size: 0.85rem;
+        font-size: 0.88rem;
         color: {SEMA_RED};
-        margin: 0;
-        font-weight: 500;
+        margin: 0.25rem 0 0 0;
+        font-weight: 600;
+    }}
+
+    .nav-bar {{
+        display: flex;
+        gap: 1.5rem;
+        justify-content: flex-end;
+        align-items: center;
+        flex-wrap: wrap;
+        padding-top: 0.7rem;
+    }}
+
+    .nav-item {{
+        color: {SEMA_BLACK};
+        font-weight: 600;
+        font-size: 0.95rem;
+        text-decoration: none;
+    }}
+
+    .nav-item:hover {{
+        color: {SEMA_RED};
     }}
 
     .hero {{
         background: linear-gradient(135deg, {SEMA_BLUE} 0%, #001a33 100%);
-        padding: 2.5rem;
         color: {SEMA_WHITE};
-        border-radius: 18px;
-        margin-bottom: 2rem;
+        border-radius: 22px;
+        padding: 3rem 2.2rem;
+        margin: 1rem 0 2rem 0;
     }}
 
-    .hero h1 {{
-        font-size: 2.7rem;
-        font-weight: 800;
-        margin-bottom: 0.8rem;
-    }}
-
-    .hero p {{
-        font-size: 1.1rem;
-        opacity: 0.95;
-        margin-bottom: 1.2rem;
-    }}
-
-    .badge {{
+    .pill {{
         display: inline-block;
         background: {SEMA_RED};
-        color: white;
-        padding: 0.3rem 0.9rem;
+        color: {SEMA_WHITE};
+        padding: 0.35rem 0.9rem;
         border-radius: 999px;
-        font-size: 0.82rem;
-        margin-right: 0.4rem;
-        margin-bottom: 0.4rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
     }}
 
-    .stat-card {{
-        background: {SEMA_WHITE};
-        border-left: 4px solid {SEMA_RED};
-        padding: 1.2rem;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        border-radius: 10px;
-        height: 100%;
-    }}
-
-    .stat-number {{
-        font-size: 2rem;
+    .hero-title {{
+        font-size: 3rem;
         font-weight: 800;
-        color: {SEMA_BLUE};
+        line-height: 1.1;
+        margin-top: 0.6rem;
+        margin-bottom: 1rem;
+    }}
+
+    .hero-sub {{
+        font-size: 1.08rem;
+        line-height: 1.7;
+        max-width: 850px;
+        opacity: 0.96;
+    }}
+
+    .hero-actions {{
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-top: 1.5rem;
+    }}
+
+    .btn-primary {{
+        background: {SEMA_RED};
+        color: white;
+        padding: 0.85rem 1.4rem;
+        border-radius: 999px;
+        text-decoration: none;
+        font-weight: 700;
+        display: inline-block;
+    }}
+
+    .btn-outline {{
+        border: 2px solid white;
+        color: white;
+        padding: 0.85rem 1.4rem;
+        border-radius: 999px;
+        text-decoration: none;
+        font-weight: 700;
+        display: inline-block;
     }}
 
     .section-title {{
         font-size: 2rem;
         font-weight: 800;
         color: {SEMA_BLUE};
-        margin-top: 1rem;
-        margin-bottom: 1rem;
+        margin-top: 2rem;
+        margin-bottom: 0.6rem;
     }}
 
-    .activity-card, .news-card {{
+    .section-sub {{
+        color: {SEMA_GRAY};
+        margin-bottom: 1.5rem;
+        font-size: 1rem;
+    }}
+
+    .card {{
         background: {SEMA_WHITE};
-        padding: 1.2rem;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        border: 1px solid #e0e0e0;
+        border: 1px solid #e6e6e6;
+        border-left: 4px solid {SEMA_RED};
+        border-radius: 14px;
+        padding: 1.25rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         height: 100%;
     }}
 
-    .activity-card h3, .news-card h3 {{
+    .card h3 {{
         color: {SEMA_BLUE};
-        font-size: 1.15rem;
-        margin-bottom: 0.65rem;
+        margin-bottom: 0.6rem;
+        font-size: 1.2rem;
     }}
 
-    .news-date {{
-        color: {SEMA_RED};
-        font-size: 0.85rem;
-        font-weight: 600;
+    .stat-card {{
+        background: {SEMA_WHITE};
+        border-radius: 14px;
+        border-left: 4px solid {SEMA_RED};
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        padding: 1.3rem;
+        height: 100%;
+    }}
+
+    .stat-number {{
+        color: {SEMA_BLUE};
+        font-weight: 800;
+        font-size: 2rem;
         margin-bottom: 0.5rem;
     }}
 
     .highlight-box {{
         background: {SEMA_LIGHT_BG};
-        padding: 1.5rem;
+        border-radius: 18px;
+        padding: 1.8rem;
+        margin-top: 1.5rem;
+        margin-bottom: 2rem;
+    }}
+
+    .news-card {{
+        background: {SEMA_WHITE};
         border-radius: 14px;
-        margin: 2rem 0;
+        border: 1px solid #e5e5e5;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        overflow: hidden;
+        height: 100%;
+    }}
+
+    .news-top {{
+        background: {SEMA_BLUE};
+        color: white;
+        padding: 1.2rem;
+        font-weight: 700;
+        font-size: 1rem;
+    }}
+
+    .news-body {{
+        padding: 1.2rem;
+    }}
+
+    .news-date {{
+        color: {SEMA_RED};
+        font-weight: 700;
+        font-size: 0.85rem;
+        margin-bottom: 0.6rem;
+    }}
+
+    .cta-box {{
+        background: {SEMA_LIGHT_BG};
+        border-radius: 18px;
+        padding: 2rem;
+        text-align: center;
+        margin-top: 2rem;
     }}
 
     .footer {{
         background: {SEMA_BLACK};
-        color: {SEMA_WHITE};
+        color: white;
+        border-radius: 18px;
         padding: 2rem;
-        border-radius: 14px;
         margin-top: 2rem;
     }}
 
     .footer h4 {{
         color: {SEMA_RED};
-        margin-bottom: 0.8rem;
+        margin-bottom: 0.7rem;
     }}
 
-    .small-note {{
+    .footer p, .footer li {{
+        color: #d9d9d9;
+        font-size: 0.95rem;
+    }}
+
+    .footer ul {{
+        list-style: none;
+        padding-left: 0;
+        margin: 0;
+    }}
+
+    .footer li {{
+        margin-bottom: 0.45rem;
+    }}
+
+    .small-muted {{
         color: {SEMA_GRAY};
-        font-size: 0.92rem;
+        font-size: 0.95rem;
+    }}
+
+    @media (max-width: 768px) {{
+        .hero-title {{
+            font-size: 2.1rem;
+        }}
     }}
 </style>
 """,
@@ -320,29 +301,61 @@ st.markdown(
 )
 
 # -------------------------
-# INIT
-# -------------------------
-init_db()
-seed_demo_data()
-
-# -------------------------
-# SIDEBAR
-# -------------------------
-st.sidebar.title("SEMA System")
-page = st.sidebar.radio("Navigation", ["Home", "Report Hazard", "Dashboard"])
-
-st.sidebar.markdown("---")
-st.sidebar.caption("Built with Streamlit + SQLite")
-
-# -------------------------
 # HEADER
+# -------------------------
+h1, h2 = st.columns([1.3, 2])
+
+with h1:
+    st.markdown(
+        """
+        <div class="logo-wrap">
+            <div class="logo-badge">SE</div>
+            <div class="logo-text">
+                <h1>SEMA</h1>
+                <p>Somalia Explosive Management Authority</p>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+with h2:
+    st.markdown(
+        """
+        <div class="nav-bar">
+            <span class="nav-item">Home</span>
+            <span class="nav-item">About Us</span>
+            <span class="nav-item">Mandate</span>
+            <span class="nav-item">Operations</span>
+            <span class="nav-item">Statistics</span>
+            <span class="nav-item">News</span>
+            <span class="nav-item">Publications</span>
+            <span class="nav-item">Contact</span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+# -------------------------
+# HERO
 # -------------------------
 st.markdown(
     """
-    <div class="main-header">
-        <div class="logo-text">
-            <h1>SEMA</h1>
-            <p>Somalia Explosive Management Authority</p>
+    <div class="hero">
+        <div>
+            <span class="pill">Ministry of Interior</span>
+            <span class="pill">Federal Government of Somalia</span>
+        </div>
+        <div class="hero-title">Somalia National Mine Action Center</div>
+        <div class="hero-sub">
+            SEMA leads national coordination for mine action and explosive hazard management in Somalia.
+            The authority supports regulation, planning, information management, public awareness,
+            operator engagement, and strategic action to reduce the humanitarian and development impact
+            of mines, ERW, and other explosive threats.
+        </div>
+        <div class="hero-actions">
+            <span class="btn-primary">National Priorities</span>
+            <span class="btn-outline">Explore Operations</span>
         </div>
     </div>
     """,
@@ -350,354 +363,327 @@ st.markdown(
 )
 
 # -------------------------
-# HOME PAGE
+# INTRO STATS
 # -------------------------
-if page == "Home":
+st.markdown('<div class="section-title">National Contamination Overview</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="section-sub">A snapshot of the explosive contamination challenge affecting safety, access, and development.</div>',
+    unsafe_allow_html=True,
+)
+
+s1, s2 = st.columns(2)
+with s1:
     st.markdown(
-        f"""
-        <div class="hero">
-            <div>
-                <span class="badge">Ministry of Interior</span>
-                <span class="badge">Federal Government of Somalia</span>
-            </div>
-            <h1>Somalia National Mine Action Center</h1>
+        """
+        <div class="stat-card">
+            <div class="stat-number">about 30%</div>
+            <p>of the territory of Somalia is estimated to be contaminated by mines and unexploded ordnance.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+with s2:
+    st.markdown(
+        """
+        <div class="stat-card">
+            <div class="stat-number">more than 139,000 km²</div>
+            <p>of land and 14,000 km of water bodies require survey, assessment, or clearance attention.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+# -------------------------
+# MANDATE
+# -------------------------
+st.markdown('<div class="section-title">Institutional Mandate</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="section-sub">SEMA provides national leadership, coordination, and oversight for explosive hazard management across Somalia.</div>',
+    unsafe_allow_html=True,
+)
+
+m1, m2, m3 = st.columns(3)
+with m1:
+    st.markdown(
+        """
+        <div class="card">
+            <h3>Mission</h3>
             <p>
-                Plans, organizes and coordinates mine action activities, informs citizens,
-                and supports training and certification of mine action operators.
+                To protect lives, livelihoods, and infrastructure by coordinating and strengthening
+                Somalia’s mine action response through effective policy, regulation, technical standards,
+                and public safety measures.
             </p>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    c1, c2 = st.columns(2)
-    with c1:
-        st.markdown(
-            """
-            <div class="stat-card">
-                <div class="stat-number">about 30%</div>
-                <p>of the territory of Somalia is contaminated by mines and unexploded ordnance.</p>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-    with c2:
-        st.markdown(
-            """
-            <div class="stat-card">
-                <div class="stat-number">more than 139,000 km²</div>
-                <p>of land and 14,000 km of water bodies need examination by demining units.</p>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    st.markdown('<div class="highlight-box">', unsafe_allow_html=True)
-    st.markdown('<div class="section-title">The most mined country</div>', unsafe_allow_html=True)
-
-    a1, a2, a3, a4 = st.columns(4)
-    a1.metric("Dangerous areas identified", "94,566 ha")
-    a2.metric("Civilian incidents", "982")
-    a3.metric("People injured", "1,003")
-    a4.metric("Deaths", "385")
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    st.markdown('<div class="section-title">Activities of the center</div>', unsafe_allow_html=True)
-    st.caption("The mine action center continuously implements all entrusted functions.")
-
-    act1, act2, act3 = st.columns(3)
-    act4, act5, act6 = st.columns(3)
-
-    activities = [
-        ("Certification of operators", "We provide EOD operators with services for certification of mine action processes."),
-        ("Inspection of territories", "We carry out inspections of requested areas and suspected hazardous zones."),
-        ("Activities planning", "We plan, organize and coordinate mine action activities."),
-        ("Information management", "We manage information in the field of mine action within the limits of authority."),
-        ("Education and information", "We inform the population about the risks associated with explosive objects."),
-        ("Scientific support", "We provide scientific and technical support for mine countermeasures."),
-    ]
-
-    for col, item in zip([act1, act2, act3, act4, act5, act6], activities):
-        with col:
-            st.markdown(
-                f"""
-                <div class="activity-card">
-                    <h3>{item[0]}</h3>
-                    <p>{item[1]}</p>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-    st.markdown('<div class="section-title">The activity of the center in numbers</div>', unsafe_allow_html=True)
-    s1, s2, s3 = st.columns(3)
-    s4, s5, s6 = st.columns(3)
-
-    stats = [
-        ("145,934+ ha", "of dangerous areas were inspected"),
-        ("56", "EOD operators were certified"),
-        ("940", "certificates were issued"),
-        ("53,000+", "reports have been validated"),
-        ("94,566", "training sessions were held"),
-        ("2,247,972+", "trainees were involved"),
-    ]
-
-    for col, stat in zip([s1, s2, s3, s4, s5, s6], stats):
-        with col:
-            st.markdown(
-                f"""
-                <div class="stat-card">
-                    <div class="stat-number">{stat[0]}</div>
-                    <p>{stat[1]}</p>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-    st.markdown('<div class="section-title">Latest news</div>', unsafe_allow_html=True)
-    n1, n2, n3 = st.columns(3)
-
-    news_items = [
-        (
-            "March 20, 2026",
-            "Inspection team reviewed demand areas in Mogadishu region",
-            "The national mine action operator continues clearing explosive hazards from Somali territories."
-        ),
-        (
-            "March 15, 2026",
-            "Working meeting with SEMA leadership and mine action operators",
-            "Operational bottlenecks and coordination issues affecting field activities were discussed."
-        ),
-        (
-            "March 10, 2026",
-            "SEMA specialists distribute informational materials about mine hazards",
-            "Public awareness remains one of the most important aspects of mine action."
-        ),
-    ]
-
-    for col, item in zip([n1, n2, n3], news_items):
-        with col:
-            st.markdown(
-                f"""
-                <div class="news-card">
-                    <div class="news-date">{item[0]}</div>
-                    <h3>{item[1]}</h3>
-                    <p>{item[2]}</p>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-    st.markdown('<div class="section-title">Report an Explosive Hazard</div>', unsafe_allow_html=True)
-    st.info("Use the sidebar and open **Report Hazard** to submit a real report into the system.")
-
+with m2:
     st.markdown(
         """
-        <div class="footer">
-            <h4>SEMA</h4>
-            <p>Somalia Explosive Management Authority</p>
-            <p>Working towards a safer Somalia through professional explosive ordnance management.</p>
+        <div class="card">
+            <h3>Vision</h3>
+            <p>
+                A Somalia where communities can live, move, and develop free from the threat of mines,
+                explosive remnants of war, and other explosive hazards.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+with m3:
+    st.markdown(
+        """
+        <div class="card">
+            <h3>Partnerships</h3>
+            <p>
+                SEMA works with federal and state institutions, humanitarian operators, donors, civil
+                society, and communities to ensure coordinated and sustainable mine action outcomes.
+            </p>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
 # -------------------------
-# REPORT FORM
+# MOST MINED COUNTRY / IMPACT
 # -------------------------
-elif page == "Report Hazard":
-    st.title("🚨 Report an Explosive Hazard")
-    st.write("If you suspect unexploded ordnance or suspicious devices, stay clear and submit details below.")
+st.markdown(
+    """
+    <div class="highlight-box">
+        <div class="section-title" style="margin-top:0;">The National Impact of Explosive Contamination</div>
+        <div class="section-sub" style="margin-bottom:1rem;">
+            Decades of conflict and insecurity have left Somalia heavily affected by explosive hazards,
+            limiting access, threatening civilians, and slowing recovery and development.
+        </div>
+    """,
+    unsafe_allow_html=True,
+)
 
-    with st.form("hazard_report_form", clear_on_submit=True):
-        col1, col2 = st.columns(2)
+i1, i2, i3, i4 = st.columns(4)
+i1.metric("Dangerous areas identified", "94,566 ha")
+i2.metric("Civilian incidents", "982")
+i3.metric("People injured", "1,003")
+i4.metric("Deaths", "385")
 
-        with col1:
-            reporter_name = st.text_input("Reporter name *")
-            phone = st.text_input("Phone number *")
-            email = st.text_input("Email")
-            district = st.text_input("District / Area *")
-
-        with col2:
-            exact_location = st.text_input("Exact location / landmark *")
-            latitude_text = st.text_input("Latitude")
-            longitude_text = st.text_input("Longitude")
-            people_at_risk = st.number_input("Estimated people at risk", min_value=0, step=1)
-
-        hazard_type = st.selectbox(
-            "Hazard type *",
-            [
-                "Unexploded ordnance",
-                "Landmine / suspected mine",
-                "Improvised explosive device",
-                "Abandoned ammunition",
-                "Stockpile risk",
-                "Other",
-            ],
-        )
-
-        severity = st.selectbox("Severity *", SEVERITY_OPTIONS, index=2)
-        immediate_danger = st.checkbox("Immediate danger to civilians")
-        description = st.text_area("Description *", height=160)
-
-        submitted = st.form_submit_button("Submit report", use_container_width=True)
-
-    if submitted:
-        errors = []
-
-        if not reporter_name.strip():
-            errors.append("Reporter name is required.")
-        if not phone.strip():
-            errors.append("Phone number is required.")
-        if not district.strip():
-            errors.append("District / area is required.")
-        if not exact_location.strip():
-            errors.append("Exact location is required.")
-        if not description.strip():
-            errors.append("Description is required.")
-
-        latitude = None
-        longitude = None
-
-        if latitude_text.strip():
-            try:
-                latitude = float(latitude_text)
-            except ValueError:
-                errors.append("Latitude must be a valid number.")
-
-        if longitude_text.strip():
-            try:
-                longitude = float(longitude_text)
-            except ValueError:
-                errors.append("Longitude must be a valid number.")
-
-        if errors:
-            for err in errors:
-                st.error(err)
-        else:
-            now = datetime.utcnow().isoformat()
-            report_ref = generate_report_ref()
-
-            insert_report(
-                {
-                    "report_ref": report_ref,
-                    "reporter_name": reporter_name.strip(),
-                    "phone": phone.strip(),
-                    "email": email.strip(),
-                    "district": district.strip(),
-                    "exact_location": exact_location.strip(),
-                    "latitude": latitude,
-                    "longitude": longitude,
-                    "hazard_type": hazard_type,
-                    "severity": severity,
-                    "description": description.strip(),
-                    "people_at_risk": int(people_at_risk),
-                    "immediate_danger": immediate_danger,
-                    "status": "Submitted",
-                    "created_at": now,
-                    "updated_at": now,
-                }
-            )
-
-            st.success(f"Report submitted successfully. Reference: {report_ref}")
-            st.caption("Please keep this reference for follow-up.")
-
-    st.markdown("---")
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Phone", "+252 61 555 7890")
-    c2.metric("Email", "info@sema.gov.so")
-    c3.metric("Location", "Mogadishu, Somalia")
+st.markdown("</div>", unsafe_allow_html=True)
 
 # -------------------------
-# DASHBOARD
+# CORE FUNCTIONS
 # -------------------------
-elif page == "Dashboard":
-    st.title("📊 Operations Dashboard")
+st.markdown('<div class="section-title">Core Functions of the Center</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="section-sub">SEMA implements the functions entrusted to the authority in support of national mine action objectives.</div>',
+    unsafe_allow_html=True,
+)
 
-    df = get_all_reports()
+f1, f2, f3 = st.columns(3)
+f4, f5, f6 = st.columns(3)
 
-    if df.empty:
-        st.warning("No reports yet.")
-    else:
-        m1, m2, m3, m4 = st.columns(4)
-        m1.metric("Total Reports", len(df))
-        m2.metric("Submitted", int((df["status"] == "Submitted").sum()))
-        m3.metric("Dispatched", int((df["status"] == "Dispatched").sum()))
-        m4.metric("Resolved", int((df["status"] == "Resolved").sum()))
+functions = [
+    ("Certification of operators", "Providing oversight and certification support for mine action operators and processes."),
+    ("Inspection of territories", "Assessing hazardous locations and supporting evidence-based prioritization of action."),
+    ("Activities planning", "Planning, organizing, and coordinating mine action interventions and national priorities."),
+    ("Information management", "Managing data and information relevant to contamination, operations, and decision-making."),
+    ("Education and information", "Raising public awareness of explosive risks and promoting safer community behavior."),
+    ("Scientific and technical support", "Supporting technical standards, quality approaches, and operational effectiveness."),
+]
 
-        st.subheader("Filters")
-        f1, f2, f3 = st.columns(3)
-
-        selected_status = f1.multiselect("Status", STATUS_OPTIONS, default=STATUS_OPTIONS)
-        selected_severity = f2.multiselect("Severity", SEVERITY_OPTIONS, default=SEVERITY_OPTIONS)
-        district_query = f3.text_input("District contains")
-
-        filtered = df[
-            df["status"].isin(selected_status) &
-            df["severity"].isin(selected_severity)
-        ].copy()
-
-        if district_query.strip():
-            filtered = filtered[
-                filtered["district"].str.contains(district_query.strip(), case=False, na=False)
-            ]
-
-        st.subheader("All Reports")
-        display_cols = [
-            "id",
-            "report_ref",
-            "reporter_name",
-            "phone",
-            "district",
-            "hazard_type",
-            "severity",
-            "people_at_risk",
-            "immediate_danger",
-            "status",
-            "created_at",
-        ]
-        st.dataframe(filtered[display_cols], use_container_width=True, hide_index=True)
-
-        st.subheader("Update Report Status")
-        if not filtered.empty:
-            u1, u2 = st.columns(2)
-            selected_id = u1.selectbox("Select report ID", filtered["id"].tolist())
-            new_status = u2.selectbox("New status", STATUS_OPTIONS)
-
-            if st.button("Update status", use_container_width=True):
-                update_report_status(int(selected_id), new_status)
-                st.success(f"Report {selected_id} updated to {new_status}.")
-                st.rerun()
-
-        st.subheader("View Report Details")
-        detail_id = st.selectbox("Choose report ID", df["id"].tolist(), key="detail_id")
-        selected_row = df[df["id"] == detail_id].iloc[0]
-
-        st.json(
-            {
-                "reference": selected_row["report_ref"],
-                "reporter_name": selected_row["reporter_name"],
-                "phone": selected_row["phone"],
-                "email": selected_row["email"],
-                "district": selected_row["district"],
-                "exact_location": selected_row["exact_location"],
-                "latitude": selected_row["latitude"],
-                "longitude": selected_row["longitude"],
-                "hazard_type": selected_row["hazard_type"],
-                "severity": selected_row["severity"],
-                "people_at_risk": int(selected_row["people_at_risk"]),
-                "immediate_danger": bool(selected_row["immediate_danger"]),
-                "status": selected_row["status"],
-                "description": selected_row["description"],
-                "created_at": selected_row["created_at"],
-                "updated_at": selected_row["updated_at"],
-            }
+for col, item in zip([f1, f2, f3, f4, f5, f6], functions):
+    with col:
+        st.markdown(
+            f"""
+            <div class="card">
+                <h3>{item[0]}</h3>
+                <p>{item[1]}</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
 
-        csv_data = filtered.to_csv(index=False).encode("utf-8")
-        st.download_button(
-            "Download filtered reports as CSV",
-            data=csv_data,
-            file_name="sema_hazard_reports.csv",
-            mime="text/csv",
+# -------------------------
+# ACTIVITY IN NUMBERS
+# -------------------------
+st.markdown('<div class="section-title">SEMA Activity in Numbers</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="section-sub">Illustrative institutional and operational indicators demonstrating the scale of mine action effort.</div>',
+    unsafe_allow_html=True,
+)
+
+n1, n2, n3 = st.columns(3)
+n4, n5, n6 = st.columns(3)
+
+stats = [
+    ("145,934+ ha", "of dangerous areas were inspected"),
+    ("56", "EOD operators were certified"),
+    ("940", "certificates were issued"),
+    ("53,000+", "reports were validated"),
+    ("94,566", "training sessions were held"),
+    ("2,247,972+", "participants were reached"),
+]
+
+for col, stat in zip([n1, n2, n3, n4, n5, n6], stats):
+    with col:
+        st.markdown(
+            f"""
+            <div class="stat-card">
+                <div class="stat-number">{stat[0]}</div>
+                <p>{stat[1]}</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
+
+# -------------------------
+# NEWS
+# -------------------------
+st.markdown('<div class="section-title">Latest News</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="section-sub">Institutional updates, operator coordination, risk education, and field engagement highlights.</div>',
+    unsafe_allow_html=True,
+)
+
+news1, news2, news3 = st.columns(3)
+
+news_items = [
+    (
+        "March 20, 2026",
+        "Field inspection mission reviewed priority demand areas in Mogadishu",
+        "SEMA teams continued technical engagement in support of survey, prioritization, and operational coordination."
+    ),
+    (
+        "March 15, 2026",
+        "SEMA leadership met mine action operators to address operational constraints",
+        "The meeting focused on coordination, field implementation challenges, and national response alignment."
+    ),
+    (
+        "March 10, 2026",
+        "Public information materials on explosive hazards distributed to communities",
+        "Risk education remains a critical pillar of the national response to explosive contamination."
+    ),
+]
+
+for col, item in zip([news1, news2, news3], news_items):
+    with col:
+        st.markdown(
+            f"""
+            <div class="news-card">
+                <div class="news-top">SEMA Update</div>
+                <div class="news-body">
+                    <div class="news-date">{item[0]}</div>
+                    <h3>{item[1]}</h3>
+                    <p>{item[2]}</p>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+# -------------------------
+# PUBLICATIONS / RESOURCES
+# -------------------------
+st.markdown('<div class="section-title">Publications and Resources</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="section-sub">Key institutional and technical resources for partners, operators, and the public.</div>',
+    unsafe_allow_html=True,
+)
+
+p1, p2, p3 = st.columns(3)
+with p1:
+    st.markdown(
+        """
+        <div class="card">
+            <h3>Annual Reports</h3>
+            <p>Institutional reporting on progress, partnerships, priorities, and implementation milestones.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+with p2:
+    st.markdown(
+        """
+        <div class="card">
+            <h3>Strategic Framework</h3>
+            <p>National direction for coordination, standards, prioritization, and sustainable mine action results.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+with p3:
+    st.markdown(
+        """
+        <div class="card">
+            <h3>Guidelines and Standards</h3>
+            <p>Technical references and operational guidance supporting quality, safety, and accountability.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+# -------------------------
+# CONTACT CTA
+# -------------------------
+st.markdown(
+    """
+    <div class="cta-box">
+        <div class="section-title" style="margin-top:0;">Contact SEMA</div>
+        <p class="small-muted">
+            For official correspondence, coordination inquiries, or institutional engagement, contact the authority through the channels below.
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+c1, c2, c3 = st.columns(3)
+c1.metric("Telephone", "+252 61 555 7890")
+c2.metric("Email", "info@sema.gov.so")
+c3.metric("Location", "Mogadishu, Somalia")
+
+# -------------------------
+# FOOTER
+# -------------------------
+st.markdown(
+    """
+    <div class="footer">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:2rem;">
+            <div>
+                <h4>SEMA</h4>
+                <p>Somalia Explosive Management Authority</p>
+                <p>Working toward a safer Somalia through coordinated explosive hazard management and mine action leadership.</p>
+            </div>
+            <div>
+                <h4>Quick Links</h4>
+                <ul>
+                    <li>About SEMA</li>
+                    <li>National Mandate</li>
+                    <li>Operations</li>
+                    <li>Statistics</li>
+                </ul>
+            </div>
+            <div>
+                <h4>Resources</h4>
+                <ul>
+                    <li>Annual Reports</li>
+                    <li>Strategic Framework</li>
+                    <li>Technical Guidance</li>
+                    <li>Public Awareness Materials</li>
+                </ul>
+            </div>
+            <div>
+                <h4>Official Contact</h4>
+                <ul>
+                    <li>Mogadishu, Somalia</li>
+                    <li>info@sema.gov.so</li>
+                    <li>+252 61 555 7890</li>
+                </ul>
+            </div>
+        </div>
+        <hr style="margin:1.5rem 0;border-color:#333;">
+        <p style="text-align:center;margin:0;">© 2026 Somalia Explosive Management Authority (SEMA) — United for a safer tomorrow.</p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
