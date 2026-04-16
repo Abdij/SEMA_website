@@ -1,3 +1,5 @@
+from pathlib import Path
+import base64
 import streamlit as st
 
 # -------------------------
@@ -11,6 +13,12 @@ st.set_page_config(
 )
 
 # -------------------------
+# PATHS / ASSETS
+# -------------------------
+BASE_DIR = Path(__file__).resolve().parent
+LOGO_PATH = BASE_DIR / "SEMA_logo.png"
+
+# -------------------------
 # BRAND COLORS
 # -------------------------
 SEMA_RED = "#C1121F"
@@ -21,6 +29,20 @@ SEMA_WHITE = "#FFFFFF"
 SEMA_BLACK = "#111111"
 SEMA_GRAY = "#5F6B76"
 SEMA_BORDER = "#D9E7F2"
+
+# -------------------------
+# HELPERS
+# -------------------------
+def load_image_base64(image_path: Path):
+    """Return base64 string for an image if it exists, else None."""
+    try:
+        if image_path.exists():
+            return base64.b64encode(image_path.read_bytes()).decode()
+    except Exception:
+        return None
+    return None
+
+logo_base64 = load_image_base64(LOGO_PATH)
 
 # -------------------------
 # CUSTOM CSS
@@ -116,6 +138,7 @@ st.markdown(
         flex-wrap: wrap;
         justify-content: flex-end;
         align-items: center;
+        margin-top: 1rem;
     }}
 
     .nav a {{
@@ -377,6 +400,27 @@ st.markdown(
         font-size: 0.94rem;
     }}
 
+    .logo-wrap {{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 120px;
+    }}
+
+    .logo-fallback {{
+        width: 110px;
+        height: 110px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, {SEMA_DARK_BLUE} 0%, {SEMA_BLUE} 100%);
+        color: {SEMA_WHITE};
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 800;
+        box-shadow: 0 8px 18px rgba(11,37,69,0.18);
+    }}
+
     @media (max-width: 900px) {{
         .hero-grid {{
             grid-template-columns: 1fr;
@@ -405,7 +449,25 @@ st.markdown(
 col1, col2 = st.columns([1, 5])
 
 with col1:
-    st.image("SEMA_logo.png", width=110)
+    if logo_base64:
+        st.markdown(
+            f"""
+            <div class="logo-wrap">
+                <img src="data:image/png;base64,{logo_base64}" width="110">
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown(
+            """
+            <div class="logo-wrap">
+                <div class="logo-fallback">SE</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.caption(f"Logo file not found: {LOGO_PATH.name}")
 
 with col2:
     st.markdown(
@@ -424,15 +486,15 @@ with col2:
 
 st.markdown(
     """
-    <div style="display:flex; gap:2rem; flex-wrap:wrap; font-size:1.1rem; font-weight:700; padding:1.2rem 0 0.5rem 0;">
-        <span>Home</span>
-        <span>About</span>
-        <span>Mandate</span>
-        <span>Operations</span>
-        <span>Operators</span>
-        <span>Publications</span>
-        <span>News</span>
-        <span>Contact</span>
+    <div class="nav">
+        <a href="#home">Home</a>
+        <a href="#about">About</a>
+        <a href="#mandate">Mandate</a>
+        <a href="#operations">Operations</a>
+        <a href="#operators">Operators</a>
+        <a href="#publications">Publications</a>
+        <a href="#news">News</a>
+        <a href="#contact">Contact</a>
     </div>
     """,
     unsafe_allow_html=True,
@@ -441,6 +503,7 @@ st.markdown(
 # -------------------------
 # HERO
 # -------------------------
+st.markdown('<div id="home"></div>', unsafe_allow_html=True)
 st.markdown(
     """
     <div class="hero">
@@ -456,8 +519,8 @@ st.markdown(
                     engagement, and strategic prioritization to protect communities and enable safer recovery.
                 </p>
                 <div class="hero-actions">
-                    <span class="btn-primary">Explore National Priorities</span>
-                    <span class="btn-secondary">View Publications</span>
+                    <a href="#mandate" class="btn-primary">Explore National Priorities</a>
+                    <a href="#publications" class="btn-secondary">View Publications</a>
                 </div>
             </div>
             <div class="hero-panel">
@@ -476,6 +539,7 @@ st.markdown(
 # -------------------------
 # QUICK OVERVIEW
 # -------------------------
+st.markdown('<div id="about"></div>', unsafe_allow_html=True)
 st.markdown('<div class="section-title">National Overview</div>', unsafe_allow_html=True)
 st.markdown(
     '<div class="section-sub">A public-facing snapshot of contamination, institutional responsibility, and national mine action priorities.</div>',
@@ -517,6 +581,7 @@ with o3:
 # -------------------------
 # MANDATE
 # -------------------------
+st.markdown('<div id="mandate"></div>', unsafe_allow_html=True)
 st.markdown('<div class="section-title">Mandate, Mission and Vision</div>', unsafe_allow_html=True)
 st.markdown(
     '<div class="section-sub">Structured like leading mine-action institutions: clear authority, public mandate, and strategic direction.</div>',
@@ -627,6 +692,7 @@ st.markdown("</div>", unsafe_allow_html=True)
 # -------------------------
 # OPERATIONS / PROGRAMMING
 # -------------------------
+st.markdown('<div id="operations"></div>', unsafe_allow_html=True)
 st.markdown('<div class="section-title">Operations and Programming</div>', unsafe_allow_html=True)
 st.markdown(
     '<div class="section-sub">A structured section for institutions, partners, and operators looking for clarity on SEMA’s role.</div>',
@@ -668,8 +734,37 @@ with p2:
     )
 
 # -------------------------
+# OPERATORS
+# -------------------------
+st.markdown('<div id="operators"></div>', unsafe_allow_html=True)
+st.markdown('<div class="section-title">Operators and Sector Engagement</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="section-sub">SEMA works with operators and sector partners to strengthen coordination, prioritization, and public safety outcomes.</div>',
+    unsafe_allow_html=True,
+)
+
+op1, op2, op3 = st.columns(3)
+operator_cards = [
+    ("Coordination", "Facilitating structured engagement with implementing partners and technical operators."),
+    ("Prioritization", "Supporting alignment around national priorities, affected communities, and operational needs."),
+    ("Visibility", "Improving public and institutional understanding of sector contributions and progress."),
+]
+for col, item in zip([op1, op2, op3], operator_cards):
+    with col:
+        st.markdown(
+            f"""
+            <div class="card">
+                <h3>{item[0]}</h3>
+                <p>{item[1]}</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+# -------------------------
 # NEWS
 # -------------------------
+st.markdown('<div id="news"></div>', unsafe_allow_html=True)
 st.markdown('<div class="section-title">Latest News and Official Updates</div>', unsafe_allow_html=True)
 st.markdown(
     '<div class="section-sub">Strong mine-action websites keep updates visible and institutionally framed for partners and the public.</div>',
@@ -713,6 +808,7 @@ for col, item in zip([n1, n2, n3], news):
 # -------------------------
 # PUBLICATIONS
 # -------------------------
+st.markdown('<div id="publications"></div>', unsafe_allow_html=True)
 st.markdown('<div class="section-title">Publications and Resources</div>', unsafe_allow_html=True)
 st.markdown(
     '<div class="section-sub">This section mirrors the strongest sector sites by making institutional documents easy to find.</div>',
@@ -764,6 +860,7 @@ st.markdown(
 # -------------------------
 # CONTACT CTA
 # -------------------------
+st.markdown('<div id="contact"></div>', unsafe_allow_html=True)
 st.markdown(
     """
     <div class="cta">
