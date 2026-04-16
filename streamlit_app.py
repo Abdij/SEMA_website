@@ -394,31 +394,45 @@ st.markdown(
 # HEADER
 # -------------------------
 st.markdown(
-    f"""
-    <div class="topbar">
-        <div>Official Portal of the Somalia Explosive Management Authority</div>
-        <div>Federal Government of Somalia | Mine Action Coordination | Public Information</div>
+    """
+    <div style="background-color:#4189DD; color:white; padding:0.6rem 1rem; font-size:0.95rem; margin:-1rem -1rem 1.5rem -1rem;">
+        Federal Government of Somalia | Mine Action Coordination | Public Information
     </div>
-    <div class="header">
-        <div class="header-grid">
-            <div class="brand">
-                <div class="brand-mark">SEMA</div>
-                <div>
-                    <div class="brand-title">SEMA</div>
-                    <div class="brand-sub">Somalia Explosive Management Authority</div>
-                </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+col1, col2 = st.columns([1, 5])
+
+with col1:
+    st.image("SEMA_logo.png", width=110)
+
+with col2:
+    st.markdown(
+        """
+        <div style="padding-top:0.4rem;">
+            <div style="font-size:3rem; font-weight:800; color:#4189DD; line-height:1; margin-bottom:0.5rem;">
+                SEMA
             </div>
-            <div class="nav">
-                <a href="#">Home</a>
-                <a href="#">About</a>
-                <a href="#">Mandate</a>
-                <a href="#">Operations</a>
-                <a href="#">Operators</a>
-                <a href="#">Publications</a>
-                <a href="#">News</a>
-                <a href="#">Contact</a>
+            <div style="font-size:1.8rem; font-weight:700; color:#C1121F;">
+                Somalia Explosive Management Authority
             </div>
         </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+st.markdown(
+    """
+    <div style="display:flex; gap:2rem; flex-wrap:wrap; font-size:1.1rem; font-weight:700; padding:1.2rem 0 0.5rem 0;">
+        <span>Home</span>
+        <span>About</span>
+        <span>Mandate</span>
+        <span>Operations</span>
+        <span>Operators</span>
+        <span>Publications</span>
+        <span>News</span>
+        <span>Contact</span>
     </div>
     """,
     unsafe_allow_html=True,
