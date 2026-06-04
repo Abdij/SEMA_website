@@ -16,7 +16,7 @@ st.set_page_config(
 # PATHS / ASSETS
 # -------------------------
 BASE_DIR = Path(__file__).resolve().parent
-LOGO_PATH = BASE_DIR / "SEMA_logo.png"
+LOGO_PATH = BASE_DIR / "assets/SEMA_logo.png"
 
 # -------------------------
 # BRAND COLORS
