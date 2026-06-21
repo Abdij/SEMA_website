@@ -105,7 +105,22 @@ create table if not exists data_request_status_history (
   created_at timestamptz not null default now()
 );
 
+create table if not exists analytics_events (
+  id uuid primary key default gen_random_uuid(),
+  event_type text not null,
+  label text,
+  path text,
+  target_url text,
+  metadata jsonb not null default '{}'::jsonb,
+  user_agent text,
+  referer text,
+  created_at timestamptz not null default now()
+);
+
 create index if not exists contact_messages_status_idx on contact_messages(status);
 create index if not exists data_requests_status_idx on data_requests(status);
 create index if not exists news_posts_status_published_idx on news_posts(status, published_at desc);
 create index if not exists publications_status_idx on publications(status);
+create index if not exists analytics_events_type_created_idx on analytics_events(event_type, created_at desc);
+create index if not exists analytics_events_label_idx on analytics_events(label);
+create index if not exists analytics_events_path_idx on analytics_events(path);

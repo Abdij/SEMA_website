@@ -2,7 +2,15 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
-type AdminTab = "news" | "publications" | "dashboards" | "messages" | "requests";
+type AdminTab = "news" | "publications" | "dashboards" | "messages" | "requests" | "reports";
+
+type ReportExportType =
+  | "data-requests"
+  | "contact-messages"
+  | "news-by-theme-date"
+  | "dashboard-clicks"
+  | "nav-clicks"
+  | "analytics-events";
 
 type NewsItem = {
   slug: string;
@@ -73,6 +81,48 @@ type DataRequest = {
   updated_at: string;
 };
 
+type ReportSummary = {
+  totals: {
+    dataRequests: number;
+    contactMessages: number;
+    publishedNews: number;
+    draftNews: number;
+    dashboardClicks: number;
+    navClicks: number;
+  };
+  newsByThemeDate: Array<{
+    category: string;
+    publishedDate: string;
+    count: number;
+  }>;
+  dashboardClicks: Array<{
+    label: string;
+    targetUrl?: string;
+    count: number;
+    firstClick?: string;
+    lastClick?: string;
+  }>;
+  navClicks: Array<{
+    eventType: string;
+    label: string;
+    targetUrl?: string;
+    count: number;
+    firstClick?: string;
+    lastClick?: string;
+  }>;
+};
+
+const adminTabs: AdminTab[] = ["news", "publications", "dashboards", "messages", "requests", "reports"];
+
+const reportExports: Array<{ type: ReportExportType; label: string }> = [
+  { type: "data-requests", label: "Export data requests" },
+  { type: "contact-messages", label: "Export contact messages" },
+  { type: "news-by-theme-date", label: "Export news by theme/date" },
+  { type: "dashboard-clicks", label: "Export dashboard clicks" },
+  { type: "nav-clicks", label: "Export website tab clicks" },
+  { type: "analytics-events", label: "Export raw click events" },
+];
+
 const emptyNews: NewsItem = {
   slug: "",
   title: "",
@@ -109,6 +159,21 @@ function authHeader(password: string) {
   return { Authorization: `Bearer ${password}` };
 }
 
+function formatNumber(value: number | undefined) {
+  return new Intl.NumberFormat("en-US").format(value ?? 0);
+}
+
+function formatDateTime(value?: string | null) {
+  if (!value) {
+    return "Not recorded";
+  }
+
+  return new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
 export default function AdminPage() {
   const [password, setPassword] = useState("");
   const [authenticated, setAuthenticated] = useState(false);
@@ -119,6 +184,7 @@ export default function AdminPage() {
   const [dashboardList, setDashboardList] = useState<DashboardItem[]>([]);
   const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
   const [dataRequests, setDataRequests] = useState<DataRequest[]>([]);
+  const [reportSummary, setReportSummary] = useState<ReportSummary | null>(null);
   const [editingNews, setEditingNews] = useState<NewsItem>(emptyNews);
   const [editingPublication, setEditingPublication] = useState<PublicationItem>(emptyPublication);
   const [publicationFile, setPublicationFile] = useState<File | null>(null);
@@ -168,12 +234,14 @@ export default function AdminPage() {
         dashboardsResponse,
         contactMessagesResponse,
         dataRequestsResponse,
+        reportsResponse,
       ] = await Promise.all([
         fetch("/api/admin/news", { headers: authHeader(authValue) }),
         fetch("/api/admin/publications", { headers: authHeader(authValue) }),
         fetch("/api/admin/dashboard-embeds", { headers: authHeader(authValue) }),
         fetch("/api/admin/contact-messages", { headers: authHeader(authValue) }),
         fetch("/api/admin/data-requests", { headers: authHeader(authValue) }),
+        fetch("/api/admin/reports", { headers: authHeader(authValue) }),
       ]);
 
       if (
@@ -181,7 +249,8 @@ export default function AdminPage() {
         !publicationsResponse.ok ||
         !dashboardsResponse.ok ||
         !contactMessagesResponse.ok ||
-        !dataRequestsResponse.ok
+        !dataRequestsResponse.ok ||
+        reportsResponse.status === 401
       ) {
         setAuthenticated(false);
         setMessage("Authorization failed. Please log in again.");
@@ -194,12 +263,14 @@ export default function AdminPage() {
         dashboardData,
         contactMessagesData,
         dataRequestsData,
+        reportsData,
       ] = await Promise.all([
         newsResponse.json(),
         publicationsResponse.json(),
         dashboardsResponse.json(),
         contactMessagesResponse.json(),
         dataRequestsResponse.json(),
+        reportsResponse.ok ? reportsResponse.json() : Promise.resolve(null),
       ]);
 
       setNewsList(Array.isArray(newsData) ? newsData : []);
@@ -207,7 +278,8 @@ export default function AdminPage() {
       setDashboardList(Array.isArray(dashboardData) ? dashboardData : []);
       setContactMessages(Array.isArray(contactMessagesData) ? contactMessagesData : []);
       setDataRequests(Array.isArray(dataRequestsData) ? dataRequestsData : []);
-      setMessage("Data loaded.");
+      setReportSummary(reportsData);
+      setMessage(reportsResponse.ok ? "Data loaded." : "Data loaded. Reports are unavailable until analytics is configured.");
     } catch (error) {
       setMessage("Unable to load admin data.");
     } finally {
@@ -257,6 +329,43 @@ export default function AdminPage() {
     }
 
     return response.json();
+  }
+
+  async function handleExportReport(type: ReportExportType) {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/admin/reports?export=${encodeURIComponent(type)}`, {
+        headers,
+      });
+
+      if (response.status === 401) {
+        setAuthenticated(false);
+        setMessage("Authorization failed. Please log in again.");
+        return;
+      }
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        setMessage(data?.message || "Could not export report.");
+        return;
+      }
+
+      const blob = await response.blob();
+      const disposition = response.headers.get("content-disposition") || "";
+      const filenameMatch = disposition.match(/filename="([^"]+)"/);
+      const filename = filenameMatch?.[1] || `sema-${type}.csv`;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      setMessage("Report exported.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleSaveNews() {
@@ -413,7 +522,7 @@ export default function AdminPage() {
         <section className="section">
           <div className="section-inner">
             <h1>SEMA Admin Dashboard</h1>
-            <p>Enter your admin password to manage news, publications, dashboard embeds, contact messages, and data requests.</p>
+            <p>Enter your admin password to manage news, publications, dashboard embeds, contact messages, data requests, and reports.</p>
             <form onSubmit={handleLogin} className="admin-login-form">
               <label>
                 Admin password
@@ -440,9 +549,9 @@ export default function AdminPage() {
       <section className="section">
         <div className="section-inner">
           <h1>SEMA Admin Dashboard</h1>
-          <p>Manage news posts, document publications, dashboard embeds, incoming contact messages, and data requests.</p>
+          <p>Manage news posts, document publications, dashboard embeds, incoming contact messages, data requests, and operational reports.</p>
           <div className="admin-tabs">
-            {(["news", "publications", "dashboards", "messages", "requests"] as AdminTab[]).map((currentTab) => (
+            {adminTabs.map((currentTab) => (
               <button
                 key={currentTab}
                 type="button"
@@ -909,6 +1018,157 @@ export default function AdminPage() {
                     </div>
                   </article>
                 ))}
+              </div>
+            </section>
+          ) : null}
+
+          {tab === "reports" ? (
+            <section className="admin-section">
+              <div className="section-heading admin-report-heading">
+                <div>
+                  <h2>Reports</h2>
+                  <p>
+                    Export SEMA data requests, contact messages, news publishing counts, dashboard opens, and website tab clicks.
+                  </p>
+                </div>
+                <button className="button light" type="button" onClick={() => loadAllData(password)} disabled={loading}>
+                  Refresh
+                </button>
+              </div>
+
+              <div className="report-grid">
+                <article className="report-card">
+                  <span>Data requests</span>
+                  <strong>{formatNumber(reportSummary?.totals.dataRequests ?? dataRequests.length)}</strong>
+                </article>
+                <article className="report-card">
+                  <span>Contact messages</span>
+                  <strong>{formatNumber(reportSummary?.totals.contactMessages ?? contactMessages.length)}</strong>
+                </article>
+                <article className="report-card">
+                  <span>Published news</span>
+                  <strong>{formatNumber(reportSummary?.totals.publishedNews ?? newsList.filter((item) => item.status === "published").length)}</strong>
+                </article>
+                <article className="report-card">
+                  <span>Draft news</span>
+                  <strong>{formatNumber(reportSummary?.totals.draftNews ?? newsList.filter((item) => item.status === "draft").length)}</strong>
+                </article>
+                <article className="report-card">
+                  <span>Dashboard opens</span>
+                  <strong>{formatNumber(reportSummary?.totals.dashboardClicks)}</strong>
+                </article>
+                <article className="report-card">
+                  <span>Website tab clicks</span>
+                  <strong>{formatNumber(reportSummary?.totals.navClicks)}</strong>
+                </article>
+              </div>
+
+              <div className="admin-export-panel">
+                <h3>Exports</h3>
+                <div className="button-row">
+                  {reportExports.map((report) => (
+                    <button
+                      key={report.type}
+                      className="button light"
+                      type="button"
+                      disabled={loading}
+                      onClick={() => handleExportReport(report.type)}
+                    >
+                      {report.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="muted">
+                  Click tracking starts from this release. SEMA can count site navigation and dashboard-open clicks; clicks made inside third-party ArcGIS or PowerBI embeds remain private to those platforms.
+                </p>
+              </div>
+
+              <div className="admin-report-panels">
+                <article className="admin-report-panel">
+                  <h3>Published news by theme and date</h3>
+                  {reportSummary?.newsByThemeDate.length ? (
+                    <div className="report-table-wrap">
+                      <table className="report-table">
+                        <thead>
+                          <tr>
+                            <th>Theme</th>
+                            <th>Date</th>
+                            <th>Count</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {reportSummary.newsByThemeDate.map((row) => (
+                            <tr key={`${row.category}-${row.publishedDate}`}>
+                              <td>{row.category}</td>
+                              <td>{row.publishedDate}</td>
+                              <td>{formatNumber(row.count)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="muted">No published news counts available yet.</p>
+                  )}
+                </article>
+
+                <article className="admin-report-panel">
+                  <h3>Dashboard opens</h3>
+                  {reportSummary?.dashboardClicks.length ? (
+                    <div className="report-table-wrap">
+                      <table className="report-table">
+                        <thead>
+                          <tr>
+                            <th>Dashboard</th>
+                            <th>Clicks</th>
+                            <th>Last click</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {reportSummary.dashboardClicks.map((row) => (
+                            <tr key={`${row.label}-${row.targetUrl}`}>
+                              <td>{row.label}</td>
+                              <td>{formatNumber(row.count)}</td>
+                              <td>{formatDateTime(row.lastClick)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="muted">No dashboard clicks recorded yet.</p>
+                  )}
+                </article>
+
+                <article className="admin-report-panel">
+                  <h3>Website tab clicks</h3>
+                  {reportSummary?.navClicks.length ? (
+                    <div className="report-table-wrap">
+                      <table className="report-table">
+                        <thead>
+                          <tr>
+                            <th>Tab or action</th>
+                            <th>Target</th>
+                            <th>Clicks</th>
+                            <th>Last click</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {reportSummary.navClicks.map((row) => (
+                            <tr key={`${row.eventType}-${row.label}-${row.targetUrl}`}>
+                              <td>{row.label}</td>
+                              <td>{row.targetUrl || "Not recorded"}</td>
+                              <td>{formatNumber(row.count)}</td>
+                              <td>{formatDateTime(row.lastClick)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="muted">No website tab clicks recorded yet.</p>
+                  )}
+                </article>
               </div>
             </section>
           ) : null}

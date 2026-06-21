@@ -1,4 +1,5 @@
 import { ExternalLink } from "lucide-react";
+import { TrackedAnchor } from "@/components/TrackedLink";
 
 type DashboardEmbedProps = {
   title: string;
@@ -17,9 +18,16 @@ export function DashboardEmbed({ title, description, url, envKey, notes }: Dashb
         <p>{description}</p>
         <p className="muted">{notes}</p>
         {url ? (
-          <a className="text-link" href={url} target="_blank" rel="noreferrer">
+          <TrackedAnchor
+            className="text-link"
+            href={url}
+            label={title}
+            metadata={{ provider: envKey || "dashboard" }}
+            target="_blank"
+            rel="noreferrer"
+          >
             Open dashboard <ExternalLink aria-hidden="true" size={16} />
-          </a>
+          </TrackedAnchor>
         ) : (
           <p className="configuration-note">Configure {envKey || "dashboard URL"} in Vercel to activate this embed.</p>
         )}

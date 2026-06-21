@@ -615,6 +615,191 @@ textarea {
   color: var(--red);
 }
 
+.admin-page .section-inner {
+  width: min(1180px, 100%);
+}
+
+.admin-login-form,
+.admin-grid > div,
+.admin-list-card,
+.admin-export-panel,
+.admin-report-panel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 10px 28px rgba(10, 35, 55, 0.06);
+}
+
+.admin-login-form,
+.admin-grid > div,
+.admin-list-card,
+.admin-export-panel,
+.admin-report-panel {
+  padding: 1.2rem;
+}
+
+.admin-login-form {
+  width: min(520px, 100%);
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.2rem;
+}
+
+.admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 1.25rem 0 0.75rem;
+}
+
+.admin-tabs .button {
+  text-transform: capitalize;
+}
+
+.admin-tabs .button.secondary,
+.admin-page .button-row .button.secondary {
+  border-color: var(--line);
+  background: white;
+  color: var(--blue-dark);
+}
+
+.admin-tabs .button.secondary:hover,
+.admin-page .button-row .button.secondary:hover,
+.admin-page .button.light:hover {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+  color: var(--blue-dark);
+}
+
+.admin-tabs .button.active {
+  border-color: var(--blue-dark);
+  background: var(--blue-dark);
+  color: white;
+}
+
+.admin-page .button.danger {
+  border-color: #8a1118;
+  background: #8a1118;
+  color: white;
+}
+
+.status-message {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.admin-section {
+  margin-top: 1.4rem;
+}
+
+.admin-section h2,
+.admin-section h3 {
+  color: var(--ink);
+}
+
+.admin-grid {
+  align-items: start;
+}
+
+.admin-list {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.admin-list-card {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.admin-list-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 0.8rem;
+}
+
+.report-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin: 1rem 0;
+}
+
+.report-card {
+  min-height: 118px;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--soft);
+}
+
+.report-card span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 900;
+}
+
+.report-card strong {
+  display: block;
+  margin-top: 0.45rem;
+  color: var(--blue-dark);
+  font-size: clamp(1.65rem, 3vw, 2.35rem);
+  line-height: 1;
+}
+
+.admin-export-panel {
+  margin: 1rem 0;
+}
+
+.admin-report-panels {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-report-panel h3,
+.admin-export-panel h3 {
+  margin-top: 0;
+}
+
+.report-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 620px;
+}
+
+.report-table th,
+.report-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.report-table th {
+  color: var(--blue-dark);
+  background: var(--blue-soft);
+  font-size: 0.84rem;
+  text-transform: uppercase;
+}
+
+.report-table td {
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
 .footer {
   color: #dcebf7;
   background: var(--blue-dark);
@@ -675,6 +860,7 @@ textarea {
   .grid.four,
   .grid.three,
   .grid.two,
+  .report-grid,
   .feature-row,
   .dashboard-panel,
   .footer-grid {

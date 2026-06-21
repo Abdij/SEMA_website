@@ -90,6 +90,16 @@ export type DataRequestStatusHistory = {
   created_at: string;
 };
 
+export type AnalyticsEventInput = {
+  eventType: string;
+  label?: string;
+  path?: string;
+  targetUrl?: string;
+  metadata?: Record<string, unknown>;
+  userAgent?: string;
+  referer?: string;
+};
+
 export function getPool() {
   const connectionString = process.env.DATABASE_URL;
 
@@ -880,4 +890,22 @@ export async function updateDataRequestStatus(
     created_at: row.created_at?.toISOString(),
     updated_at: row.updated_at?.toISOString(),
   };
+}
+
+export async function recordAnalyticsEvent(input: AnalyticsEventInput) {
+  const pool = getPool();
+
+  await pool.query(
+    `insert into analytics_events (event_type, label, path, target_url, metadata, user_agent, referer)
+     values ($1, $2, $3, $4, $5::jsonb, $6, $7)`,
+    [
+      input.eventType,
+      input.label || null,
+      input.path || null,
+      input.targetUrl || null,
+      JSON.stringify(input.metadata ?? {}),
+      input.userAgent || null,
+      input.referer || null,
+    ],
+  );
 }

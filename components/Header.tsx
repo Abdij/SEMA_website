@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Database, Mail } from "lucide-react";
+import { TrackedLink } from "@/components/TrackedLink";
 import { navItems } from "@/lib/content";
 
 export function Header() {
@@ -25,21 +26,21 @@ export function Header() {
           </span>
         </Link>
         <div className="header-actions">
-          <Link className="icon-link" href="/data-request">
+          <TrackedLink className="icon-link" href="/data-request" eventType="header_action_click" label="Data request">
             <Database aria-hidden="true" size={18} />
             Data request
-          </Link>
-          <Link className="icon-link primary" href="/contact">
+          </TrackedLink>
+          <TrackedLink className="icon-link primary" href="/contact" eventType="header_action_click" label="Contact">
             <Mail aria-hidden="true" size={18} />
             Contact
-          </Link>
+          </TrackedLink>
         </div>
       </div>
       <nav className="nav" aria-label="Primary navigation">
         {navItems.map((item) => (
-          <Link key={item.href} href={item.href}>
+          <TrackedLink key={item.href} href={item.href} label={item.label}>
             {item.label}
-          </Link>
+          </TrackedLink>
         ))}
       </nav>
     </header>
