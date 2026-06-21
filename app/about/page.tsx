@@ -1,0 +1,38 @@
+import { PageHero } from "@/components/PageHero";
+
+export const metadata = {
+  title: "About",
+};
+
+export default function AboutPage() {
+  return (
+    <>
+      <PageHero
+        eyebrow="Institution"
+        title="About SEMA"
+        text="The Somalia Explosive Management Authority is the national institution responsible for leading and coordinating mine action and explosive hazard management across Somalia."
+      />
+      <section className="section">
+        <div className="section-inner feature-row">
+          <div className="content-block">
+            <h2>National leadership for safer communities</h2>
+            <p>
+              SEMA works with government institutions, Federal Member States,
+              operators, communities, and international partners to strengthen
+              public safety, improve coordination, support information
+              management, and reduce the impact of explosive hazards on people,
+              services, livelihoods, and development.
+            </p>
+            <p>
+              The official website is designed to make SEMA's public role more
+              visible through accurate information, formal publications,
+              dashboard access, data request services, and clear contact
+              channels.
+            </p>
+          </div>
+          <div className="feature-image" />
+        </div>
+      </section>
+    </>
+  );
+}
