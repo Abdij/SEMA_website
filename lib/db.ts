@@ -137,6 +137,36 @@ function paragraphSplit(value: string) {
     .filter(Boolean);
 }
 
+function normalizeImageUrl(url: string | null | undefined): string {
+  if (!url) {
+    return "/images/mine-survey.jpg";
+  }
+
+  const trimmed = url.trim();
+
+  // If the admin pasted a GitHub URL, convert it to a raw content URL
+  if (trimmed.includes("github.com")) {
+    try {
+      const parsedUrl = new URL(trimmed);
+      const parts = parsedUrl.pathname.split("/").filter(Boolean);
+      // Expected structure for file page: /[username]/[repo]/blob/[branch]/[path...]
+      // or /[username]/[repo]/raw/[branch]/[path...]
+      // or /[username]/[repo]/tree/[branch]/[path...]
+      if (parts.length >= 4 && (parts[2] === "blob" || parts[2] === "raw" || parts[2] === "tree")) {
+        const username = parts[0];
+        const repo = parts[1];
+        const branch = parts[3];
+        const filePath = parts.slice(4).join("/");
+        return `https://raw.githubusercontent.com/${username}/${repo}/${branch}/${filePath}`;
+      }
+    } catch {
+      // Return original URL if parsing fails
+    }
+  }
+
+  return trimmed;
+}
+
 function mapNewsRow(row: any): NewsPost {
   return {
     slug: row.slug,
@@ -144,7 +174,7 @@ function mapNewsRow(row: any): NewsPost {
     date: row.published_at ? new Date(row.published_at).toISOString().split("T")[0] : "",
     category: row.category,
     summary: row.summary,
-    image: row.image_url || "/images/mine-survey.jpg",
+    image: normalizeImageUrl(row.image_url),
     body: row.body ? paragraphSplit(row.body) : [""],
     sourceLabel: row.source_label || undefined,
     sourceUrl: row.source_url || undefined,
