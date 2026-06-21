@@ -1,12 +1,13 @@
 import { Download, ExternalLink } from "lucide-react";
 import { PageHero } from "@/components/PageHero";
-import { publications } from "@/lib/content";
+import { getPublications } from "@/lib/db";
 
 export const metadata = {
   title: "Publications",
 };
 
-export default function PublicationsPage() {
+export default async function PublicationsPage() {
+  const publications = await getPublications();
   return (
     <>
       <PageHero

@@ -1,13 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
 import { PageHero } from "@/components/PageHero";
-import { newsPosts } from "@/lib/content";
+import { getNewsPosts } from "@/lib/db";
 
 export const metadata = {
   title: "News",
 };
 
-export default function NewsPage() {
+export default async function NewsPage() {
+  const newsPosts = await getNewsPosts();
+
   return (
     <>
       <PageHero

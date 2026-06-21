@@ -4,7 +4,7 @@ type DashboardEmbedProps = {
   title: string;
   description: string;
   url: string;
-  envKey: string;
+  envKey?: string;
   notes: string;
 };
 
@@ -21,7 +21,7 @@ export function DashboardEmbed({ title, description, url, envKey, notes }: Dashb
             Open dashboard <ExternalLink aria-hidden="true" size={16} />
           </a>
         ) : (
-          <p className="configuration-note">Configure {envKey} in Vercel to activate this embed.</p>
+          <p className="configuration-note">Configure {envKey || "dashboard URL"} in Vercel to activate this embed.</p>
         )}
       </div>
       <div className="embed-shell">

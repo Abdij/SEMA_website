@@ -1,9 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, BarChart3, Download, FileText, ShieldCheck } from "lucide-react";
-import { newsPosts, quickStats, serviceAreas } from "@/lib/content";
+import { quickStats, serviceAreas } from "@/lib/content";
+import { getNewsPosts } from "@/lib/db";
 
-export default function Home() {
+export default async function Home() {
+  const newsPosts = await getNewsPosts();
+
   return (
     <>
       <section className="hero">

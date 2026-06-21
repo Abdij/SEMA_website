@@ -1,12 +1,14 @@
 import { DashboardEmbed } from "@/components/DashboardEmbed";
 import { PageHero } from "@/components/PageHero";
-import { dashboardEmbeds } from "@/lib/content";
+import { getDashboardEmbeds } from "@/lib/db";
 
 export const metadata = {
   title: "Dashboards",
 };
 
-export default function DashboardsPage() {
+export default async function DashboardsPage() {
+  const dashboardEmbeds = await getDashboardEmbeds();
+
   return (
     <>
       <PageHero

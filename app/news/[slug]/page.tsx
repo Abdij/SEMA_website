@@ -1,19 +1,20 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ExternalLink } from "lucide-react";
-import { newsPosts } from "@/lib/content";
+import { getNewsPostBySlug, getNewsPosts } from "@/lib/db";
 
 type NewsArticleProps = {
   params: Promise<{ slug: string }>;
 };
 
-export function generateStaticParams() {
-  return newsPosts.map((post) => ({ slug: post.slug }));
+export async function generateStaticParams() {
+  const posts = await getNewsPosts();
+  return posts.map((post) => ({ slug: post.slug }));
 }
 
 export async function generateMetadata({ params }: NewsArticleProps) {
   const { slug } = await params;
-  const post = newsPosts.find((item) => item.slug === slug);
+  const post = await getNewsPostBySlug(slug);
 
   return {
     title: post?.title || "News",
@@ -22,7 +23,7 @@ export async function generateMetadata({ params }: NewsArticleProps) {
 
 export default async function NewsArticlePage({ params }: NewsArticleProps) {
   const { slug } = await params;
-  const post = newsPosts.find((item) => item.slug === slug);
+  const post = await getNewsPostBySlug(slug);
 
   if (!post) {
     notFound();
