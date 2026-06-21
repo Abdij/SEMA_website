@@ -454,7 +454,7 @@ export async function createPublication(input: {
   title: string;
   type: string;
   description: string;
-  href: string;
+  href?: string;
   source: string;
   publication_date?: string;
   status?: string;
@@ -464,6 +464,11 @@ export async function createPublication(input: {
 }) {
   const pool = getPool();
   const fileBuffer = input.fileData ? Buffer.from(input.fileData, "base64") : null;
+
+  if (!input.href && !fileBuffer) {
+    throw new Error("Publication requires either a URL or an uploaded file");
+  }
+
   const result = await pool.query(
     `insert into publications (title, document_type, description, file_url, source, publication_date, status, file_name, file_mime, file_data)
      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
@@ -472,7 +477,7 @@ export async function createPublication(input: {
       input.title,
       input.type,
       input.description,
-      input.href,
+      input.href || null,
       input.source,
       input.publication_date || null,
       input.status || "published",

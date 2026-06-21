@@ -21,7 +21,7 @@ create table if not exists publications (
   title text not null,
   document_type text not null,
   description text not null,
-  file_url text not null,
+  file_url text,
   file_name text,
   file_mime text,
   file_data bytea,
@@ -35,6 +35,7 @@ create table if not exists publications (
 alter table publications add column if not exists file_name text;
 alter table publications add column if not exists file_mime text;
 alter table publications add column if not exists file_data bytea;
+alter table publications alter column file_url drop not null;
 
 create table if not exists dashboard_embeds (
   id uuid primary key default gen_random_uuid(),

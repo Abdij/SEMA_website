@@ -658,10 +658,17 @@ export default function AdminPage() {
                     </select>
                   </label>
                   <div className="button-row">
-                    <button className="button" type="button" onClick={handleSavePublication} disabled={loading || !editingPublication.title || !editingPublication.href}>
+                    <button className="button" type="button" onClick={handleSavePublication} disabled={loading || !editingPublication.title || (!editingPublication.href && !publicationFile)}>
                       Save publication
                     </button>
-                    <button className="button secondary" type="button" onClick={() => setEditingPublication(emptyPublication)}>
+                    <button
+                      className="button secondary"
+                      type="button"
+                      onClick={() => {
+                        setEditingPublication(emptyPublication);
+                        setPublicationFile(null);
+                      }}
+                    >
                       Clear
                     </button>
                   </div>
