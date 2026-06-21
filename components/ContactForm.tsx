@@ -11,10 +11,11 @@ export function ContactForm() {
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
     setState("submitting");
     setMessage("");
 
-    const formData = new FormData(event.currentTarget);
+    const formData = new FormData(form);
     const payload = Object.fromEntries(formData.entries());
 
     try {
@@ -30,7 +31,7 @@ export function ContactForm() {
         throw new Error(data.message || "Unable to submit the message.");
       }
 
-      event.currentTarget.reset();
+      form.reset();
       setState("success");
       setMessage("Your message was submitted. SEMA will review and respond through the official contact channel.");
     } catch (error) {

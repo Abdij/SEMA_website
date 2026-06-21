@@ -11,10 +11,11 @@ export function DataRequestForm() {
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
     setState("submitting");
     setMessage("");
 
-    const formData = new FormData(event.currentTarget);
+    const formData = new FormData(form);
     const payload = Object.fromEntries(formData.entries());
 
     try {
@@ -30,7 +31,7 @@ export function DataRequestForm() {
         throw new Error(data.message || "Unable to submit the request.");
       }
 
-      event.currentTarget.reset();
+      form.reset();
       setState("success");
       setMessage(
         data.requestRef
