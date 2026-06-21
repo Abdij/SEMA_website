@@ -24,6 +24,7 @@ export type NewsPost = {
 };
 
 export type Publication = {
+  id?: string;
   title: string;
   type: string;
   description: string;
@@ -31,6 +32,8 @@ export type Publication = {
   source: string;
   publication_date?: string;
   status?: string;
+  fileName?: string;
+  fileMime?: string;
 };
 
 export type DashboardEmbed = {
@@ -41,6 +44,50 @@ export type DashboardEmbed = {
   public_safe?: boolean;
   status?: string;
   notes?: string;
+};
+
+export type ContactMessage = {
+  id: string;
+  name: string;
+  organization?: string;
+  email: string;
+  phone?: string;
+  enquiryType: string;
+  subject: string;
+  message: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type DataRequest = {
+  id: string;
+  requestRef: string;
+  name: string;
+  organization?: string;
+  role?: string;
+  email: string;
+  phone?: string;
+  requesterType: string;
+  dataRequested: string;
+  geography?: string;
+  timePeriod?: string;
+  intendedUse: string;
+  preferredFormat: string;
+  deadline?: string;
+  status: string;
+  sensitivityLevel: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type DataRequestStatusHistory = {
+  id: string;
+  dataRequestId: string;
+  status: string;
+  note?: string;
+  changedBy?: string;
+  created_at: string;
 };
 
 export function getPool() {
@@ -167,7 +214,7 @@ export async function getPublications() {
   }
 
   const result = await pool.query(
-    `select title, document_type, description, file_url, source, publication_date, status
+    `select id, title, document_type, description, file_url, file_name, file_mime, source, publication_date, status
      from publications
      where status = 'published'
      order by publication_date desc nulls last`,
@@ -178,13 +225,16 @@ export async function getPublications() {
   }
 
   return result.rows.map((row) => ({
+    id: row.id,
     title: row.title,
     type: row.document_type,
     description: row.description,
-    href: row.file_url,
+    href: row.file_url || (row.file_name ? `/api/publications/file?id=${row.id}` : ""),
     source: row.source,
     publication_date: row.publication_date ? row.publication_date.toISOString().split("T")[0] : undefined,
     status: row.status,
+    fileName: row.file_name || undefined,
+    fileMime: row.file_mime || undefined,
   }));
 }
 
@@ -196,7 +246,7 @@ export async function getAdminPublications() {
   }
 
   const result = await pool.query(
-    `select title, document_type, description, file_url, source, publication_date, status
+    `select id, title, document_type, description, file_url, file_name, file_mime, source, publication_date, status
      from publications
      order by publication_date desc nulls last`,
   );
@@ -206,13 +256,16 @@ export async function getAdminPublications() {
   }
 
   return result.rows.map((row) => ({
+    id: row.id,
     title: row.title,
     type: row.document_type,
     description: row.description,
-    href: row.file_url,
+    href: row.file_url || (row.file_name ? `/api/publications/file?id=${row.id}` : ""),
     source: row.source,
     publication_date: row.publication_date ? row.publication_date.toISOString().split("T")[0] : undefined,
     status: row.status,
+    fileName: row.file_name || undefined,
+    fileMime: row.file_mime || undefined,
   }));
 }
 
@@ -405,11 +458,15 @@ export async function createPublication(input: {
   source: string;
   publication_date?: string;
   status?: string;
+  fileName?: string;
+  fileMime?: string;
+  fileData?: string;
 }) {
   const pool = getPool();
+  const fileBuffer = input.fileData ? Buffer.from(input.fileData, "base64") : null;
   const result = await pool.query(
-    `insert into publications (title, document_type, description, file_url, source, publication_date, status)
-     values ($1, $2, $3, $4, $5, $6, $7)
+    `insert into publications (title, document_type, description, file_url, source, publication_date, status, file_name, file_mime, file_data)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
      returning *`,
     [
       input.title,
@@ -419,17 +476,24 @@ export async function createPublication(input: {
       input.source,
       input.publication_date || null,
       input.status || "published",
+      input.fileName || null,
+      input.fileMime || null,
+      fileBuffer,
     ],
   );
 
+  const row = result.rows[0];
   return {
-    title: result.rows[0].title,
-    type: result.rows[0].document_type,
-    description: result.rows[0].description,
-    href: result.rows[0].file_url,
-    source: result.rows[0].source,
-    publication_date: result.rows[0].publication_date ? result.rows[0].publication_date.toISOString().split("T")[0] : undefined,
-    status: result.rows[0].status,
+    id: row.id,
+    title: row.title,
+    type: row.document_type,
+    description: row.description,
+    href: row.file_url || (row.file_name ? `/api/publications/file?id=${row.id}` : ""),
+    source: row.source,
+    publication_date: row.publication_date ? row.publication_date.toISOString().split("T")[0] : undefined,
+    status: row.status,
+    fileName: row.file_name || undefined,
+    fileMime: row.file_mime || undefined,
   };
 }
 
@@ -440,8 +504,12 @@ export async function updatePublication(title: string, input: {
   source?: string;
   publication_date?: string;
   status?: string;
+  fileName?: string;
+  fileMime?: string;
+  fileData?: string;
 }) {
   const pool = getPool();
+  const fileBuffer = input.fileData ? Buffer.from(input.fileData, "base64") : null;
   const result = await pool.query(
     `update publications set
       document_type = coalesce($1, document_type),
@@ -450,8 +518,11 @@ export async function updatePublication(title: string, input: {
       source = coalesce($4, source),
       publication_date = coalesce($5, publication_date),
       status = coalesce($6, status),
+      file_name = coalesce($7, file_name),
+      file_mime = coalesce($8, file_mime),
+      file_data = coalesce($9, file_data),
       updated_at = now()
-     where title = $7
+     where title = $10
      returning *`,
     [
       input.type || null,
@@ -460,6 +531,9 @@ export async function updatePublication(title: string, input: {
       input.source || null,
       input.publication_date || null,
       input.status || null,
+      input.fileName || null,
+      input.fileMime || null,
+      fileBuffer,
       title,
     ],
   );
@@ -468,14 +542,18 @@ export async function updatePublication(title: string, input: {
     throw new Error("Publication not found");
   }
 
+  const row = result.rows[0];
   return {
-    title: result.rows[0].title,
-    type: result.rows[0].document_type,
-    description: result.rows[0].description,
-    href: result.rows[0].file_url,
-    source: result.rows[0].source,
-    publication_date: result.rows[0].publication_date ? result.rows[0].publication_date.toISOString().split("T")[0] : undefined,
-    status: result.rows[0].status,
+    id: row.id,
+    title: row.title,
+    type: row.document_type,
+    description: row.description,
+    href: row.file_url || (row.file_name ? `/api/publications/file?id=${row.id}` : ""),
+    source: row.source,
+    publication_date: row.publication_date ? row.publication_date.toISOString().split("T")[0] : undefined,
+    status: row.status,
+    fileName: row.file_name || undefined,
+    fileMime: row.file_mime || undefined,
   };
 }
 
@@ -564,4 +642,237 @@ export async function updateDashboardEmbed(title: string, input: {
 export async function deleteDashboardEmbed(title: string) {
   const pool = getPool();
   await pool.query(`delete from dashboard_embeds where title = $1`, [title]);
+}
+
+export function requireString(value: unknown, label: string) {
+  if (typeof value !== "string") {
+    throw new Error(`${label} is required`);
+  }
+
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    throw new Error(`${label} is required`);
+  }
+
+  return trimmed;
+}
+
+export async function insertContactMessage(input: {
+  name: string;
+  organization?: string;
+  email: string;
+  phone?: string;
+  enquiryType: string;
+  subject: string;
+  message: string;
+}) {
+  const pool = getPool();
+
+  const result = await pool.query(
+    `insert into contact_messages (name, organization, email, phone, enquiry_type, subject, message)
+     values ($1, $2, $3, $4, $5, $6, $7)
+     returning *`,
+    [
+      input.name,
+      input.organization || null,
+      input.email,
+      input.phone || null,
+      input.enquiryType,
+      input.subject,
+      input.message,
+    ],
+  );
+
+  return result.rows[0];
+}
+
+export async function insertDataRequest(input: {
+  name: string;
+  organization?: string;
+  role?: string;
+  email: string;
+  phone?: string;
+  requesterType: string;
+  dataRequested: string;
+  geography?: string;
+  timePeriod?: string;
+  intendedUse: string;
+  preferredFormat: string;
+  deadline?: string;
+}) {
+  const pool = getPool();
+
+  const result = await pool.query(
+    `insert into data_requests (name, organization, role, email, phone, requester_type, data_requested, geography, time_period, intended_use, preferred_format, deadline)
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+     returning *`,
+    [
+      input.name,
+      input.organization || null,
+      input.role || null,
+      input.email,
+      input.phone || null,
+      input.requesterType,
+      input.dataRequested,
+      input.geography || null,
+      input.timePeriod || null,
+      input.intendedUse,
+      input.preferredFormat,
+      input.deadline || null,
+    ],
+  );
+
+  return result.rows[0];
+}
+
+export async function getContactMessages() {
+  const pool = getPool();
+  const result = await pool.query(
+    `select id, name, organization, email, phone, enquiry_type, subject, message, status, created_at, updated_at
+     from contact_messages
+     order by created_at desc`,
+  );
+
+  return result.rows.map((row: any) => ({
+    id: row.id,
+    name: row.name,
+    organization: row.organization || undefined,
+    email: row.email,
+    phone: row.phone || undefined,
+    enquiryType: row.enquiry_type,
+    subject: row.subject,
+    message: row.message,
+    status: row.status,
+    created_at: row.created_at?.toISOString(),
+    updated_at: row.updated_at?.toISOString(),
+  }));
+}
+
+export async function updateContactMessageStatus(id: string, status: string) {
+  const pool = getPool();
+  const result = await pool.query(
+    `update contact_messages set status = $1, updated_at = now()
+     where id = $2
+     returning id, name, organization, email, phone, enquiry_type, subject, message, status, created_at, updated_at`,
+    [status, id],
+  );
+
+  if (!result.rows.length) {
+    throw new Error("Contact message not found");
+  }
+
+  const row = result.rows[0];
+  return {
+    id: row.id,
+    name: row.name,
+    organization: row.organization || undefined,
+    email: row.email,
+    phone: row.phone || undefined,
+    enquiryType: row.enquiry_type,
+    subject: row.subject,
+    message: row.message,
+    status: row.status,
+    created_at: row.created_at?.toISOString(),
+    updated_at: row.updated_at?.toISOString(),
+  };
+}
+
+export async function getDataRequests() {
+  const pool = getPool();
+  const result = await pool.query(
+    `select id, request_ref, name, organization, role, email, phone, requester_type, data_requested, geography, time_period, intended_use, preferred_format, deadline, status, sensitivity_level, created_at, updated_at
+     from data_requests
+     order by created_at desc`,
+  );
+
+  return result.rows.map((row: any) => ({
+    id: row.id,
+    requestRef: row.request_ref,
+    name: row.name,
+    organization: row.organization || undefined,
+    role: row.role || undefined,
+    email: row.email,
+    phone: row.phone || undefined,
+    requesterType: row.requester_type,
+    dataRequested: row.data_requested,
+    geography: row.geography || undefined,
+    timePeriod: row.time_period || undefined,
+    intendedUse: row.intended_use,
+    preferredFormat: row.preferred_format,
+    deadline: row.deadline ? row.deadline.toISOString().split("T")[0] : undefined,
+    status: row.status,
+    sensitivityLevel: row.sensitivity_level,
+    created_at: row.created_at?.toISOString(),
+    updated_at: row.updated_at?.toISOString(),
+  }));
+}
+
+export async function addDataRequestStatusHistory(dataRequestId: string, status: string, note?: string, changedBy?: string) {
+  const pool = getPool();
+  const result = await pool.query(
+    `insert into data_request_status_history (data_request_id, status, note, changed_by)
+     values ($1, $2, $3, $4)
+     returning id, data_request_id, status, note, changed_by, created_at`,
+    [dataRequestId, status, note || null, changedBy || null],
+  );
+
+  return {
+    id: result.rows[0].id,
+    dataRequestId: result.rows[0].data_request_id,
+    status: result.rows[0].status,
+    note: result.rows[0].note || undefined,
+    changedBy: result.rows[0].changed_by || undefined,
+    created_at: result.rows[0].created_at?.toISOString(),
+  };
+}
+
+export async function updateDataRequestStatus(
+  id: string,
+  status: string | undefined,
+  sensitivityLevel: string | undefined,
+  note?: string,
+  changedBy?: string,
+) {
+  const pool = getPool();
+
+  const result = await pool.query(
+    `update data_requests set
+      status = coalesce($1, status),
+      sensitivity_level = coalesce($2, sensitivity_level),
+      updated_at = now()
+     where id = $3
+     returning id, request_ref, name, organization, role, email, phone, requester_type, data_requested, geography, time_period, intended_use, preferred_format, deadline, status, sensitivity_level, created_at, updated_at`,
+    [status || null, sensitivityLevel || null, id],
+  );
+
+  if (!result.rows.length) {
+    throw new Error("Data request not found");
+  }
+
+  if (status) {
+    await addDataRequestStatusHistory(id, status, note, changedBy);
+  }
+
+  const row = result.rows[0];
+  return {
+    id: row.id,
+    requestRef: row.request_ref,
+    name: row.name,
+    organization: row.organization || undefined,
+    role: row.role || undefined,
+    email: row.email,
+    phone: row.phone || undefined,
+    requesterType: row.requester_type,
+    dataRequested: row.data_requested,
+    geography: row.geography || undefined,
+    timePeriod: row.time_period || undefined,
+    intendedUse: row.intended_use,
+    preferredFormat: row.preferred_format,
+    deadline: row.deadline ? row.deadline.toISOString().split("T")[0] : undefined,
+    status: row.status,
+    sensitivityLevel: row.sensitivity_level,
+    created_at: row.created_at?.toISOString(),
+    updated_at: row.updated_at?.toISOString(),
+  };
 }

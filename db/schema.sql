@@ -22,12 +22,19 @@ create table if not exists publications (
   document_type text not null,
   description text not null,
   file_url text not null,
+  file_name text,
+  file_mime text,
+  file_data bytea,
   source text not null default 'SEMA',
   publication_date date,
   status text not null default 'published' check (status in ('draft', 'published', 'archived')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table publications add column if not exists file_name text;
+alter table publications add column if not exists file_mime text;
+alter table publications add column if not exists file_data bytea;
 
 create table if not exists dashboard_embeds (
   id uuid primary key default gen_random_uuid(),

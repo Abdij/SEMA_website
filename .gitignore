@@ -17,3 +17,6 @@ screenshots/
 next-dev.log
 next-dev.err.log
 tsconfig.tsbuildinfo
+
+.vercel
+.env*

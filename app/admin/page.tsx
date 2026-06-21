@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
-type AdminTab = "news" | "publications" | "dashboards";
+type AdminTab = "news" | "publications" | "dashboards" | "messages" | "requests";
 
 type NewsItem = {
   slug: string;
@@ -25,6 +25,8 @@ type PublicationItem = {
   source: string;
   publication_date?: string;
   status?: string;
+  fileName?: string;
+  fileMime?: string;
 };
 
 type DashboardItem = {
@@ -34,6 +36,41 @@ type DashboardItem = {
   provider?: string;
   public_safe?: boolean;
   status?: string;
+};
+
+type ContactMessage = {
+  id: string;
+  name: string;
+  organization?: string;
+  email: string;
+  phone?: string;
+  enquiryType: string;
+  subject: string;
+  message: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+};
+
+type DataRequest = {
+  id: string;
+  requestRef: string;
+  name: string;
+  organization?: string;
+  role?: string;
+  email: string;
+  phone?: string;
+  requesterType: string;
+  dataRequested: string;
+  geography?: string;
+  timePeriod?: string;
+  intendedUse: string;
+  preferredFormat: string;
+  deadline?: string;
+  status: string;
+  sensitivityLevel: string;
+  created_at: string;
+  updated_at: string;
 };
 
 const emptyNews: NewsItem = {
@@ -80,8 +117,11 @@ export default function AdminPage() {
   const [newsList, setNewsList] = useState<NewsItem[]>([]);
   const [publicationList, setPublicationList] = useState<PublicationItem[]>([]);
   const [dashboardList, setDashboardList] = useState<DashboardItem[]>([]);
+  const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
+  const [dataRequests, setDataRequests] = useState<DataRequest[]>([]);
   const [editingNews, setEditingNews] = useState<NewsItem>(emptyNews);
   const [editingPublication, setEditingPublication] = useState<PublicationItem>(emptyPublication);
+  const [publicationFile, setPublicationFile] = useState<File | null>(null);
   const [editingDashboard, setEditingDashboard] = useState<DashboardItem>(emptyDashboard);
   const [loading, setLoading] = useState(false);
 
@@ -122,27 +162,51 @@ export default function AdminPage() {
   async function loadAllData(authValue: string) {
     setLoading(true);
     try {
-      const [newsResponse, publicationsResponse, dashboardsResponse] = await Promise.all([
+      const [
+        newsResponse,
+        publicationsResponse,
+        dashboardsResponse,
+        contactMessagesResponse,
+        dataRequestsResponse,
+      ] = await Promise.all([
         fetch("/api/admin/news", { headers: authHeader(authValue) }),
         fetch("/api/admin/publications", { headers: authHeader(authValue) }),
         fetch("/api/admin/dashboard-embeds", { headers: authHeader(authValue) }),
+        fetch("/api/admin/contact-messages", { headers: authHeader(authValue) }),
+        fetch("/api/admin/data-requests", { headers: authHeader(authValue) }),
       ]);
 
-      if (!newsResponse.ok || !publicationsResponse.ok || !dashboardsResponse.ok) {
+      if (
+        !newsResponse.ok ||
+        !publicationsResponse.ok ||
+        !dashboardsResponse.ok ||
+        !contactMessagesResponse.ok ||
+        !dataRequestsResponse.ok
+      ) {
         setAuthenticated(false);
         setMessage("Authorization failed. Please log in again.");
         return;
       }
 
-      const [newsData, publicationsData, dashboardData] = await Promise.all([
+      const [
+        newsData,
+        publicationsData,
+        dashboardData,
+        contactMessagesData,
+        dataRequestsData,
+      ] = await Promise.all([
         newsResponse.json(),
         publicationsResponse.json(),
         dashboardsResponse.json(),
+        contactMessagesResponse.json(),
+        dataRequestsResponse.json(),
       ]);
 
       setNewsList(Array.isArray(newsData) ? newsData : []);
       setPublicationList(Array.isArray(publicationsData) ? publicationsData : []);
       setDashboardList(Array.isArray(dashboardData) ? dashboardData : []);
+      setContactMessages(Array.isArray(contactMessagesData) ? contactMessagesData : []);
+      setDataRequests(Array.isArray(dataRequestsData) ? dataRequestsData : []);
       setMessage("Data loaded.");
     } catch (error) {
       setMessage("Unable to load admin data.");
@@ -159,7 +223,21 @@ export default function AdminPage() {
   function resetPageState() {
     setEditingNews(emptyNews);
     setEditingPublication(emptyPublication);
+    setPublicationFile(null);
     setEditingDashboard(emptyDashboard);
+  }
+
+  async function fileToBase64(file: File) {
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        const base64 = result.split(",")[1] ?? "";
+        resolve(base64);
+      };
+      reader.onerror = () => reject(new Error("Failed to read file."));
+      reader.readAsDataURL(file);
+    });
   }
 
   async function sendAdminRequest(path: string, method: string, body?: unknown) {
@@ -224,13 +302,20 @@ export default function AdminPage() {
     try {
       const method = publicationList.some((item) => item.title === editingPublication.title) ? "PATCH" : "POST";
       const path = method === "PATCH" ? `/api/admin/publications?title=${encodeURIComponent(editingPublication.title)}` : "/api/admin/publications";
-      const payload = { ...editingPublication };
+      const payload: Record<string, unknown> = { ...editingPublication };
+
+      if (publicationFile) {
+        payload.fileName = publicationFile.name;
+        payload.fileMime = publicationFile.type || "application/octet-stream";
+        payload.fileData = await fileToBase64(publicationFile);
+      }
 
       const result = await sendAdminRequest(path, method, payload);
       if (result && !result.message) {
         setMessage("Publication saved.");
         await loadAllData(password);
         setEditingPublication(emptyPublication);
+        setPublicationFile(null);
       } else {
         setMessage(result?.message || "Could not save publication.");
       }
@@ -289,13 +374,46 @@ export default function AdminPage() {
     }
   }
 
+  async function handleUpdateContactMessageStatus(id: string, status: string) {
+    setLoading(true);
+    try {
+      const result = await sendAdminRequest(`/api/admin/contact-messages?id=${encodeURIComponent(id)}`, "PATCH", { status });
+      if (result && !result.message) {
+        setMessage("Contact message status updated.");
+        await loadAllData(password);
+      } else {
+        setMessage(result?.message || "Could not update message status.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleUpdateDataRequestStatus(id: string, status: string, sensitivityLevel: string) {
+    setLoading(true);
+    try {
+      const result = await sendAdminRequest(`/api/admin/data-requests?id=${encodeURIComponent(id)}`, "PATCH", {
+        status,
+        sensitivityLevel,
+      });
+      if (result && !result.message) {
+        setMessage("Data request status updated.");
+        await loadAllData(password);
+      } else {
+        setMessage(result?.message || "Could not update request status.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
   if (!authenticated) {
     return (
       <main className="page admin-page">
         <section className="section">
           <div className="section-inner">
             <h1>SEMA Admin Dashboard</h1>
-            <p>Enter your admin password to manage news, publications, and dashboard embeds.</p>
+            <p>Enter your admin password to manage news, publications, dashboard embeds, contact messages, and data requests.</p>
             <form onSubmit={handleLogin} className="admin-login-form">
               <label>
                 Admin password
@@ -322,9 +440,9 @@ export default function AdminPage() {
       <section className="section">
         <div className="section-inner">
           <h1>SEMA Admin Dashboard</h1>
-          <p>Manage news posts, document publications, and public dashboard embeds.</p>
+          <p>Manage news posts, document publications, dashboard embeds, incoming contact messages, and data requests.</p>
           <div className="admin-tabs">
-            {(["news", "publications", "dashboards"] as AdminTab[]).map((currentTab) => (
+            {(["news", "publications", "dashboards", "messages", "requests"] as AdminTab[]).map((currentTab) => (
               <button
                 key={currentTab}
                 type="button"
@@ -505,6 +623,14 @@ export default function AdminPage() {
                     />
                   </label>
                   <label>
+                    File upload
+                    <input
+                      type="file"
+                      onChange={(event) => setPublicationFile(event.target.files?.[0] ?? null)}
+                    />
+                    {publicationFile ? <small>Selected: {publicationFile.name}</small> : <small>No file selected</small>}
+                  </label>
+                  <label>
                     Source
                     <input
                       type="text"
@@ -549,7 +675,14 @@ export default function AdminPage() {
                         <p>{item.type}</p>
                         <p>{item.source}</p>
                         <div className="button-row">
-                          <button className="button secondary" type="button" onClick={() => setEditingPublication(item)}>
+                          <button
+                            className="button secondary"
+                            type="button"
+                            onClick={() => {
+                              setEditingPublication(item);
+                              setPublicationFile(null);
+                            }}
+                          >
                             Edit
                           </button>
                           <button className="button danger" type="button" onClick={() => handleDeletePublication(item.title)}>
@@ -653,6 +786,122 @@ export default function AdminPage() {
                     ))}
                   </div>
                 </div>
+              </div>
+            </section>
+          ) : null}
+
+          {tab === "messages" ? (
+            <section className="admin-section">
+              <h2>Contact messages</h2>
+              <div className="admin-list">
+                {contactMessages.map((message) => (
+                  <article key={message.id} className="admin-list-card">
+                    <strong>{message.subject}</strong>
+                    <p>
+                      {message.name} • {message.email}
+                    </p>
+                    {message.organization ? <p>{message.organization}</p> : null}
+                    <p>Type: {message.enquiryType}</p>
+                    <p>Status:</p>
+                    <label>
+                      <select
+                        value={message.status}
+                        onChange={(event) =>
+                          setContactMessages((current) =>
+                            current.map((item) =>
+                              item.id === message.id ? { ...item, status: event.target.value } : item,
+                            ),
+                          )
+                        }
+                      >
+                        <option value="new">new</option>
+                        <option value="reviewing">reviewing</option>
+                        <option value="responded">responded</option>
+                        <option value="closed">closed</option>
+                      </select>
+                    </label>
+                    <p>{message.message}</p>
+                    <div className="button-row">
+                      <button
+                        className="button"
+                        type="button"
+                        disabled={loading}
+                        onClick={() => handleUpdateContactMessageStatus(message.id, message.status)}
+                      >
+                        Save status
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          {tab === "requests" ? (
+            <section className="admin-section">
+              <h2>Data requests</h2>
+              <div className="admin-list">
+                {dataRequests.map((request) => (
+                  <article key={request.id} className="admin-list-card">
+                    <strong>{request.requestRef}</strong>
+                    <p>
+                      {request.name} • {request.email}
+                    </p>
+                    {request.organization ? <p>{request.organization}</p> : null}
+                    <p>{request.requesterType}</p>
+                    <p>Preferred format: {request.preferredFormat}</p>
+                    <p>Requested data: {request.dataRequested}</p>
+                    <label>
+                      Status:
+                      <select
+                        value={request.status}
+                        onChange={(event) =>
+                          setDataRequests((current) =>
+                            current.map((item) =>
+                              item.id === request.id ? { ...item, status: event.target.value } : item,
+                            ),
+                          )
+                        }
+                      >
+                        <option value="submitted">submitted</option>
+                        <option value="screening">screening</option>
+                        <option value="clarification_needed">clarification_needed</option>
+                        <option value="approved">approved</option>
+                        <option value="fulfilled">fulfilled</option>
+                        <option value="declined">declined</option>
+                        <option value="closed">closed</option>
+                      </select>
+                    </label>
+                    <label>
+                      Sensitivity:
+                      <select
+                        value={request.sensitivityLevel}
+                        onChange={(event) =>
+                          setDataRequests((current) =>
+                            current.map((item) =>
+                              item.id === request.id ? { ...item, sensitivityLevel: event.target.value } : item,
+                            ),
+                          )
+                        }
+                      >
+                        <option value="pending_review">pending_review</option>
+                        <option value="public">public</option>
+                        <option value="restricted">restricted</option>
+                        <option value="confidential">confidential</option>
+                      </select>
+                    </label>
+                    <div className="button-row">
+                      <button
+                        className="button"
+                        type="button"
+                        disabled={loading}
+                        onClick={() => handleUpdateDataRequestStatus(request.id, request.status, request.sensitivityLevel)}
+                      >
+                        Save request
+                      </button>
+                    </div>
+                  </article>
+                ))}
               </div>
             </section>
           ) : null}
