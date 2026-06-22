@@ -63,7 +63,7 @@ export async function Header() {
         <Link className="brand" href="/" aria-label={t("homeLabel")}>
           <div className="brand-flags">
             <img
-              src="/images/somalia-flag1.svg"
+              src="/images/somalia-flag.svg"
               alt={t("somaliaFlagAlt")}
               className="brand-flag"
             />
