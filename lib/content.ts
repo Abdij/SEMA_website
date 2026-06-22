@@ -29,13 +29,77 @@ export const navItems = [
   { href: "/", label: "Home" },
   { href: "/about", label: "About" },
   { href: "/mandate", label: "Mandate" },
+  { href: "/leadership", label: "Leadership" },
   { href: "/operations", label: "Operations" },
   { href: "/dashboards", label: "Dashboards" },
   { href: "/publications", label: "Publications" },
   { href: "/conventions", label: "Convention Progress" },
   { href: "/news", label: "News" },
   { href: "/data-request", label: "Data Request" },
+  { href: "/government-links", label: "Government Links" },
   { href: "/contact", label: "Contact" },
+];
+
+export const govLinks = [
+  {
+    name: "Ministry of Internal Security (MoIS)",
+    description: "Federal Government ministry responsible for internal security coordination and public safety across Somalia.",
+    href: "https://mois.gov.so",
+  },
+  {
+    name: "Ministry of Interior, Federal Affairs and Reconciliation (MoIFAR)",
+    description: "Federal Government ministry overseeing interior affairs, federal-state relations, and national reconciliation.",
+    href: "https://moifar.gov.so",
+  },
+  {
+    name: "Somalia Disaster Management Agency (SoDMA)",
+    description: "National agency coordinating disaster preparedness, response, and risk reduction across Somalia.",
+    href: "https://sodma.gov.so",
+  },
+  {
+    name: "Federal Government of Somalia Portal",
+    description: "Official portal of the Federal Government of Somalia — news, departments, and public services.",
+    href: "https://www.somalia.gov.so",
+  },
+];
+
+export const mandateAreas = [
+  {
+    title: "National Mine Action Coordination",
+    text: "SEMA leads and coordinates all national mine action activities, aligning government institutions, Federal Member States, operators, donors, and technical partners around shared priorities.",
+  },
+  {
+    title: "Explosive Hazard Management",
+    text: "SEMA oversees the systematic identification, marking, and clearance of explosive hazards including anti-personnel mines, cluster munitions, and explosive remnants of war.",
+  },
+  {
+    title: "Information Management",
+    text: "SEMA develops and maintains national information management systems to collect, validate, analyse, and share mine action data for planning, operations, and public reporting.",
+  },
+  {
+    title: "Quality Assurance",
+    text: "SEMA establishes and monitors national standards, accreditation requirements, and quality management processes for all operators conducting mine action activities in Somalia.",
+  },
+  {
+    title: "Risk Education (EORE)",
+    text: "SEMA coordinates explosive ordnance risk education programmes that reduce casualties by informing communities about the dangers of explosive hazards and safe behaviours.",
+  },
+  {
+    title: "Victim Assistance",
+    text: "SEMA supports victim assistance efforts by coordinating services, strengthening national reporting, and advocating for the rights and needs of landmine and EO survivors.",
+  },
+  {
+    title: "National Reporting",
+    text: "SEMA fulfils Somalia's international treaty reporting obligations, including annual Article 7 reports under the Anti-Personnel Mine Ban Convention and related instruments.",
+  },
+  {
+    title: "Strategic Planning",
+    text: "SEMA leads the development and implementation of national mine action strategies, work plans, and sectoral priorities aligned with Somalia's development and security agenda.",
+  },
+  {
+    title: "Government and Partner Coordination",
+    text: "SEMA facilitates coordination with Federal Member States, UN agencies, international NGOs, and bilateral donors supporting mine action and explosive hazard management in Somalia.",
+  },
 ];
 
 export const officialSources = [

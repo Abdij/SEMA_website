@@ -53,15 +53,51 @@ main {
   backdrop-filter: blur(12px);
 }
 
-.topline {
+.gov-bar {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.45rem clamp(1rem, 4vw, 3.5rem);
+  padding: 0.4rem clamp(1rem, 4vw, 3.5rem);
   color: white;
   background: var(--blue-dark);
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 700;
+}
+
+.gov-bar-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.gov-bar-flag {
+  height: 18px;
+  width: auto;
+  border-radius: 1px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
+.gov-bar-links {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.gov-bar-links a {
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.gov-bar-links a:hover {
+  color: white;
+}
+
+.gov-bar-sep {
+  color: rgba(255, 255, 255, 0.3);
+  font-weight: 400;
 }
 
 .header-main {
@@ -80,26 +116,50 @@ main {
   text-decoration: none;
 }
 
+.brand-flags {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.brand-flag {
+  height: 46px;
+  width: auto;
+  border-radius: 2px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
 .brand img {
-  width: 70px;
+  width: 64px;
   height: auto;
+  flex-shrink: 0;
+}
+
+.brand-divider {
+  width: 1px;
+  height: 56px;
+  background: var(--line);
+  margin: 0 0.2rem;
+  flex-shrink: 0;
 }
 
 .brand strong {
   display: block;
-  color: var(--blue);
-  font-size: clamp(1.65rem, 2.8vw, 2.4rem);
-  line-height: 1;
+  color: var(--blue-dark);
+  font-size: clamp(0.88rem, 1.7vw, 1.15rem);
+  line-height: 1.2;
   font-weight: 900;
   letter-spacing: 0;
 }
 
 .brand small {
   display: block;
-  color: var(--red);
-  font-size: 0.86rem;
-  font-weight: 800;
-  line-height: 1.25;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-top: 0.15rem;
 }
 
 .header-actions {
@@ -843,6 +903,94 @@ textarea {
   font-size: 0.84rem;
 }
 
+.leadership-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.leader-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(10, 35, 55, 0.06);
+}
+
+.leader-portrait {
+  width: 100%;
+  height: 180px;
+  background: var(--blue-soft);
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 1rem;
+}
+
+.leader-info {
+  padding: 1.25rem;
+}
+
+.leader-role {
+  display: block;
+  color: var(--red);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.3rem;
+}
+
+.leader-name {
+  margin: 0 0 0.5rem;
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1.3;
+}
+
+.leader-bio {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.65;
+}
+
+.gov-link-card {
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  padding: 1.5rem;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 6px 20px rgba(10, 35, 55, 0.06);
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.gov-link-card:hover {
+  box-shadow: 0 12px 32px rgba(10, 35, 55, 0.1);
+  border-color: var(--blue);
+}
+
+.gov-link-card h3 {
+  margin: 0 0 0.5rem;
+  color: var(--blue-dark);
+  font-size: 1.05rem;
+  font-weight: 900;
+  line-height: 1.3;
+}
+
+.gov-link-card p {
+  margin: 0 0 0.85rem;
+  color: var(--muted);
+  line-height: 1.6;
+  font-size: 0.92rem;
+}
+
 .footer {
   color: #dcebf7;
   background: var(--blue-dark);
@@ -888,7 +1036,7 @@ textarea {
 }
 
 @media (max-width: 980px) {
-  .topline,
+  .gov-bar,
   .header-main,
   .footer-bottom,
   .section-heading {
@@ -917,10 +1065,18 @@ textarea {
   .indicators-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .leadership-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 580px) {
   .indicators-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .leadership-grid {
     grid-template-columns: 1fr;
   }
 }

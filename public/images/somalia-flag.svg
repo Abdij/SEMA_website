@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400">
+  <rect width="600" height="400" fill="#4189DD"/>
+  <!-- White 5-pointed star centred at (300,200), outer radius 100, inner radius 40 -->
+  <polygon
+    points="300,100 324,168 395,169 338,212 359,281 300,240 241,281 262,212 205,169 276,168"
+    fill="white"
+  />
+</svg>

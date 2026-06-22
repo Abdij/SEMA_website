@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { officialSources } from "@/lib/content";
+import { govLinks } from "@/lib/content";
 
 export function Footer() {
   return (
@@ -11,6 +11,9 @@ export function Footer() {
             Somalia Explosive Management Authority. National coordination,
             policy oversight, information management, and public information
             for mine action and explosive hazard management across Somalia.
+          </p>
+          <p style={{ marginTop: "0.5rem", fontSize: "0.82rem", opacity: 0.7 }}>
+            Federal Republic of Somalia
           </p>
         </div>
         <div>
@@ -24,14 +27,21 @@ export function Footer() {
           <h3>Institution</h3>
           <Link href="/about">About SEMA</Link>
           <Link href="/mandate">Mandate</Link>
+          <Link href="/leadership">Leadership</Link>
           <Link href="/operations">Operations</Link>
           <Link href="/partners">Partners</Link>
         </div>
         <div>
-          <h3>External Sources</h3>
-          {officialSources.slice(0, 4).map((source) => (
-            <a key={source.href} href={source.href} target="_blank" rel="noreferrer">
-              {source.label}
+          <h3>Government Links</h3>
+          {govLinks.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Visit ${link.name} (opens in new tab)`}
+            >
+              {link.name}
             </a>
           ))}
           <h3 style={{ marginTop: "1.25rem" }}>Follow SEMA</h3>

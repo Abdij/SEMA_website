@@ -1,5 +1,5 @@
 import { PageHero } from "@/components/PageHero";
-import { serviceAreas } from "@/lib/content";
+import { mandateAreas } from "@/lib/content";
 
 export const metadata = {
   title: "Mandate",
@@ -10,12 +10,12 @@ export default function MandatePage() {
     <>
       <PageHero
         eyebrow="Mandate"
-        title="Coordination, policy direction, standards, and public reporting."
-        text="SEMA's mandate centers on national leadership for mine action and explosive hazard management, including operator coordination, information management, risk education support, and progress reporting."
+        title="National authority for mine action coordination and explosive hazard management."
+        text="SEMA's mandate covers the full spectrum of mine action functions — from national coordination and operator oversight to information management, risk education, victim assistance, and treaty reporting."
       />
       <section className="section">
-        <div className="section-inner grid two">
-          {serviceAreas.map((area) => (
+        <div className="section-inner grid three">
+          {mandateAreas.map((area) => (
             <article className="card" key={area.title}>
               <h3>{area.title}</h3>
               <p>{area.text}</p>
