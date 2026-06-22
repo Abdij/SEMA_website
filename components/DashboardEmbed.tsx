@@ -6,7 +6,7 @@ type DashboardEmbedProps = {
   description: string;
   url: string;
   envKey?: string;
-  notes: string;
+  notes?: string;
 };
 
 export function DashboardEmbed({ title, description, url, envKey, notes }: DashboardEmbedProps) {
@@ -16,7 +16,7 @@ export function DashboardEmbed({ title, description, url, envKey, notes }: Dashb
         <p className="eyebrow">Dashboard</p>
         <h2>{title}</h2>
         <p>{description}</p>
-        <p className="muted">{notes}</p>
+        {notes ? <p className="muted">{notes}</p> : null}
         {url ? (
           <TrackedAnchor
             className="text-link"

@@ -168,6 +168,54 @@ function normalizeImageUrl(url: string | null | undefined): string {
   return trimmed;
 }
 
+function normalizeDashboardProvider(provider?: string | null, title?: string | null): string {
+  const value = `${provider || ""} ${title || ""}`.toLowerCase();
+
+  if (value.includes("arcgis")) {
+    return "arcgis";
+  }
+
+  if (value.includes("powerbi") || value.includes("power bi") || value.includes("power_bi")) {
+    return "powerbi";
+  }
+
+  if (provider === "arcgis" || provider === "powerbi" || provider === "other") {
+    return provider;
+  }
+
+  return "other";
+}
+
+function normalizeDashboardUrl(url: string): string {
+  const trimmed = url.trim();
+
+  try {
+    const parsedUrl = new URL(trimmed);
+    if (parsedUrl.hostname.endsWith("safelinks.protection.outlook.com")) {
+      const targetUrl = parsedUrl.searchParams.get("url");
+      if (targetUrl) {
+        return targetUrl.trim();
+      }
+    }
+  } catch {
+    return trimmed;
+  }
+
+  return trimmed;
+}
+
+function mapFallbackDashboard(item: (typeof fallbackDashboardEmbeds)[number]): DashboardEmbed {
+  return {
+    title: item.title,
+    description: item.description,
+    url: item.url ? normalizeDashboardUrl(item.url) : "",
+    provider: normalizeDashboardProvider(item.envKey, item.title),
+    public_safe: true,
+    status: "published",
+    notes: item.notes,
+  };
+}
+
 function mapNewsRow(row: any): NewsPost {
   return {
     slug: row.slug,
@@ -314,15 +362,7 @@ export async function getDashboardEmbeds() {
   const pool = tryGetPool();
 
   if (!pool) {
-    return fallbackDashboardEmbeds.map((item) => ({
-      title: item.title,
-      description: item.description,
-      url: item.url,
-      provider: item.envKey || "other",
-      public_safe: true,
-      status: "published",
-      notes: item.notes,
-    }));
+    return fallbackDashboardEmbeds.map(mapFallbackDashboard);
   }
 
   const result = await pool.query(
@@ -333,15 +373,7 @@ export async function getDashboardEmbeds() {
   );
 
   if (!result.rows.length) {
-    return fallbackDashboardEmbeds.map((item) => ({
-      title: item.title,
-      description: item.description,
-      url: item.url,
-      provider: item.envKey || "other",
-      public_safe: true,
-      status: "published",
-      notes: item.notes,
-    }));
+    return fallbackDashboardEmbeds.map(mapFallbackDashboard);
   }
 
   return result.rows.map((row) => ({
@@ -359,15 +391,7 @@ export async function getAdminDashboardEmbeds() {
   const pool = tryGetPool();
 
   if (!pool) {
-    return fallbackDashboardEmbeds.map((item) => ({
-      title: item.title,
-      description: item.description,
-      url: item.url,
-      provider: item.envKey || "other",
-      public_safe: true,
-      status: "published",
-      notes: item.notes,
-    }));
+    return fallbackDashboardEmbeds.map(mapFallbackDashboard);
   }
 
   const result = await pool.query(
@@ -377,15 +401,7 @@ export async function getAdminDashboardEmbeds() {
   );
 
   if (!result.rows.length) {
-    return fallbackDashboardEmbeds.map((item) => ({
-      title: item.title,
-      description: item.description,
-      url: item.url,
-      provider: item.envKey || "other",
-      public_safe: true,
-      status: "published",
-      notes: item.notes,
-    }));
+    return fallbackDashboardEmbeds.map(mapFallbackDashboard);
   }
 
   return result.rows.map((row) => ({
@@ -624,9 +640,9 @@ export async function createDashboardEmbed(input: {
      returning *`,
     [
       input.title,
-      input.provider || "other",
+      normalizeDashboardProvider(input.provider, input.title),
       input.description,
-      input.url,
+      normalizeDashboardUrl(input.url),
       input.public_safe ?? false,
       input.status || "published",
     ],
@@ -674,8 +690,8 @@ export async function updateDashboardEmbed(identifier: { id?: string; title?: st
     [
       input.title || null,
       input.description || null,
-      input.url || null,
-      input.provider || null,
+      input.url ? normalizeDashboardUrl(input.url) : null,
+      input.provider ? normalizeDashboardProvider(input.provider, input.title) : null,
       input.public_safe,
       input.status || null,
       whereValue,
