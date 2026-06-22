@@ -1,10 +1,30 @@
 import Image from "next/image";
-import Link from "next/link";
 import { Database, Mail } from "lucide-react";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/lib/navigation";
 import { TrackedLink } from "@/components/TrackedLink";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { navItems } from "@/lib/content";
 
-export function Header() {
+export async function Header() {
+  const t = await getTranslations("header");
+  const nav = await getTranslations("nav");
+
+  const navLabels: Record<string, string> = {
+    "/": nav("home"),
+    "/about": nav("about"),
+    "/mandate": nav("mandate"),
+    "/leadership": nav("leadership"),
+    "/operations": nav("operations"),
+    "/dashboards": nav("dashboards"),
+    "/publications": nav("publications"),
+    "/conventions": nav("conventions"),
+    "/news": nav("news"),
+    "/data-request": nav("dataRequest"),
+    "/government-links": nav("governmentLinks"),
+    "/contact": nav("contact"),
+  };
+
   return (
     <header className="site-header">
       <div className="gov-bar">
@@ -15,34 +35,36 @@ export function Header() {
             className="gov-bar-flag"
             aria-hidden="true"
           />
-          <span>Federal Republic of Somalia</span>
+          <span>{t("govBar")}</span>
         </div>
         <div className="gov-bar-links">
+          <LanguageSwitcher />
+          <span className="gov-bar-sep" aria-hidden="true">|</span>
           <a
             href="https://www.somalia.gov.so"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Federal Government of Somalia portal"
+            aria-label={t("somaliaPortalLabel")}
           >
-            somalia.gov.so
+            {t("somaliaPortal")}
           </a>
           <span className="gov-bar-sep" aria-hidden="true">|</span>
           <a
             href="https://x.com/SomaliaSema"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Follow SEMA on X"
+            aria-label={t("xLabel")}
           >
-            X: @SomaliaSema
+            {t("xLink")}
           </a>
         </div>
       </div>
       <div className="header-main">
-        <Link className="brand" href="/" aria-label="SEMA home">
+        <Link className="brand" href="/" aria-label={t("homeLabel")}>
           <div className="brand-flags">
             <img
               src="/images/somalia-flag.svg"
-              alt="Somalia flag"
+              alt={t("somaliaFlagAlt")}
               className="brand-flag"
             />
             <Image
@@ -55,8 +77,8 @@ export function Header() {
           </div>
           <div className="brand-divider" aria-hidden="true" />
           <span>
-            <strong>Somalia Explosive Management Authority</strong>
-            <small>SEMA — Federal Government of Somalia</small>
+            <strong>{t("brandName")}</strong>
+            <small>{t("brandSubtitle")}</small>
           </span>
         </Link>
         <div className="header-actions">
@@ -67,7 +89,7 @@ export function Header() {
             label="Data request"
           >
             <Database aria-hidden="true" size={18} />
-            Data request
+            {t("dataRequest")}
           </TrackedLink>
           <TrackedLink
             className="icon-link primary"
@@ -76,14 +98,18 @@ export function Header() {
             label="Contact"
           >
             <Mail aria-hidden="true" size={18} />
-            Contact
+            {t("contact")}
           </TrackedLink>
         </div>
       </div>
       <nav className="nav" aria-label="Primary navigation">
         {navItems.map((item) => (
-          <TrackedLink key={item.href} href={item.href} label={item.label}>
-            {item.label}
+          <TrackedLink
+            key={item.href}
+            href={item.href}
+            label={navLabels[item.href] ?? item.label}
+          >
+            {navLabels[item.href] ?? item.label}
           </TrackedLink>
         ))}
       </nav>

@@ -2,10 +2,12 @@
 
 import { FormEvent, useState } from "react";
 import { Send } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type FormState = "idle" | "submitting" | "success" | "error";
 
 export function ContactForm() {
+  const t = useTranslations("contact");
   const [state, setState] = useState<FormState>("idle");
   const [message, setMessage] = useState("");
 
@@ -28,15 +30,15 @@ export function ContactForm() {
       const data = (await response.json()) as { message?: string };
 
       if (!response.ok) {
-        throw new Error(data.message || "Unable to submit the message.");
+        throw new Error(data.message || t("errorFallback"));
       }
 
       form.reset();
       setState("success");
-      setMessage("Your message was submitted. SEMA will review and respond through the official contact channel.");
+      setMessage(t("successMessage"));
     } catch (error) {
       setState("error");
-      setMessage(error instanceof Error ? error.message : "Unable to submit the message.");
+      setMessage(error instanceof Error ? error.message : t("errorFallback"));
     }
   }
 
@@ -44,50 +46,48 @@ export function ContactForm() {
     <form className="form" onSubmit={onSubmit}>
       <div className="form-grid">
         <label>
-          Full name
+          {t("name")}
           <input name="name" required autoComplete="name" />
         </label>
         <label>
-          Organization
+          {t("organization")}
           <input name="organization" autoComplete="organization" />
         </label>
         <label>
-          Email
+          {t("email")}
           <input name="email" type="email" required autoComplete="email" />
         </label>
         <label>
-          Phone
+          {t("phone")}
           <input name="phone" autoComplete="tel" />
         </label>
         <label>
-          Enquiry type
+          {t("enquiryType")}
           <select name="enquiryType" required defaultValue="">
-            <option value="" disabled>
-              Select type
-            </option>
-            <option>General enquiry</option>
-            <option>Media request</option>
-            <option>Partner coordination</option>
-            <option>Publication or policy request</option>
-            <option>Website feedback</option>
+            <option value="" disabled>{t("selectType")}</option>
+            <option>{t("enquiryGeneral")}</option>
+            <option>{t("enquiryMedia")}</option>
+            <option>{t("enquiryPartner")}</option>
+            <option>{t("enquiryPublication")}</option>
+            <option>{t("enquiryFeedback")}</option>
           </select>
         </label>
         <label>
-          Subject
+          {t("subject")}
           <input name="subject" required />
         </label>
       </div>
       <label>
-        Message
+        {t("message")}
         <textarea name="message" rows={6} required />
       </label>
       <label className="check-row">
         <input name="consent" type="checkbox" required />
-        I consent to SEMA processing this message for official response and record keeping.
+        {t("consent")}
       </label>
       <button className="button" type="submit" disabled={state === "submitting"}>
         <Send aria-hidden="true" size={18} />
-        {state === "submitting" ? "Submitting" : "Submit message"}
+        {state === "submitting" ? t("submitting") : t("submit")}
       </button>
       {message ? <p className={`form-message ${state}`}>{message}</p> : null}
     </form>

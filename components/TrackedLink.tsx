@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import type { AnchorHTMLAttributes, MouseEvent, ReactNode } from "react";
+import { Link } from "@/lib/navigation";
 
 type AnalyticsEventType = "nav_click" | "header_action_click" | "dashboard_open";
 
@@ -51,7 +51,6 @@ export function TrackedLink({
 }: TrackedLinkProps) {
   function handleClick(event: MouseEvent<HTMLAnchorElement>) {
     onClick?.(event);
-
     if (!event.defaultPrevented) {
       sendAnalytics(eventType, label, href, metadata);
     }
@@ -75,7 +74,6 @@ export function TrackedAnchor({
 }: TrackedLinkProps) {
   function handleClick(event: MouseEvent<HTMLAnchorElement>) {
     onClick?.(event);
-
     if (!event.defaultPrevented) {
       sendAnalytics(eventType, label, href, metadata);
     }

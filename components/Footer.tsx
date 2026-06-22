@@ -1,38 +1,38 @@
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/lib/navigation";
 import { govLinks } from "@/lib/content";
 
-export function Footer() {
+export async function Footer() {
+  const t = await getTranslations("footer");
+  const nav = await getTranslations("nav");
+
   return (
     <footer className="footer">
       <div className="footer-grid">
         <div>
           <h2>SEMA</h2>
-          <p>
-            Somalia Explosive Management Authority. National coordination,
-            policy oversight, information management, and public information
-            for mine action and explosive hazard management across Somalia.
-          </p>
+          <p>{t("description")}</p>
           <p style={{ marginTop: "0.5rem", fontSize: "0.82rem", opacity: 0.7 }}>
-            Federal Republic of Somalia
+            {t("federal")}
           </p>
         </div>
         <div>
-          <h3>Services</h3>
-          <Link href="/dashboards">Dashboards</Link>
-          <Link href="/publications">Publications</Link>
-          <Link href="/data-request">Data request</Link>
-          <Link href="/contact">Contact us</Link>
+          <h3>{t("services")}</h3>
+          <Link href="/dashboards">{nav("dashboards")}</Link>
+          <Link href="/publications">{nav("publications")}</Link>
+          <Link href="/data-request">{nav("dataRequest")}</Link>
+          <Link href="/contact">{nav("contact")}</Link>
         </div>
         <div>
-          <h3>Institution</h3>
-          <Link href="/about">About SEMA</Link>
-          <Link href="/mandate">Mandate</Link>
-          <Link href="/leadership">Leadership</Link>
-          <Link href="/operations">Operations</Link>
-          <Link href="/partners">Partners</Link>
+          <h3>{t("institution")}</h3>
+          <Link href="/about">{nav("about")}</Link>
+          <Link href="/mandate">{nav("mandate")}</Link>
+          <Link href="/leadership">{nav("leadership")}</Link>
+          <Link href="/operations">{nav("operations")}</Link>
+          <Link href="/partners">{nav("partners")}</Link>
         </div>
         <div>
-          <h3>Government Links</h3>
+          <h3>{t("governmentLinks")}</h3>
           {govLinks.map((link) => (
             <a
               key={link.href}
@@ -44,21 +44,19 @@ export function Footer() {
               {link.name}
             </a>
           ))}
-          <h3 style={{ marginTop: "1.25rem" }}>Follow SEMA</h3>
+          <h3 style={{ marginTop: "1.25rem" }}>{t("followSema")}</h3>
           <a
             href="https://x.com/SomaliaSema"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Follow SEMA on X"
+            aria-label={t("xLabel")}
           >
-            X: @SomaliaSema
+            {t("xLink")}
           </a>
         </div>
       </div>
       <div className="footer-bottom">
-        <span>
-          © 2026 Somalia Explosive Management Authority · Mogadishu, Somalia
-        </span>
+        <span>{t("copyright")}</span>
         <a href="mailto:info@sema.gov.so">info@sema.gov.so</a>
       </div>
     </footer>

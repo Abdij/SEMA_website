@@ -2,10 +2,12 @@
 
 import { FormEvent, useState } from "react";
 import { Send } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type FormState = "idle" | "submitting" | "success" | "error";
 
 export function DataRequestForm() {
+  const t = useTranslations("dataRequest");
   const [state, setState] = useState<FormState>("idle");
   const [message, setMessage] = useState("");
 
@@ -28,19 +30,19 @@ export function DataRequestForm() {
       const data = (await response.json()) as { message?: string; requestRef?: string };
 
       if (!response.ok) {
-        throw new Error(data.message || "Unable to submit the request.");
+        throw new Error(data.message || t("errorFallback"));
       }
 
       form.reset();
       setState("success");
       setMessage(
         data.requestRef
-          ? `Your request was submitted. Reference: ${data.requestRef}.`
-          : "Your request was submitted for review.",
+          ? t("successRef", { ref: data.requestRef })
+          : t("successNoRef"),
       );
     } catch (error) {
       setState("error");
-      setMessage(error instanceof Error ? error.message : "Unable to submit the request.");
+      setMessage(error instanceof Error ? error.message : t("errorFallback"));
     }
   }
 
@@ -48,93 +50,79 @@ export function DataRequestForm() {
     <form className="form" onSubmit={onSubmit}>
       <div className="form-grid">
         <label>
-          Full name
+          {t("name")}
           <input name="name" required autoComplete="name" />
         </label>
         <label>
-          Organization
+          {t("organization")}
           <input name="organization" autoComplete="organization" />
         </label>
         <label>
-          Role or title
+          {t("roleLabel")}
           <input name="role" />
         </label>
         <label>
-          Requester type
+          {t("requesterType")}
           <select name="requesterType" required defaultValue="">
-            <option value="" disabled>
-              Select type
-            </option>
-            <option>Government institution</option>
-            <option>Federal Member State</option>
-            <option>Mine action operator</option>
-            <option>Humanitarian partner</option>
-            <option>Donor</option>
-            <option>Researcher</option>
-            <option>Media</option>
-            <option>Public</option>
+            <option value="" disabled>{t("selectType")}</option>
+            <option>{t("requesterTypes.gov")}</option>
+            <option>{t("requesterTypes.fms")}</option>
+            <option>{t("requesterTypes.operator")}</option>
+            <option>{t("requesterTypes.humanitarian")}</option>
+            <option>{t("requesterTypes.donor")}</option>
+            <option>{t("requesterTypes.researcher")}</option>
+            <option>{t("requesterTypes.media")}</option>
+            <option>{t("requesterTypes.public")}</option>
           </select>
         </label>
         <label>
-          Email
+          {t("email")}
           <input name="email" type="email" required autoComplete="email" />
         </label>
         <label>
-          Phone
+          {t("phone")}
           <input name="phone" autoComplete="tel" />
         </label>
         <label>
-          Geographic area
-          <input name="geography" placeholder="District, region, FMS, or national" />
+          {t("geography")}
+          <input name="geography" placeholder={t("geographyPlaceholder")} />
         </label>
         <label>
-          Time period
-          <input name="timePeriod" placeholder="Example: 2022-2026" />
+          {t("timePeriod")}
+          <input name="timePeriod" placeholder={t("timePeriodPlaceholder")} />
         </label>
         <label>
-          Preferred format
+          {t("format")}
           <select name="preferredFormat" required defaultValue="">
-            <option value="" disabled>
-              Select format
-            </option>
-            <option>PDF report</option>
-            <option>Excel</option>
-            <option>CSV</option>
-            <option>Map</option>
-            <option>Dashboard access</option>
-            <option>Formal data-sharing agreement</option>
+            <option value="" disabled>{t("selectFormat")}</option>
+            <option>{t("formats.pdf")}</option>
+            <option>{t("formats.excel")}</option>
+            <option>{t("formats.csv")}</option>
+            <option>{t("formats.map")}</option>
+            <option>{t("formats.dashboard")}</option>
+            <option>{t("formats.agreement")}</option>
           </select>
         </label>
         <label>
-          Deadline
+          {t("deadline")}
           <input name="deadline" type="date" />
         </label>
       </div>
       <label>
-        Data requested
-        <textarea
-          name="dataRequested"
-          rows={5}
-          required
-          placeholder="Describe the data, indicators, geography, period, and level of detail requested."
-        />
+        {t("dataRequested")}
+        <textarea name="dataRequested" rows={5} required placeholder={t("dataRequestedPlaceholder")} />
       </label>
       <label>
-        Intended use
-        <textarea
-          name="intendedUse"
-          rows={5}
-          required
-          placeholder="Explain how the data will be used and who will access it."
-        />
+        {t("intendedUse")}
+        <textarea name="intendedUse" rows={5} required placeholder={t("intendedUsePlaceholder")} />
       </label>
       <label className="check-row">
         <input name="terms" type="checkbox" required />
-        I understand that sensitive, personal, security-related, or restricted operational data may be declined, aggregated, or shared only through an approved agreement.
+        {t("terms")}
       </label>
       <button className="button" type="submit" disabled={state === "submitting"}>
         <Send aria-hidden="true" size={18} />
-        {state === "submitting" ? "Submitting" : "Submit data request"}
+        {state === "submitting" ? t("submitting") : t("submit")}
       </button>
       {message ? <p className={`form-message ${state}`}>{message}</p> : null}
     </form>

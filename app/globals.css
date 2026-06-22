@@ -95,6 +95,34 @@ main {
   color: white;
 }
 
+.lang-switcher {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.lang-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  letter-spacing: 0.03em;
+}
+
+.lang-btn.active {
+  color: white;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.lang-btn:disabled {
+  cursor: default;
+}
+
 .gov-bar-sep {
   color: rgba(255, 255, 255, 0.3);
   font-weight: 400;
