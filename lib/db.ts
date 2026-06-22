@@ -560,7 +560,7 @@ export async function createPublication(input: {
   };
 }
 
-export async function updatePublication(title: string, input: {
+export async function updatePublication(id: string, input: {
   type?: string;
   description?: string;
   href?: string;
@@ -585,7 +585,7 @@ export async function updatePublication(title: string, input: {
       file_mime = coalesce($8, file_mime),
       file_data = coalesce($9, file_data),
       updated_at = now()
-     where title = $10
+     where id = $10
      returning *`,
     [
       input.type || null,
@@ -597,7 +597,7 @@ export async function updatePublication(title: string, input: {
       input.fileName || null,
       input.fileMime || null,
       fileBuffer,
-      title,
+      id,
     ],
   );
 
@@ -620,9 +620,9 @@ export async function updatePublication(title: string, input: {
   };
 }
 
-export async function deletePublication(title: string) {
+export async function deletePublication(id: string) {
   const pool = getPool();
-  await pool.query(`delete from publications where title = $1`, [title]);
+  await pool.query(`delete from publications where id = $1`, [id]);
 }
 
 export async function createDashboardEmbed(input: {

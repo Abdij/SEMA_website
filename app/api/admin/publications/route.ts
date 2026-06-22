@@ -40,14 +40,14 @@ export async function PATCH(request: Request) {
   try {
     requireAdminAuth(request);
     const url = new URL(request.url);
-    const title = url.searchParams.get("title");
+    const id = url.searchParams.get("id");
     const body = await request.json();
 
-    if (!title) {
-      return NextResponse.json({ message: "Missing title" }, { status: 400 });
+    if (!id) {
+      return NextResponse.json({ message: "Missing id" }, { status: 400 });
     }
 
-    const updated = await updatePublication(title, body);
+    const updated = await updatePublication(id, body);
     return NextResponse.json(updated);
   } catch (error) {
     if (error instanceof AdminUnauthorizedError) {
@@ -61,13 +61,13 @@ export async function DELETE(request: Request) {
   try {
     requireAdminAuth(request);
     const url = new URL(request.url);
-    const title = url.searchParams.get("title");
+    const id = url.searchParams.get("id");
 
-    if (!title) {
-      return NextResponse.json({ message: "Missing title" }, { status: 400 });
+    if (!id) {
+      return NextResponse.json({ message: "Missing id" }, { status: 400 });
     }
 
-    await deletePublication(title);
+    await deletePublication(id);
     return NextResponse.json({ ok: true });
   } catch (error) {
     if (error instanceof AdminUnauthorizedError) {

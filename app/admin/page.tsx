@@ -26,6 +26,7 @@ type NewsItem = {
 };
 
 type PublicationItem = {
+  id?: string;
   title: string;
   type: string;
   description: string;
@@ -410,8 +411,8 @@ export default function AdminPage() {
   async function handleSavePublication() {
     setLoading(true);
     try {
-      const method = publicationList.some((item) => item.title === editingPublication.title) ? "PATCH" : "POST";
-      const path = method === "PATCH" ? `/api/admin/publications?title=${encodeURIComponent(editingPublication.title)}` : "/api/admin/publications";
+      const method = editingPublication.id ? "PATCH" : "POST";
+      const path = method === "PATCH" ? `/api/admin/publications?id=${encodeURIComponent(editingPublication.id!)}` : "/api/admin/publications";
       const payload: Record<string, unknown> = { ...editingPublication };
 
       if (publicationFile) {
@@ -434,10 +435,10 @@ export default function AdminPage() {
     }
   }
 
-  async function handleDeletePublication(title: string) {
+  async function handleDeletePublication(id: string) {
     setLoading(true);
     try {
-      const result = await sendAdminRequest(`/api/admin/publications?title=${encodeURIComponent(title)}`, "DELETE");
+      const result = await sendAdminRequest(`/api/admin/publications?id=${encodeURIComponent(id)}`, "DELETE");
       if (result?.ok) {
         setMessage("Publication deleted.");
         await loadAllData(password);
@@ -807,7 +808,7 @@ export default function AdminPage() {
                           >
                             Edit
                           </button>
-                          <button className="button danger" type="button" onClick={() => handleDeletePublication(item.title)}>
+                          <button className="button danger" type="button" onClick={() => handleDeletePublication(item.id!)}>
                             Delete
                           </button>
                         </div>
