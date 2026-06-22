@@ -9,9 +9,17 @@ type NewsArticleProps = {
 
 export const dynamic = "force-dynamic";
 
+function decodeSlug(slug: string) {
+  try {
+    return decodeURIComponent(slug);
+  } catch {
+    return slug;
+  }
+}
+
 export async function generateMetadata({ params }: NewsArticleProps) {
   const { slug } = await params;
-  const post = await getNewsPostBySlug(slug);
+  const post = await getNewsPostBySlug(decodeSlug(slug));
 
   return {
     title: post?.title || "News",
@@ -20,7 +28,7 @@ export async function generateMetadata({ params }: NewsArticleProps) {
 
 export default async function NewsArticlePage({ params }: NewsArticleProps) {
   const { slug } = await params;
-  const post = await getNewsPostBySlug(slug);
+  const post = await getNewsPostBySlug(decodeSlug(slug));
 
   if (!post) {
     notFound();
