@@ -16,7 +16,9 @@
     "dataRequest": "Data Request",
     "governmentLinks": "Government Links",
     "contact": "Contact",
-    "resources": "Resources"
+    "resources": "Resources",
+    "partners": "Partners",
+    "operators": "Operators"
   },
   "header": {
     "govBar": "Federal Republic of Somalia",
@@ -67,6 +69,14 @@
     "feature1": "SEMA provides access to survey, clearance, and risk education dashboards.",
     "feature2": "SEMA makes policies, standards, reports, and awareness materials available for download.",
     "feature3": "SEMA supports transparent data access through a structured request process.",
+    "funcArea0Title": "National Coordination",
+    "funcArea0Text": "Coordinate government institutions, Federal Member States, operators, donors, and technical partners around national mine action priorities.",
+    "funcArea1Title": "Information Management",
+    "funcArea1Text": "Strengthen the systems used to collect, validate, analyze, and share mine action information for planning and public reporting.",
+    "funcArea2Title": "Standards and Quality",
+    "funcArea2Text": "Maintain policies, standards, accreditation processes, and quality management expectations for operators working in Somalia.",
+    "funcArea3Title": "Public Information",
+    "funcArea3Text": "Publish official updates, risk education messages, policy documents, dashboards, data access guidance, and public contact channels.",
     "functionsEyebrow": "SEMA functions",
     "functionsTitle": "Institutional focus areas",
     "readMandate": "Read mandate",

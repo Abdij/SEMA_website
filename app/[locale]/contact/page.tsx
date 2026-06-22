@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { Link } from "@/lib/navigation";
 import { ContactForm } from "@/components/ContactForm";
 import { PageHero } from "@/components/PageHero";
 
@@ -34,9 +35,9 @@ export default async function ContactPage() {
               </li>
               <li>
                 {t("dataRequestNote")}{" "}
-                <a href="/data-request" style={{ color: "inherit", fontWeight: 900 }}>
+                <Link href="/data-request" style={{ color: "inherit", fontWeight: 900 }}>
                   {t("dataRequestLink")}
-                </a>{" "}
+                </Link>{" "}
                 {t("dataRequestEnd")}
               </li>
             </ul>

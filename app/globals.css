@@ -209,9 +209,7 @@ main {
   display: flex;
   align-items: center;
   gap: 0.1rem;
-  overflow-x: auto;
   padding: 0 clamp(1rem, 4vw, 3.5rem) 0.45rem;
-  scrollbar-width: none;
   border-top: 1px solid var(--line);
 }
 

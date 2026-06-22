@@ -16,7 +16,9 @@
     "dataRequest": "Codsiga Xogta",
     "governmentLinks": "Xiriiriyaha Dowladda",
     "contact": "Xiriiri",
-    "resources": "Kheyraadka"
+    "resources": "Kheyraadka",
+    "partners": "Wadaajayaasha",
+    "operators": "Hawlwadeennada"
   },
   "header": {
     "govBar": "Jamhuuriyadda Federaalka Soomaaliya",
@@ -67,6 +69,14 @@
     "feature1": "SEMA waxay bixisaa gelitaan oo loogu talagalay xogaha sahanka, nadiifinta, iyo waxbarashada khatarta.",
     "feature2": "SEMA waxay ka dhigaysaa siyaasadaha, heerarka, warbixinnada, iyo agabka wacyigelinta si loo soo dajiyey.",
     "feature3": "SEMA waxay taageeraysaa gelitaanka xogta oo hufan adoo isticmaalaya hannaanka codsiga habaynsan.",
+    "funcArea0Title": "Iskaashiga Qaranka",
+    "funcArea0Text": "Isku-duub hay'adaha dowladda, Dowlad-Gobolleedyada Federaalka, hawlwadeennada, deeqdeyda, iyo wadaagayaasha farsamada ee mudnaanaha waxqabadka maynka qaranka.",
+    "funcArea1Title": "Maaraynta Macluumaadka",
+    "funcArea1Text": "Xoojiyo nidaamyada loo isticmaalo in la ururiyo, xaqijiyo, falanqeeyo, loona wadaago macluumaadka waxqabadka maynka ee qorshaha iyo warbixinta dadweynaha.",
+    "funcArea2Title": "Heerarka iyo Tayada",
+    "funcArea2Text": "Suster siyaasadaha, heerarka, hababka ansixinta, iyo rabitaannada maaraynta tayada ee hawlwadeennada ka shaqeeya Soomaaliya.",
+    "funcArea3Title": "Macluumaadka Guud",
+    "funcArea3Text": "Baahiyee cusboonaysiinnada rasmi ah, farriimaha waxbarashada khatarta, dukumeentiyada siyaasadda, xogaha, hanuuninta xogta, iyo kanaalada xiriirka dadweynaha.",
     "functionsEyebrow": "Hawlaha SEMA",
     "functionsTitle": "Dhinacyada xarumaha",
     "readMandate": "Akhri mas'uuliyadda",

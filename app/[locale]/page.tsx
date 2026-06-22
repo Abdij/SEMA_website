@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { ArrowRight, BarChart3, Download, FileText, ShieldCheck } from "lucide-react";
 import { getTranslations } from "next-intl/server";
+import { Link } from "@/lib/navigation";
 import { NewsImage } from "@/components/NewsImage";
-import { serviceAreas } from "@/lib/content";
 import { getNewsPosts } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +18,11 @@ const indicatorValues = [
 export default async function Home() {
   const t = await getTranslations("home");
   const newsPosts = await getNewsPosts();
+
+  const funcAreas = Array.from({ length: 4 }, (_, i) => ({
+    title: t(`funcArea${i}Title`),
+    text: t(`funcArea${i}Text`),
+  }));
 
   return (
     <>
@@ -66,10 +70,10 @@ export default async function Home() {
 
       <section className="section">
         <div className="section-inner grid four">
-          {serviceAreas.map((stat) => (
-            <div className="stat-card" key={stat.title}>
-              <strong>{stat.title}</strong>
-              <p>{stat.text}</p>
+          {funcAreas.map((area) => (
+            <div className="stat-card" key={area.title}>
+              <strong>{area.title}</strong>
+              <p>{area.text}</p>
             </div>
           ))}
         </div>
@@ -103,7 +107,7 @@ export default async function Home() {
             </Link>
           </div>
           <div className="grid four">
-            {serviceAreas.map((area) => (
+            {funcAreas.map((area) => (
               <article className="card" key={area.title}>
                 <ShieldCheck aria-hidden="true" color="#126aa4" />
                 <h3>{area.title}</h3>
