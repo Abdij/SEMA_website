@@ -6,6 +6,8 @@ export const metadata = {
   title: "Dashboards",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function DashboardsPage() {
   const dashboardEmbeds = await getDashboardEmbeds();
 

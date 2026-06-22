@@ -6,6 +6,8 @@ export const metadata = {
   title: "Publications",
 };
 
+export const dynamic = "force-dynamic";
+
 function getPublicationAction(item: { href: string; fileName?: string }) {
   if (item.href.startsWith("http")) {
     return {

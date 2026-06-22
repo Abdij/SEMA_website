@@ -38,6 +38,7 @@ type PublicationItem = {
 };
 
 type DashboardItem = {
+  id?: string;
   title: string;
   description: string;
   url: string;
@@ -451,8 +452,10 @@ export default function AdminPage() {
   async function handleSaveDashboard() {
     setLoading(true);
     try {
-      const method = dashboardList.some((item) => item.title === editingDashboard.title) ? "PATCH" : "POST";
-      const path = method === "PATCH" ? `/api/admin/dashboard-embeds?title=${encodeURIComponent(editingDashboard.title)}` : "/api/admin/dashboard-embeds";
+      const method = editingDashboard.id ? "PATCH" : "POST";
+      const path = editingDashboard.id
+        ? `/api/admin/dashboard-embeds?id=${encodeURIComponent(editingDashboard.id)}`
+        : "/api/admin/dashboard-embeds";
       const payload = { ...editingDashboard };
 
       const result = await sendAdminRequest(path, method, payload);
@@ -468,10 +471,13 @@ export default function AdminPage() {
     }
   }
 
-  async function handleDeleteDashboard(title: string) {
+  async function handleDeleteDashboard(item: DashboardItem) {
     setLoading(true);
     try {
-      const result = await sendAdminRequest(`/api/admin/dashboard-embeds?title=${encodeURIComponent(title)}`, "DELETE");
+      const query = item.id
+        ? `id=${encodeURIComponent(item.id)}`
+        : `title=${encodeURIComponent(item.title)}`;
+      const result = await sendAdminRequest(`/api/admin/dashboard-embeds?${query}`, "DELETE");
       if (result?.ok) {
         setMessage("Dashboard deleted.");
         await loadAllData(password);
@@ -886,7 +892,7 @@ export default function AdminPage() {
                   <h3>Existing dashboards</h3>
                   <div className="admin-list">
                     {dashboardList.map((item) => (
-                      <article key={item.title} className="admin-list-card">
+                      <article key={item.id || item.title} className="admin-list-card">
                         <strong>{item.title}</strong>
                         <p>{item.provider || "other"}</p>
                         <p>{item.url}</p>
@@ -894,7 +900,7 @@ export default function AdminPage() {
                           <button className="button secondary" type="button" onClick={() => setEditingDashboard(item)}>
                             Edit
                           </button>
-                          <button className="button danger" type="button" onClick={() => handleDeleteDashboard(item.title)}>
+                          <button className="button danger" type="button" onClick={() => handleDeleteDashboard(item)}>
                             Delete
                           </button>
                         </div>

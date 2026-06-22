@@ -40,14 +40,15 @@ export async function PATCH(request: Request) {
   try {
     requireAdminAuth(request);
     const url = new URL(request.url);
+    const id = url.searchParams.get("id");
     const title = url.searchParams.get("title");
     const body = await request.json();
 
-    if (!title) {
-      return NextResponse.json({ message: "Missing title" }, { status: 400 });
+    if (!id && !title) {
+      return NextResponse.json({ message: "Missing dashboard id or title" }, { status: 400 });
     }
 
-    const updated = await updateDashboardEmbed(title, body);
+    const updated = await updateDashboardEmbed({ id: id || undefined, title: title || undefined }, body);
     return NextResponse.json(updated);
   } catch (error) {
     if (error instanceof AdminUnauthorizedError) {
@@ -61,13 +62,14 @@ export async function DELETE(request: Request) {
   try {
     requireAdminAuth(request);
     const url = new URL(request.url);
+    const id = url.searchParams.get("id");
     const title = url.searchParams.get("title");
 
-    if (!title) {
-      return NextResponse.json({ message: "Missing title" }, { status: 400 });
+    if (!id && !title) {
+      return NextResponse.json({ message: "Missing dashboard id or title" }, { status: 400 });
     }
 
-    await deleteDashboardEmbed(title);
+    await deleteDashboardEmbed({ id: id || undefined, title: title || undefined });
     return NextResponse.json({ ok: true });
   } catch (error) {
     if (error instanceof AdminUnauthorizedError) {

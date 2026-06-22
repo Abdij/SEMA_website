@@ -37,6 +37,7 @@ export type Publication = {
 };
 
 export type DashboardEmbed = {
+  id?: string;
   title: string;
   description: string;
   url: string;
@@ -370,7 +371,7 @@ export async function getAdminDashboardEmbeds() {
   }
 
   const result = await pool.query(
-    `select title, provider, description, embed_url, public_safe, status
+    `select id, title, provider, description, embed_url, public_safe, status
      from dashboard_embeds
      order by created_at desc`,
   );
@@ -388,6 +389,7 @@ export async function getAdminDashboardEmbeds() {
   }
 
   return result.rows.map((row) => ({
+    id: row.id,
     title: row.title,
     description: row.description,
     url: row.embed_url,
@@ -631,6 +633,7 @@ export async function createDashboardEmbed(input: {
   );
 
   return {
+    id: result.rows[0].id,
     title: result.rows[0].title,
     description: result.rows[0].description,
     url: result.rows[0].embed_url,
@@ -641,7 +644,8 @@ export async function createDashboardEmbed(input: {
   };
 }
 
-export async function updateDashboardEmbed(title: string, input: {
+export async function updateDashboardEmbed(identifier: { id?: string; title?: string }, input: {
+  title?: string;
   description?: string;
   url?: string;
   provider?: string;
@@ -649,23 +653,32 @@ export async function updateDashboardEmbed(title: string, input: {
   status?: string;
 }) {
   const pool = getPool();
+  const whereValue = identifier.id || identifier.title;
+
+  if (!whereValue) {
+    throw new Error("Dashboard embed identifier is required");
+  }
+
+  const whereClause = identifier.id ? "id = $7" : "title = $7";
   const result = await pool.query(
     `update dashboard_embeds set
-      description = coalesce($1, description),
-      embed_url = coalesce($2, embed_url),
-      provider = coalesce($3, provider),
-      public_safe = coalesce($4, public_safe),
-      status = coalesce($5, status),
+      title = coalesce($1, title),
+      description = coalesce($2, description),
+      embed_url = coalesce($3, embed_url),
+      provider = coalesce($4, provider),
+      public_safe = coalesce($5, public_safe),
+      status = coalesce($6, status),
       updated_at = now()
-     where title = $6
+     where ${whereClause}
      returning *`,
     [
+      input.title || null,
       input.description || null,
       input.url || null,
       input.provider || null,
       input.public_safe,
       input.status || null,
-      title,
+      whereValue,
     ],
   );
 
@@ -674,6 +687,7 @@ export async function updateDashboardEmbed(title: string, input: {
   }
 
   return {
+    id: result.rows[0].id,
     title: result.rows[0].title,
     description: result.rows[0].description,
     url: result.rows[0].embed_url,
@@ -684,9 +698,16 @@ export async function updateDashboardEmbed(title: string, input: {
   };
 }
 
-export async function deleteDashboardEmbed(title: string) {
+export async function deleteDashboardEmbed(identifier: { id?: string; title?: string }) {
   const pool = getPool();
-  await pool.query(`delete from dashboard_embeds where title = $1`, [title]);
+  const whereValue = identifier.id || identifier.title;
+
+  if (!whereValue) {
+    throw new Error("Dashboard embed identifier is required");
+  }
+
+  const whereClause = identifier.id ? "id = $1" : "title = $1";
+  await pool.query(`delete from dashboard_embeds where ${whereClause}`, [whereValue]);
 }
 
 export function requireString(value: unknown, label: string) {

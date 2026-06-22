@@ -1,16 +1,13 @@
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ExternalLink } from "lucide-react";
-import { getNewsPostBySlug, getNewsPosts } from "@/lib/db";
+import { NewsImage } from "@/components/NewsImage";
+import { getNewsPostBySlug } from "@/lib/db";
 
 type NewsArticleProps = {
   params: Promise<{ slug: string }>;
 };
 
-export async function generateStaticParams() {
-  const posts = await getNewsPosts();
-  return posts.map((post) => ({ slug: post.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: NewsArticleProps) {
   const { slug } = await params;
@@ -34,7 +31,7 @@ export default async function NewsArticlePage({ params }: NewsArticleProps) {
       <span className="tag">{post.category}</span>
       <h1>{post.title}</h1>
       <p className="news-meta">{post.date}</p>
-      <Image src={post.image} alt="" width={1100} height={620} priority />
+      <NewsImage src={post.image} alt="" width={1100} height={620} priority />
       {post.body.map((paragraph) => (
         <p key={paragraph}>{paragraph}</p>
       ))}
