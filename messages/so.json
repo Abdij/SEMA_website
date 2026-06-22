@@ -15,7 +15,8 @@
     "news": "Wararka",
     "dataRequest": "Codsiga Xogta",
     "governmentLinks": "Xiriiriyaha Dowladda",
-    "contact": "Xiriiri"
+    "contact": "Xiriiri",
+    "resources": "Kheyraadka"
   },
   "header": {
     "govBar": "Jamhuuriyadda Federaalka Soomaaliya",
@@ -24,7 +25,7 @@
     "xLink": "X: @SomaliaSema",
     "xLabel": "Raac SEMA xog-ogaalnimada X",
     "brandName": "Hay'adda Maaraynta Qaraxaha Soomaaliya",
-    "brandSubtitle": "SEMA — Dowladda Federaalka Soomaaliya",
+    "brandSubtitle": "Hay'adda Qaranka ee Maaraynta Khatarta Qaraxaha",
     "homeLabel": "Bogga hore SEMA",
     "somaliaFlagAlt": "Calanka Soomaaliya",
     "dataRequest": "Codsiga Xogta",

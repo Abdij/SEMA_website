@@ -132,51 +132,37 @@ main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1.5rem;
-  padding: 0.9rem clamp(1rem, 4vw, 3.5rem);
+  gap: 1rem;
+  padding: 0.55rem clamp(1rem, 4vw, 3.5rem);
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.75rem;
   color: var(--ink);
   text-decoration: none;
 }
 
-.brand-flags {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  flex-shrink: 0;
-}
-
-.brand-flag {
-  height: 46px;
-  width: auto;
-  border-radius: 2px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
-}
-
 .brand img {
-  width: 64px;
+  width: 48px;
   height: auto;
   flex-shrink: 0;
 }
 
 .brand-divider {
   width: 1px;
-  height: 56px;
+  height: 40px;
   background: var(--line);
-  margin: 0 0.2rem;
+  margin: 0 0.1rem;
   flex-shrink: 0;
 }
 
 .brand strong {
   display: block;
   color: var(--blue-dark);
-  font-size: clamp(0.88rem, 1.7vw, 1.15rem);
-  line-height: 1.2;
+  font-size: clamp(0.82rem, 1.4vw, 1rem);
+  line-height: 1.25;
   font-weight: 900;
   letter-spacing: 0;
 }
@@ -184,17 +170,10 @@ main {
 .brand small {
   display: block;
   color: var(--muted);
-  font-size: 0.76rem;
-  font-weight: 700;
+  font-size: 0.72rem;
+  font-weight: 600;
   line-height: 1.3;
-  margin-top: 0.15rem;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  flex-wrap: wrap;
+  margin-top: 0.1rem;
 }
 
 .icon-link,
@@ -207,14 +186,14 @@ main {
 }
 
 .icon-link {
-  min-height: 42px;
-  padding: 0.65rem 0.85rem;
+  min-height: 38px;
+  padding: 0.5rem 0.85rem;
   border: 1px solid var(--line);
   border-radius: 6px;
   color: var(--blue-dark);
   background: white;
   text-decoration: none;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 800;
 }
 
@@ -225,28 +204,191 @@ main {
   color: white;
 }
 
+/* ── Desktop navigation ─────────────────────────────── */
 .nav {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.1rem;
   overflow-x: auto;
-  padding: 0 1rem 0.9rem;
-  scrollbar-width: thin;
+  padding: 0 clamp(1rem, 4vw, 3.5rem) 0.45rem;
+  scrollbar-width: none;
+  border-top: 1px solid var(--line);
 }
 
 .nav a {
   flex: 0 0 auto;
-  padding: 0.65rem 0.85rem;
-  border-radius: 6px;
+  padding: 0.55rem 0.75rem;
+  border-radius: 5px;
   color: var(--ink);
   text-decoration: none;
-  font-size: 0.9rem;
-  font-weight: 800;
+  font-size: 0.875rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .nav a:hover {
   background: var(--blue-soft);
   color: var(--blue-dark);
+}
+
+.nav-cta {
+  margin-left: auto;
+  padding: 0.45rem 1.1rem !important;
+  background: var(--red) !important;
+  color: white !important;
+  border-radius: 5px !important;
+  font-weight: 800 !important;
+  flex-shrink: 0;
+}
+
+.nav-cta:hover {
+  background: #9b0d17 !important;
+  color: white !important;
+}
+
+/* ── Resources dropdown ─────────────────────────────── */
+.nav-dropdown {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.nav-dropdown-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 5px;
+  color: var(--ink);
+  background: none;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.nav-dropdown-btn:hover {
+  background: var(--blue-soft);
+  color: var(--blue-dark);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 10px 28px rgba(10, 35, 55, 0.13);
+  min-width: 240px;
+  z-index: 200;
+  padding: 0.3rem 0;
+}
+
+.dropdown-item {
+  display: block;
+  padding: 0.6rem 1.1rem;
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.dropdown-item:hover {
+  background: var(--blue-soft);
+  color: var(--blue-dark);
+}
+
+/* ── Mobile menu toggle ─────────────────────────────── */
+.mobile-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.45rem 0.55rem;
+  cursor: pointer;
+  color: var(--blue-dark);
+  flex-shrink: 0;
+}
+
+.mobile-toggle:hover {
+  background: var(--blue-soft);
+}
+
+/* ── Mobile menu panel ──────────────────────────────── */
+.mobile-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 300;
+  background: white;
+  border-top: 1px solid var(--line);
+  box-shadow: 0 10px 28px rgba(10, 35, 55, 0.12);
+  display: flex;
+  flex-direction: column;
+  padding: 0.4rem 0 1rem;
+}
+
+.mobile-link {
+  display: block;
+  padding: 0.7rem clamp(1rem, 4vw, 3.5rem);
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.mobile-link:hover {
+  background: var(--blue-soft);
+  color: var(--blue-dark);
+}
+
+.mobile-indent {
+  padding-left: calc(clamp(1rem, 4vw, 3.5rem) + 1.2rem);
+  font-size: 0.88rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.mobile-indent:hover {
+  color: var(--blue-dark);
+}
+
+.mobile-section-label {
+  display: block;
+  padding: 0.6rem clamp(1rem, 4vw, 3.5rem) 0.2rem;
+  font-size: 0.7rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.mobile-divider {
+  height: 1px;
+  background: var(--line);
+  margin: 0.3rem 0;
+}
+
+.mobile-cta {
+  display: block;
+  margin: 0.5rem clamp(1rem, 4vw, 3.5rem) 0;
+  padding: 0.75rem 1.25rem;
+  background: var(--red);
+  color: white !important;
+  border-radius: 6px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  text-decoration: none;
+  text-align: center;
+}
+
+.mobile-cta:hover {
+  background: #9b0d17;
 }
 
 .hero {
@@ -1065,15 +1207,23 @@ textarea {
 
 @media (max-width: 980px) {
   .gov-bar,
-  .header-main,
   .footer-bottom,
   .section-heading {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .header-main {
-    display: grid;
+  /* Hide desktop nav and show mobile toggle */
+  .nav {
+    display: none;
+  }
+
+  .mobile-toggle {
+    display: flex;
+  }
+
+  .site-header {
+    position: relative;
   }
 
   .grid.four,
@@ -1115,12 +1265,7 @@ textarea {
   }
 
   .brand img {
-    width: 58px;
-  }
-
-  .header-actions,
-  .icon-link {
-    width: 100%;
+    width: 40px;
   }
 
   .form-grid,

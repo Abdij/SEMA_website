@@ -1,32 +1,45 @@
 import Image from "next/image";
-import { Database, Mail } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/lib/navigation";
 import { TrackedLink } from "@/components/TrackedLink";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import { navItems } from "@/lib/content";
+import { ResourcesDropdown } from "@/components/ResourcesDropdown";
+import { MobileNav } from "@/components/MobileNav";
+
+const topNavHrefs = [
+  { href: "/", key: "home" },
+  { href: "/about", key: "about" },
+  { href: "/dashboards", key: "dashboards" },
+  { href: "/publications", key: "publications" },
+  { href: "/news", key: "news" },
+] as const;
+
+const resourceHrefs = [
+  { href: "/mandate", key: "mandate" },
+  { href: "/leadership", key: "leadership" },
+  { href: "/operations", key: "operations" },
+  { href: "/conventions", key: "conventions" },
+  { href: "/data-request", key: "dataRequest" },
+  { href: "/government-links", key: "governmentLinks" },
+] as const;
 
 export async function Header() {
   const t = await getTranslations("header");
   const nav = await getTranslations("nav");
 
-  const navLabels: Record<string, string> = {
-    "/": nav("home"),
-    "/about": nav("about"),
-    "/mandate": nav("mandate"),
-    "/leadership": nav("leadership"),
-    "/operations": nav("operations"),
-    "/dashboards": nav("dashboards"),
-    "/publications": nav("publications"),
-    "/conventions": nav("conventions"),
-    "/news": nav("news"),
-    "/data-request": nav("dataRequest"),
-    "/government-links": nav("governmentLinks"),
-    "/contact": nav("contact"),
-  };
+  const topItems = topNavHrefs.map((item) => ({
+    href: item.href,
+    label: nav(item.key),
+  }));
+
+  const resourceItems = resourceHrefs.map((item) => ({
+    href: item.href,
+    label: nav(item.key),
+  }));
 
   return (
     <header className="site-header">
+      {/* Government identity strip */}
       <div className="gov-bar">
         <div className="gov-bar-identity">
           <img
@@ -59,59 +72,52 @@ export async function Header() {
           </a>
         </div>
       </div>
+
+      {/* Main brand bar */}
       <div className="header-main">
         <Link className="brand" href="/" aria-label={t("homeLabel")}>
-          <div className="brand-flags">
-            <img
-              src="/images/somalia-flag.svg"
-              alt={t("somaliaFlagAlt")}
-              className="brand-flag"
-            />
-            <Image
-              src="/images/sema-logo.png"
-              alt="SEMA logo"
-              width={64}
-              height={64}
-              priority
-            />
-          </div>
+          <Image
+            src="/images/sema-logo.png"
+            alt="SEMA logo"
+            width={48}
+            height={48}
+            priority
+          />
           <div className="brand-divider" aria-hidden="true" />
           <span>
             <strong>{t("brandName")}</strong>
             <small>{t("brandSubtitle")}</small>
           </span>
         </Link>
-        <div className="header-actions">
-          <TrackedLink
-            className="icon-link"
-            href="/data-request"
-            eventType="header_action_click"
-            label="Data request"
-          >
-            <Database aria-hidden="true" size={18} />
-            {t("dataRequest")}
-          </TrackedLink>
-          <TrackedLink
-            className="icon-link primary"
-            href="/contact"
-            eventType="header_action_click"
-            label="Contact"
-          >
-            <Mail aria-hidden="true" size={18} />
-            {t("contact")}
-          </TrackedLink>
-        </div>
+
+        {/* Mobile hamburger (hidden on desktop) */}
+        <MobileNav
+          topItems={topItems}
+          resourceItems={resourceItems}
+          resourcesLabel={nav("resources")}
+          contactLabel={nav("contact")}
+        />
       </div>
+
+      {/* Desktop navigation (hidden on mobile) */}
       <nav className="nav" aria-label="Primary navigation">
-        {navItems.map((item) => (
-          <TrackedLink
-            key={item.href}
-            href={item.href}
-            label={navLabels[item.href] ?? item.label}
-          >
-            {navLabels[item.href] ?? item.label}
+        {topItems.map((item) => (
+          <TrackedLink key={item.href} href={item.href} label={item.label}>
+            {item.label}
           </TrackedLink>
         ))}
+        <ResourcesDropdown
+          label={nav("resources")}
+          items={resourceItems}
+        />
+        <TrackedLink
+          className="nav-cta"
+          href="/contact"
+          eventType="header_action_click"
+          label={nav("contact")}
+        >
+          {nav("contact")}
+        </TrackedLink>
       </nav>
     </header>
   );

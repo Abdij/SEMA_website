@@ -15,7 +15,8 @@
     "news": "News",
     "dataRequest": "Data Request",
     "governmentLinks": "Government Links",
-    "contact": "Contact"
+    "contact": "Contact",
+    "resources": "Resources"
   },
   "header": {
     "govBar": "Federal Republic of Somalia",
@@ -24,7 +25,7 @@
     "xLink": "X: @SomaliaSema",
     "xLabel": "Follow SEMA on X",
     "brandName": "Somalia Explosive Management Authority",
-    "brandSubtitle": "SEMA — Federal Government of Somalia",
+    "brandSubtitle": "National Authority for Explosive Hazard Management",
     "homeLabel": "SEMA home",
     "somaliaFlagAlt": "Somalia flag",
     "dataRequest": "Data request",
