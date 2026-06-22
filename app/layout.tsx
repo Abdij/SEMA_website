@@ -9,7 +9,15 @@ export const metadata: Metadata = {
     template: "%s | SEMA",
   },
   description:
-    "Official website for the Somalia Explosive Management Authority, supporting mine action coordination, public information, publications, dashboards, and data requests.",
+    "Official website of the Somalia Explosive Management Authority, coordinating national efforts on explosive hazard management, risk education, clearance, and mine action information management.",
+  openGraph: {
+    title: "SEMA | Somalia Explosive Management Authority",
+    description:
+      "Official website of the Somalia Explosive Management Authority, coordinating national efforts on explosive hazard management, risk education, clearance, and mine action information management.",
+    siteName: "Somalia Explosive Management Authority",
+    locale: "en_US",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

@@ -10,7 +10,7 @@ export function Footer() {
           <p>
             Somalia Explosive Management Authority. National coordination,
             policy oversight, information management, and public information
-            for mine action and explosive hazard management.
+            for mine action and explosive hazard management across Somalia.
           </p>
         </div>
         <div>
@@ -34,11 +34,22 @@ export function Footer() {
               {source.label}
             </a>
           ))}
+          <h3 style={{ marginTop: "1.25rem" }}>Follow SEMA</h3>
+          <a
+            href="https://x.com/SomaliaSema"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Follow SEMA on X"
+          >
+            X: @SomaliaSema
+          </a>
         </div>
       </div>
       <div className="footer-bottom">
-        <span>© 2026 Somalia Explosive Management Authority.</span>
-        <span>Mogadishu, Somalia · info@sema.gov.so</span>
+        <span>
+          © 2026 Somalia Explosive Management Authority · Mogadishu, Somalia
+        </span>
+        <a href="mailto:info@sema.gov.so">info@sema.gov.so</a>
       </div>
     </footer>
   );

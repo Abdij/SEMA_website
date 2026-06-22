@@ -4,6 +4,8 @@ import { getDashboardEmbeds } from "@/lib/db";
 
 export const metadata = {
   title: "Dashboards",
+  description:
+    "Official SEMA mine action dashboards covering explosive hazard contamination, survey and clearance progress, risk education activities, and national performance indicators.",
 };
 
 export const dynamic = "force-dynamic";
@@ -15,20 +17,9 @@ export default async function DashboardsPage() {
     <>
       <PageHero
         eyebrow="Dashboards"
-        title="ArcGIS and Power BI dashboards for public-safe reporting."
-        text="This page is prepared for SEMA dashboards. Configure the ArcGIS and Power BI embed URLs in Vercel when approved public dashboards are ready."
+        title="Mine action data and performance dashboards."
+        text="Access official SEMA dashboards covering explosive hazard contamination, survey and clearance progress, risk education activities, and national mine action indicators across Somalia."
       />
-      <section className="section">
-        <div className="section-inner content-block">
-          <h2>Dashboard publication rules</h2>
-          <ul className="content-list">
-            <li>Use only public-safe dashboards for anonymous public embeds.</li>
-            <li>Do not publish exact sensitive hazard coordinates, personal data, or restricted partner data.</li>
-            <li>Use secure embed or authenticated access for internal operational dashboards.</li>
-            <li>Document the source, update frequency, owner, and approval status for each dashboard.</li>
-          </ul>
-        </div>
-      </section>
       {dashboardEmbeds.map((dashboard) => (
         <DashboardEmbed key={dashboard.title} {...dashboard} />
       ))}

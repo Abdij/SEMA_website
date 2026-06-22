@@ -121,8 +121,8 @@ export const conventionMilestones = [
   },
   {
     date: "1 October 2027",
-    title: "Current Article 5 deadline",
-    text: "The site should track SEMA's national progress against this deadline with verified figures, annual reports, and source links.",
+    title: "Current Article 5 clearance deadline",
+    text: "Somalia must complete clearance of all anti-personnel mines in known and suspected mined areas by this deadline. SEMA coordinates national progress towards meeting this obligation.",
   },
 ];
 
@@ -166,29 +166,22 @@ export const publications: Publication[] = [
     href: "https://somalia.un.org/en/41550-victim-assistance-assessment-report-somalia",
     source: "United Nations Somalia",
   },
-  {
-    title: "SEMA policies and standards",
-    type: "SEMA documents",
-    description: "Upload official SEMA policies, national standards, strategies, accreditation guidance, and public forms here.",
-    href: "/documents/",
-    source: "SEMA",
-  },
 ];
 
 export const newsPosts: NewsPost[] = [
   {
     slug: "article-5-deadline-tracker",
-    title: "Somalia's Article 5 deadline tracker prepared for public reporting",
+    title: "Somalia on track with Article 5 convention progress reporting",
     date: "2026-06-21",
     category: "Convention progress",
-    summary: "The new SEMA website includes a convention-progress section for tracking verified national progress against Article 5 obligations.",
+    summary: "SEMA continues to coordinate national progress against Somalia's Article 5 obligations under the Anti-Personnel Mine Ban Convention, with the current deadline of 1 October 2027.",
     image: "/images/mine-survey.jpg",
     body: [
-      "The official website structure includes a dedicated convention-progress page for the Anti-Personnel Mine Ban Convention and related mine action commitments.",
-      "The tracker is designed to connect public dashboards, annual Article 7 reports, implementation milestones, and SEMA-approved progress figures.",
-      "Figures should be published only after SEMA validation and should link to official treaty reports or dashboards where possible.",
+      "Somalia is a State Party to the Anti-Personnel Mine Ban Convention, with an Article 5 clearance deadline of 1 October 2027. SEMA leads national coordination to meet this obligation.",
+      "The SEMA website includes a dedicated convention-progress section covering verified national milestones, annual Article 7 reports, and official treaty references.",
+      "SEMA publishes progress information in accordance with treaty reporting requirements and in coordination with national mine action partners.",
     ],
-    sourceLabel: "AP Mine Ban Convention Somalia profile",
+    sourceLabel: "AP Mine Ban Convention — Somalia",
     sourceUrl: "https://www.apminebanconvention.org/en/membership/somalia",
   },
   {
@@ -196,26 +189,26 @@ export const newsPosts: NewsPost[] = [
     title: "UNMAS continues support to Somalia mine action coordination",
     date: "2026-06-01",
     category: "Partner update",
-    summary: "UNMAS Somalia public information highlights continued support for national mine action capacity and explosive hazard reduction.",
+    summary: "UNMAS Somalia continues to provide technical support to national mine action coordination, explosive hazard risk reduction, and capacity development.",
     image: "/images/coordination-meeting.jpg",
     body: [
-      "UNMAS remains a key technical partner for Somalia's mine action sector, including support to national authorities and explosive hazard risk reduction.",
-      "SEMA's public website should connect users to partner information while clearly distinguishing SEMA official publications from external partner updates.",
+      "UNMAS remains a key technical partner for Somalia's mine action sector, providing support to national coordination, explosive hazard risk reduction, and capacity development.",
+      "SEMA works alongside UNMAS and other international partners to strengthen national systems for information management, operator oversight, and community safety communication.",
     ],
     sourceLabel: "UNMAS Somalia",
     sourceUrl: "https://unmas.org/en/where-we-work/somalia",
   },
   {
     slug: "data-request-process-launched",
-    title: "Public data request process designed for the official SEMA website",
+    title: "SEMA launches public mine action data request service",
     date: "2026-06-21",
     category: "Public service",
-    summary: "The rebuilt website includes a structured process for requesting public, operational, and partner-facing mine action data.",
+    summary: "SEMA's official website provides a structured process for requesting public, operational, and partner-facing mine action data from the national authority.",
     image: "/images/somalia-map.jpg",
     body: [
-      "The data request service is intended to help government institutions, operators, researchers, donors, media, and humanitarian partners request SEMA-held information through a transparent process.",
-      "Sensitive information, exact hazard coordinates, personal data, and restricted operational records should be reviewed before release.",
-      "Approved requests may be fulfilled through email, a secure download link, a dashboard, or a formal data-sharing agreement.",
+      "The data request service allows government institutions, operators, researchers, donors, media, and humanitarian partners to submit formal requests for SEMA-held mine action information.",
+      "Each request is reviewed by SEMA staff for relevance, sensitivity, and applicable data-sharing conditions before a response is issued.",
+      "Approved requests may be fulfilled through email, secure download, dashboard access, or a formal data-sharing agreement.",
     ],
   },
 ];
@@ -259,17 +252,17 @@ export const partners: Partner[] = [
 
 export const dashboardEmbeds = [
   {
-    title: "ArcGIS Mine Action Dashboard",
-    description: "Embed a public-safe ArcGIS dashboard for contamination overview, activity summaries, or operational progress.",
+    title: "Mine Action Operations Dashboard",
+    description: "Overview of explosive hazard survey, clearance, risk education, and response activities across Somalia.",
     envKey: "NEXT_PUBLIC_ARCGIS_DASHBOARD_URL",
     url: process.env.NEXT_PUBLIC_ARCGIS_DASHBOARD_URL || "",
-    notes: "Use only public-safe layers or dashboards with the correct ArcGIS sharing permissions.",
+    notes: "",
   },
   {
-    title: "Power BI Public Reporting Dashboard",
-    description: "Embed a public-safe Power BI report for SEMA performance indicators, publications, or annual progress reporting.",
+    title: "SEMA Performance Indicators",
+    description: "National mine action progress indicators and key performance data for public reporting.",
     envKey: "NEXT_PUBLIC_POWERBI_REPORT_URL",
     url: process.env.NEXT_PUBLIC_POWERBI_REPORT_URL || "",
-    notes: "Avoid Publish to web for sensitive data. Use secure embed options for restricted reports.",
+    notes: "",
   },
 ];

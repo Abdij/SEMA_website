@@ -5,32 +5,31 @@ type DashboardEmbedProps = {
   title: string;
   description: string;
   url: string;
-  envKey?: string;
+  provider?: string;
+  public_safe?: boolean;
+  status?: string;
   notes?: string;
 };
 
-export function DashboardEmbed({ title, description, url, envKey, notes }: DashboardEmbedProps) {
+export function DashboardEmbed({ title, description, url, provider }: DashboardEmbedProps) {
   return (
     <section className="dashboard-panel">
       <div className="dashboard-copy">
         <p className="eyebrow">Dashboard</p>
         <h2>{title}</h2>
         <p>{description}</p>
-        {notes ? <p className="muted">{notes}</p> : null}
         {url ? (
           <TrackedAnchor
             className="text-link"
             href={url}
             label={title}
-            metadata={{ provider: envKey || "dashboard" }}
+            metadata={{ provider: provider || "dashboard" }}
             target="_blank"
             rel="noreferrer"
           >
-            Open dashboard <ExternalLink aria-hidden="true" size={16} />
+            View Dashboard <ExternalLink aria-hidden="true" size={16} />
           </TrackedAnchor>
-        ) : (
-          <p className="configuration-note">Configure {envKey || "dashboard URL"} in Vercel to activate this embed.</p>
-        )}
+        ) : null}
       </div>
       <div className="embed-shell">
         {url ? (
@@ -43,8 +42,7 @@ export function DashboardEmbed({ title, description, url, envKey, notes }: Dashb
           />
         ) : (
           <div className="embed-placeholder">
-            <span>{title}</span>
-            <small>Embed URL pending</small>
+            <span>Dashboard temporarily unavailable.</span>
           </div>
         )}
       </div>

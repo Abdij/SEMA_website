@@ -162,7 +162,7 @@ main {
 }
 
 .hero {
-  min-height: min(680px, calc(100vh - 120px));
+  min-height: min(600px, 72vh);
   display: grid;
   align-items: flex-end;
   background:
@@ -179,12 +179,12 @@ main {
 
 .hero h1,
 .page-hero h1 {
-  max-width: 930px;
+  max-width: 700px;
   margin: 0;
-  font-size: clamp(2.6rem, 7vw, 5.6rem);
-  line-height: 0.96;
+  font-size: clamp(2.125rem, 5vw, 4.5rem);
+  line-height: 1.05;
   letter-spacing: 0;
-  font-weight: 900;
+  font-weight: 800;
 }
 
 .hero p {
@@ -800,6 +800,49 @@ textarea {
   overflow-wrap: anywhere;
 }
 
+.indicators-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.indicator-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  padding: 1.75rem 1.25rem;
+  text-align: center;
+  box-shadow: 0 6px 20px rgba(10, 35, 55, 0.05);
+  transition: box-shadow 0.18s;
+}
+
+.indicator-card:hover {
+  box-shadow: 0 12px 32px rgba(10, 35, 55, 0.1);
+}
+
+.indicator-value {
+  display: block;
+  color: var(--blue);
+  font-size: clamp(2.25rem, 4vw, 3.25rem);
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 0.6rem;
+}
+
+.indicator-label {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.indicators-source {
+  margin: 1.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
 .footer {
   color: #dcebf7;
   background: var(--blue-dark);
@@ -870,11 +913,21 @@ textarea {
   .feature-image {
     min-height: 300px;
   }
+
+  .indicators-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 580px) {
+  .indicators-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 680px) {
   .hero {
-    min-height: 620px;
+    min-height: 520px;
   }
 
   .brand img {

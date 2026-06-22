@@ -24,10 +24,10 @@ export default function AboutPage() {
               services, livelihoods, and development.
             </p>
             <p>
-              The official website is designed to make SEMA's public role more
-              visible through accurate information, formal publications,
-              dashboard access, data request services, and clear contact
-              channels.
+              SEMA provides official public information through its national
+              website, including mine action news, policy publications, data
+              dashboards, data access services, and direct contact channels for
+              government institutions, partners, and the public.
             </p>
           </div>
           <div className="feature-image" />

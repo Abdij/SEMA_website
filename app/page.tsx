@@ -6,6 +6,15 @@ import { getNewsPosts } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
+const indicators = [
+  { value: "2,111,131", label: "People Reached Through EORE" },
+  { value: "123 Million m²", label: "Confirmed and Suspected Hazard Areas" },
+  { value: "331", label: "Confirmed Hazard Areas (CHA)" },
+  { value: "201", label: "Suspected Hazard Areas (SHA)" },
+  { value: "1,684", label: "Recorded EO Casualties" },
+  { value: "6", label: "Affected Federal Member States" },
+];
+
 export default async function Home() {
   const newsPosts = await getNewsPosts();
 
@@ -13,21 +22,49 @@ export default async function Home() {
     <>
       <section className="hero">
         <div className="hero-inner">
-          <p className="eyebrow">Official public website</p>
-          <h1>Somalia's national authority for explosive hazard management.</h1>
+          <p className="eyebrow">Federal Government of Somalia</p>
+          <h1>Somalia's National Authority for Explosive Hazard Management</h1>
           <p>
             SEMA leads national coordination, policy oversight, information
             management, operator engagement, public reporting, and community
             safety communication across Somalia's mine action sector.
           </p>
           <div className="hero-actions">
-            <Link className="button" href="/data-request">
-              Request data <ArrowRight aria-hidden="true" size={18} />
+            <Link className="button" href="/dashboards">
+              View Dashboards <BarChart3 aria-hidden="true" size={18} />
             </Link>
-            <Link className="button secondary" href="/dashboards">
-              View dashboards <BarChart3 aria-hidden="true" size={18} />
+            <Link className="button secondary" href="/publications">
+              Publications <Download aria-hidden="true" size={18} />
+            </Link>
+            <Link className="button secondary" href="/contact">
+              Contact SEMA <ArrowRight aria-hidden="true" size={18} />
             </Link>
           </div>
+        </div>
+      </section>
+
+      <section className="band">
+        <div className="section-inner">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">National mine action data</p>
+              <h2>Somalia Explosive Hazard Overview</h2>
+              <p className="muted" style={{ marginTop: "0.4rem" }}>
+                Key national mine action indicators based on available SEMA data.
+              </p>
+            </div>
+          </div>
+          <div className="indicators-grid">
+            {indicators.map((item) => (
+              <article className="indicator-card" key={item.label}>
+                <strong className="indicator-value">{item.value}</strong>
+                <p className="indicator-label">{item.label}</p>
+              </article>
+            ))}
+          </div>
+          <p className="indicators-source">
+            Data source: Somalia Explosive Management Authority (SEMA).
+          </p>
         </div>
       </section>
 
@@ -48,16 +85,16 @@ export default async function Home() {
             <p className="eyebrow">Public services</p>
             <h2>One official entry point for updates, documents, dashboards, and requests.</h2>
             <p>
-              The rebuilt website is structured for official communication:
-              news and updates, policy downloads, ArcGIS and Power BI embeds,
-              convention-progress reporting, partner links, contact messages,
-              and a transparent data request workflow.
+              SEMA serves as Somalia's central national authority for mine
+              action information, coordination, and public communication.
+              This website provides official access to dashboards, publications,
+              news, and data services.
             </p>
             <ul className="content-list">
-              <li>Publish official SEMA news, announcements, and public safety notices.</li>
-              <li>Embed public-safe dashboards from ArcGIS and Power BI.</li>
-              <li>Provide downloadable policies, standards, reports, and awareness material.</li>
-              <li>Receive contact messages and data requests through PostgreSQL-backed forms.</li>
+              <li>SEMA publishes official news, announcements, and public safety information.</li>
+              <li>SEMA provides access to survey, clearance, and risk education dashboards.</li>
+              <li>SEMA makes policies, standards, reports, and awareness materials available for download.</li>
+              <li>SEMA supports transparent data access through a structured request process.</li>
             </ul>
           </div>
           <div className="feature-image" aria-label="Explosive ordnance risk education session" />
@@ -98,19 +135,23 @@ export default async function Home() {
               All news <ArrowRight aria-hidden="true" size={16} />
             </Link>
           </div>
-          <div className="grid three">
-            {newsPosts.map((post) => (
-              <Link className="news-card" href={`/news/${encodeURIComponent(post.slug)}`} key={post.slug}>
-                <NewsImage src={post.image} alt="" width={560} height={320} />
-                <div className="news-body">
-                  <span className="tag">{post.category}</span>
-                  <h3>{post.title}</h3>
-                  <p>{post.summary}</p>
-                  <p className="news-meta">{post.date}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
+          {newsPosts.length > 0 ? (
+            <div className="grid three">
+              {newsPosts.map((post) => (
+                <Link className="news-card" href={`/news/${encodeURIComponent(post.slug)}`} key={post.slug}>
+                  <NewsImage src={post.image} alt={post.title} width={560} height={320} />
+                  <div className="news-body">
+                    <span className="tag">{post.category}</span>
+                    <h3>{post.title}</h3>
+                    <p>{post.summary}</p>
+                    <p className="news-meta">{post.date}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="muted">Official updates will be published here.</p>
+          )}
         </div>
       </section>
 
