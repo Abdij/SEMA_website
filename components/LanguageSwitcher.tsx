@@ -3,6 +3,7 @@
 import { useLocale } from "next-intl";
 import { usePathname, useRouter } from "@/lib/navigation";
 import { useTransition } from "react";
+import { trackEvent } from "@/lib/analytics-client";
 
 export function LanguageSwitcher() {
   const locale = useLocale();
@@ -11,6 +12,15 @@ export function LanguageSwitcher() {
   const [isPending, startTransition] = useTransition();
 
   function switchLocale(next: string) {
+    if (next === locale) return;
+
+    trackEvent({
+      eventType: "language_changed",
+      eventCategory: "locale",
+      locale: next,
+      metadata: { previousLocale: locale, newLocale: next, page: pathname },
+    });
+
     startTransition(() => {
       router.replace(pathname, { locale: next });
     });

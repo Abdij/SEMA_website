@@ -18,7 +18,8 @@
     "contact": "Contact",
     "resources": "Resources",
     "partners": "Partners",
-    "operators": "Operators"
+    "operators": "Operators",
+    "privacy": "Privacy"
   },
   "header": {
     "govBar": "Federal Republic of Somalia",
@@ -43,7 +44,9 @@
     "followSema": "Follow SEMA",
     "xLabel": "Follow SEMA on X",
     "xLink": "X: @SomaliaSema",
-    "copyright": "© 2026 Somalia Explosive Management Authority · Mogadishu, Somalia"
+    "copyright": "© 2026 Somalia Explosive Management Authority · Mogadishu, Somalia",
+    "legal": "Legal",
+    "privacyLink": "Privacy Notice"
   },
   "home": {
     "heroEyebrow": "Federal Government of Somalia",
@@ -323,5 +326,127 @@
     "title": "Federal Government of Somalia — Official Institutions",
     "text": "SEMA operates within the Federal Government of Somalia alongside partner ministries and agencies responsible for security, governance, and disaster management.",
     "visitWebsite": "Visit website →"
+  },
+  "dashboardAccess": {
+    "title": "Access SEMA Mine Action Dashboard",
+    "explanation": "SEMA collects limited information about organizations accessing this dashboard to better understand its users, improve information products, and support stakeholder engagement. This information will not be displayed publicly.",
+    "fields": {
+      "organizationName": {
+        "label": "Organization name",
+        "placeholder": "e.g. Somalia Explosive Management Authority"
+      },
+      "organizationType": {
+        "label": "Organization type (optional)",
+        "placeholder": "Select organization type"
+      },
+      "organizationTypeOther": {
+        "label": "Please specify",
+        "placeholder": "Describe your organization type"
+      },
+      "activityTypes": {
+        "label": "Areas of activity"
+      },
+      "activityTypeOther": {
+        "label": "Please specify",
+        "placeholder": "Describe the activity"
+      },
+      "countryOfOperation": {
+        "label": "Country of operation (optional)",
+        "placeholder": "e.g. Somalia"
+      },
+      "consent": {
+        "label": "I understand and consent to SEMA collecting this information as described above."
+      }
+    },
+    "orgTypes": {
+      "government": "Government",
+      "united_nations": "United Nations",
+      "international_ngo": "International NGO",
+      "national_ngo": "National NGO",
+      "civil_society": "Civil society organization",
+      "donor": "Donor",
+      "academic": "Academic or research institution",
+      "private_sector": "Private sector",
+      "media": "Media",
+      "independent_consultant": "Independent consultant",
+      "other": "Other"
+    },
+    "activityOptions": {
+      "humanitarian": "Humanitarian",
+      "development": "Development",
+      "peacebuilding": "Peacebuilding",
+      "stabilization": "Stabilization",
+      "mine_action": "Mine action",
+      "protection": "Protection",
+      "emergency_response": "Emergency response",
+      "government_services": "Government services",
+      "research_academia": "Research or academia",
+      "donor_funding": "Donor or funding",
+      "private_sector": "Private sector",
+      "media": "Media",
+      "other": "Other"
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "continue": "Continue to Dashboard",
+      "submitting": "Submitting…",
+      "openDashboard": "Open Dashboard",
+      "changeInfo": "Change organization information",
+      "viewInNewTab": "View Dashboard",
+      "close": "Close"
+    },
+    "errors": {
+      "organizationName": "Enter your organization name.",
+      "activityTypes": "Select at least one area of activity.",
+      "consent": "You must consent before accessing the dashboard.",
+      "generic": "Something went wrong. Your information has been kept — please try again."
+    },
+    "notices": {
+      "privacy": "Read our",
+      "privacyLinkLabel": "privacy notice",
+      "reusing": "Using your previously provided organization information."
+    },
+    "gateLockedMessage": "Provide your organization details to view this dashboard.",
+    "gateProviderArcgis": "ArcGIS dashboard — organization details required.",
+    "gateProviderPowerbi": "Power BI dashboard — organization details required."
+  },
+  "privacy": {
+    "eyebrow": "Privacy",
+    "title": "Analytics and dashboard-access privacy notice",
+    "intro": "This notice explains what information SEMA collects when you browse this website and when you access a SEMA Power BI or ArcGIS dashboard, why it is collected, and how it is handled.",
+    "sections": {
+      "whatWebsite": {
+        "title": "Website analytics",
+        "body": "When you browse this website, SEMA records anonymous, aggregate information: pages visited, navigation links and buttons clicked, publications downloaded, external links clicked, the language you use, the site that referred you, and the approximate date and time of your visit. We also generate a random, first-party identifier stored in your browser so that repeat visits from the same browser can be counted — this identifier is not linked to your name, email address, or any other personal information."
+      },
+      "whatDashboard": {
+        "title": "Dashboard-access information",
+        "body": "Before opening a SEMA mine action dashboard, we ask for your organization name, areas of activity, and — optionally — your organization type and country of operation. This information helps SEMA understand who is using its dashboards, improve its information products, and support stakeholder engagement. It is never displayed publicly."
+      },
+      "location": {
+        "title": "Approximate location",
+        "body": "Where available from our hosting infrastructure, we record an approximate country, region, and city associated with your visit. We do not request your device's GPS location, and we do not collect or store exact coordinates. We do not permanently store your raw IP address, and it is never shown in the SEMA admin area."
+      },
+      "estimates": {
+        "title": "Unique visitor counts are estimates",
+        "body": "Figures such as \"unique visitors\" reported to SEMA staff are estimates based on anonymous browser identifiers. They represent distinct browsers or devices, not verified individual people, and the same person using two devices may be counted twice."
+      },
+      "retention": {
+        "title": "How long information is kept",
+        "body": "Dashboard-access organization records and website analytics events are retained for a limited period, configured by SEMA, after which older records are eligible for deletion. Contact SEMA using the details below for the current retention periods."
+      },
+      "access": {
+        "title": "Who can see this information",
+        "body": "Only authorized SEMA administrators can view organization-level dashboard-access records and detailed website analytics. This information is never made public and is not shared with third parties for marketing purposes."
+      },
+      "contact": {
+        "title": "Questions about your data",
+        "body": "To ask a question about the information described in this notice, contact SEMA at info@sema.gov.so or through the contact form on this website."
+      },
+      "powerbi": {
+        "title": "About Power BI dashboards",
+        "body": "This access form helps SEMA understand and engage with its stakeholders — it is not a security control. If a dashboard is published using Power BI \"Publish to web\", the underlying report may still be reachable directly by anyone who already has that direct link, independent of this website."
+      }
+    }
   }
 }

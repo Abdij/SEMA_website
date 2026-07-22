@@ -11,11 +11,16 @@ export type NewsPost = {
 };
 
 export type Publication = {
+  id?: string;
   title: string;
   type: string;
   description: string;
   href: string;
   source: string;
+  publication_date?: string;
+  status?: string;
+  fileName?: string;
+  fileMime?: string;
 };
 
 export type Partner = {

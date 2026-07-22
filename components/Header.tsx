@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/lib/navigation";
-import { TrackedLink } from "@/components/TrackedLink";
+import { TrackedAnchor, TrackedLink } from "@/components/TrackedLink";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { ResourcesDropdown } from "@/components/ResourcesDropdown";
 import { MobileNav } from "@/components/MobileNav";
@@ -53,23 +53,27 @@ export async function Header() {
         <div className="gov-bar-links">
           <LanguageSwitcher />
           <span className="gov-bar-sep" aria-hidden="true">|</span>
-          <a
+          <TrackedAnchor
             href="https://www.somalia.gov.so"
+            eventType="external_link_clicked"
+            label={t("somaliaPortal")}
             target="_blank"
             rel="noopener noreferrer"
             aria-label={t("somaliaPortalLabel")}
           >
             {t("somaliaPortal")}
-          </a>
+          </TrackedAnchor>
           <span className="gov-bar-sep" aria-hidden="true">|</span>
-          <a
+          <TrackedAnchor
             href="https://x.com/SomaliaSema"
+            eventType="external_link_clicked"
+            label={t("xLink")}
             target="_blank"
             rel="noopener noreferrer"
             aria-label={t("xLabel")}
           >
             {t("xLink")}
-          </a>
+          </TrackedAnchor>
         </div>
       </div>
 

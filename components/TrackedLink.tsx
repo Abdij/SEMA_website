@@ -1,9 +1,15 @@
 "use client";
 
 import type { AnchorHTMLAttributes, MouseEvent, ReactNode } from "react";
+import { useLocale } from "next-intl";
 import { Link } from "@/lib/navigation";
+import { trackEvent } from "@/lib/analytics-client";
 
-type AnalyticsEventType = "nav_click" | "header_action_click" | "dashboard_open";
+type AnalyticsEventType =
+  | "nav_click"
+  | "header_action_click"
+  | "dashboard_open"
+  | "external_link_clicked";
 
 type TrackingProps = {
   children: ReactNode;
@@ -17,29 +23,6 @@ type TrackedLinkProps = TrackingProps &
     href: string;
   };
 
-function sendAnalytics(eventType: AnalyticsEventType, label: string, targetUrl: string, metadata?: Record<string, unknown>) {
-  const payload = JSON.stringify({
-    eventType,
-    label,
-    targetUrl,
-    path: `${window.location.pathname}${window.location.search}`,
-    metadata: metadata ?? {},
-  });
-
-  if ("sendBeacon" in navigator) {
-    const blob = new Blob([payload], { type: "application/json" });
-    navigator.sendBeacon("/api/analytics", blob);
-    return;
-  }
-
-  void fetch("/api/analytics", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: payload,
-    keepalive: true,
-  });
-}
-
 export function TrackedLink({
   children,
   eventType = "nav_click",
@@ -49,10 +32,19 @@ export function TrackedLink({
   onClick,
   ...props
 }: TrackedLinkProps) {
+  const locale = useLocale();
+
   function handleClick(event: MouseEvent<HTMLAnchorElement>) {
     onClick?.(event);
     if (!event.defaultPrevented) {
-      sendAnalytics(eventType, label, href, metadata);
+      trackEvent({
+        eventType,
+        eventCategory: "navigation",
+        label,
+        targetUrl: href,
+        locale,
+        metadata,
+      });
     }
   }
 
@@ -72,10 +64,19 @@ export function TrackedAnchor({
   onClick,
   ...props
 }: TrackedLinkProps) {
+  const locale = useLocale();
+
   function handleClick(event: MouseEvent<HTMLAnchorElement>) {
     onClick?.(event);
     if (!event.defaultPrevented) {
-      sendAnalytics(eventType, label, href, metadata);
+      trackEvent({
+        eventType,
+        eventCategory: eventType === "external_link_clicked" ? "external" : "dashboard",
+        label,
+        targetUrl: href,
+        locale,
+        metadata,
+      });
     }
   }
 

@@ -93,12 +93,52 @@ export type DataRequestStatusHistory = {
 
 export type AnalyticsEventInput = {
   eventType: string;
+  eventCategory?: string;
   label?: string;
   path?: string;
   targetUrl?: string;
   metadata?: Record<string, unknown>;
   userAgent?: string;
   referer?: string;
+  anonymousVisitorId?: string;
+  sessionId?: string;
+  dashboardAccessId?: string;
+  dashboardId?: string;
+  dashboardTitle?: string;
+  locale?: string;
+  countryCode?: string;
+  region?: string;
+  city?: string;
+  deviceCategory?: string;
+  browserCategory?: string;
+};
+
+export type DashboardAccessInput = {
+  organizationName: string;
+  organizationType?: string;
+  organizationTypeOther?: string;
+  activityTypes: string[];
+  activityTypeOther?: string;
+  countryOfOperation?: string;
+  dashboardId?: string;
+  dashboardTitle?: string;
+  dashboardUrl?: string;
+  anonymousVisitorId?: string;
+  sessionId?: string;
+  visitorCountry?: string;
+  visitorRegion?: string;
+  visitorCity?: string;
+  locale?: string;
+  sourcePage?: string;
+  referrer?: string;
+  userAgent?: string;
+  consentGiven: boolean;
+  consentVersion: string;
+};
+
+export type DashboardAccessRecord = DashboardAccessInput & {
+  id: string;
+  createdAt: string;
 };
 
 export function getPool() {
@@ -216,6 +256,7 @@ function mapFallbackDashboard(item: (typeof fallbackDashboardEmbeds)[number]): D
   };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapNewsRow(row: any): NewsPost {
   return {
     slug: row.slug,
@@ -362,11 +403,15 @@ export async function getDashboardEmbeds() {
   const pool = tryGetPool();
 
   if (!pool) {
+    // No database configured: fall back to static content, but this path
+    // cannot support the dashboard-access gate (there is no dashboard_id to
+    // register against), so the fallback dashboard's own URL is used
+    // directly by the (ungated) placeholder rendering in DashboardEmbed.
     return fallbackDashboardEmbeds.map(mapFallbackDashboard);
   }
 
   const result = await pool.query(
-    `select title, provider, description, embed_url, public_safe, status
+    `select id, title, provider, description, embed_url, public_safe, status
      from dashboard_embeds
      where status = 'published'
      order by created_at desc`,
@@ -376,14 +421,18 @@ export async function getDashboardEmbeds() {
     return fallbackDashboardEmbeds.map(mapFallbackDashboard);
   }
 
+  // Intentionally omit the raw embed_url here: this list feeds the public
+  // dashboards page, which now gates access behind the organization form.
+  // The trusted URL is only ever returned server-side, after a successful
+  // registration/reuse, via POST /api/dashboard-access.
   return result.rows.map((row) => ({
+    id: row.id as string,
     title: row.title,
     description: row.description,
-    url: row.embed_url,
     provider: row.provider,
     public_safe: row.public_safe,
     status: row.status,
-    notes: row.public_safe ? "Published dashboard embed." : "Private or draft dashboard embed."
+    notes: row.public_safe ? "Published dashboard embed." : "Private or draft dashboard embed.",
   }));
 }
 
@@ -816,6 +865,7 @@ export async function getContactMessages() {
      order by created_at desc`,
   );
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return result.rows.map((row: any) => ({
     id: row.id,
     name: row.name,
@@ -868,6 +918,7 @@ export async function getDataRequests() {
      order by created_at desc`,
   );
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return result.rows.map((row: any) => ({
     id: row.id,
     requestRef: row.request_ref,
@@ -963,8 +1014,13 @@ export async function recordAnalyticsEvent(input: AnalyticsEventInput) {
   const pool = getPool();
 
   await pool.query(
-    `insert into analytics_events (event_type, label, path, target_url, metadata, user_agent, referer)
-     values ($1, $2, $3, $4, $5::jsonb, $6, $7)`,
+    `insert into analytics_events (
+       event_type, label, path, target_url, metadata, user_agent, referer,
+       anonymous_visitor_id, session_id, dashboard_access_id, event_category,
+       dashboard_id, dashboard_title, locale, country_code, region, city,
+       device_category, browser_category
+     )
+     values ($1, $2, $3, $4, $5::jsonb, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)`,
     [
       input.eventType,
       input.label || null,
@@ -973,6 +1029,80 @@ export async function recordAnalyticsEvent(input: AnalyticsEventInput) {
       JSON.stringify(input.metadata ?? {}),
       input.userAgent || null,
       input.referer || null,
+      input.anonymousVisitorId || null,
+      input.sessionId || null,
+      input.dashboardAccessId || null,
+      input.eventCategory || null,
+      input.dashboardId || null,
+      input.dashboardTitle || null,
+      input.locale || null,
+      input.countryCode || null,
+      input.region || null,
+      input.city || null,
+      input.deviceCategory || null,
+      input.browserCategory || null,
     ],
   );
+}
+
+export async function getPublishedDashboardById(id: string) {
+  const pool = getPool();
+
+  const result = await pool.query(
+    `select id, title, provider, description, embed_url, public_safe, status
+     from dashboard_embeds
+     where id = $1 and status = 'published'`,
+    [id],
+  );
+
+  return result.rows[0] || null;
+}
+
+export async function createDashboardAccess(input: DashboardAccessInput): Promise<DashboardAccessRecord> {
+  const pool = getPool();
+
+  const result = await pool.query(
+    `insert into dashboard_accesses (
+       organization_name, organization_type, organization_type_other,
+       activity_types, activity_type_other, country_of_operation,
+       dashboard_id, dashboard_title, dashboard_url,
+       anonymous_visitor_id, session_id,
+       visitor_country, visitor_region, visitor_city,
+       locale, source_page, referrer, user_agent,
+       consent_given, consent_version
+     ) values (
+       $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
+     )
+     returning id, created_at`,
+    [
+      input.organizationName,
+      input.organizationType || null,
+      input.organizationTypeOther || null,
+      input.activityTypes,
+      input.activityTypeOther || null,
+      input.countryOfOperation || null,
+      input.dashboardId || null,
+      input.dashboardTitle || null,
+      input.dashboardUrl || null,
+      input.anonymousVisitorId || null,
+      input.sessionId || null,
+      input.visitorCountry || null,
+      input.visitorRegion || null,
+      input.visitorCity || null,
+      input.locale || null,
+      input.sourcePage || null,
+      input.referrer || null,
+      input.userAgent || null,
+      input.consentGiven,
+      input.consentVersion,
+    ],
+  );
+
+  const row = result.rows[0];
+
+  return {
+    ...input,
+    id: row.id,
+    createdAt: row.created_at.toISOString(),
+  };
 }

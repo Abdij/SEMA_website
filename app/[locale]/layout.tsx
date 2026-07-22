@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { hasLocale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { NextIntlClientProvider } from "next-intl";
@@ -6,6 +7,7 @@ import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { PageViewTracker } from "@/components/PageViewTracker";
 import { routing } from "@/i18n/routing";
 
 export async function generateMetadata({
@@ -49,6 +51,9 @@ export default async function LocaleLayout({
     <html lang={locale}>
       <body>
         <NextIntlClientProvider messages={messages}>
+          <Suspense fallback={null}>
+            <PageViewTracker />
+          </Suspense>
           <Header />
           <main>{children}</main>
           <Footer />

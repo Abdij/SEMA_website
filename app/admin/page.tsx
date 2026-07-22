@@ -1,8 +1,17 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { ACTIVITY_TYPES, ORGANIZATION_TYPES } from "@/lib/dashboard-access-options";
 
-type AdminTab = "news" | "publications" | "dashboards" | "messages" | "requests" | "reports";
+type AdminTab =
+  | "news"
+  | "publications"
+  | "dashboards"
+  | "messages"
+  | "requests"
+  | "reports"
+  | "analytics"
+  | "access";
 
 type ReportExportType =
   | "data-requests"
@@ -114,7 +123,120 @@ type ReportSummary = {
   }>;
 };
 
-const adminTabs: AdminTab[] = ["news", "publications", "dashboards", "messages", "requests", "reports"];
+type CountRow = { key?: string; category?: string; count: number };
+
+type AnalyticsOverview = {
+  totals: {
+    pageViews: number;
+    uniqueVisitors: number;
+    totalSessions: number;
+    returningVisitorRate: number;
+    dashboardOpens: number;
+    uniqueOrganizations: number;
+    dashboardFormSubmissions: number;
+    dashboardFormCompletionRate: number | null;
+    publicationDownloads: number;
+    dataRequestsSubmitted: number;
+    contactFormsSubmitted: number;
+    externalLinkClicks: number;
+  };
+  visitorsByDay: Array<{ day: string; count: number; unique_visitors: number }>;
+  dashboardOpensOverTime: Array<{ day: string; count: number }>;
+  mostAccessedDashboards: Array<{ title: string; count: number }>;
+  mostVisitedPages: Array<{ path: string; count: number }>;
+  mostClickedNav: Array<{ label: string; count: number }>;
+  mostDownloadedPublications: Array<{ label: string; count: number }>;
+  referrers: Array<{ referrer: string; count: number }>;
+  deviceCategories: Array<{ category: string; count: number }>;
+  browserCategories: Array<{ category: string; count: number }>;
+  localeUsage: Array<{ locale: string; count: number }>;
+  visitorsByCountry: Array<{ country: string; count: number }>;
+  visitorsByCity: Array<{ city: string; count: number }>;
+  dashboardGateFunnel: { opened: number; cancelled: number; submitted: number };
+  note: string;
+};
+
+type AnalyticsFilters = {
+  dateFrom: string;
+  dateTo: string;
+  dashboardId: string;
+  page: string;
+  eventType: string;
+  locale: string;
+};
+
+const emptyAnalyticsFilters: AnalyticsFilters = {
+  dateFrom: "",
+  dateTo: "",
+  dashboardId: "",
+  page: "",
+  eventType: "",
+  locale: "",
+};
+
+type DashboardAccessRow = {
+  id: string;
+  organizationName: string;
+  organizationType?: string;
+  organizationTypeOther?: string;
+  activityTypes: string[];
+  activityTypeOther?: string;
+  countryOfOperation?: string;
+  dashboardId?: string;
+  dashboardTitle?: string;
+  visitorCountry?: string;
+  visitorRegion?: string;
+  visitorCity?: string;
+  locale?: string;
+  sourcePage?: string;
+  createdAt: string;
+  isRepeatAccess: boolean;
+};
+
+type DashboardAccessResponse = {
+  rows: DashboardAccessRow[];
+  total: number;
+  page: number;
+  limit: number;
+  byActivityType: CountRow[];
+  byOrganizationType: CountRow[];
+  byCountry: CountRow[];
+};
+
+type DashboardAccessFilters = {
+  dateFrom: string;
+  dateTo: string;
+  dashboardId: string;
+  organization: string;
+  organizationType: string;
+  activityType: string;
+  country: string;
+  sourcePage: string;
+  language: string;
+};
+
+const emptyDashboardAccessFilters: DashboardAccessFilters = {
+  dateFrom: "",
+  dateTo: "",
+  dashboardId: "",
+  organization: "",
+  organizationType: "",
+  activityType: "",
+  country: "",
+  sourcePage: "",
+  language: "",
+};
+
+const adminTabs: AdminTab[] = [
+  "news",
+  "publications",
+  "dashboards",
+  "messages",
+  "requests",
+  "reports",
+  "analytics",
+  "access",
+];
 
 const reportExports: Array<{ type: ReportExportType; label: string }> = [
   { type: "data-requests", label: "Export data requests" },
@@ -176,6 +298,36 @@ function formatDateTime(value?: string | null) {
   }).format(new Date(value));
 }
 
+function RankBarList({
+  items,
+  emptyLabel,
+}: {
+  items: Array<{ label: string; count: number }>;
+  emptyLabel: string;
+}) {
+  if (!items.length) {
+    return <p className="muted">{emptyLabel}</p>;
+  }
+
+  const max = Math.max(...items.map((item) => item.count), 1);
+
+  return (
+    <div className="rank-bar-list">
+      {items.map((item) => (
+        <div className="rank-bar-row" key={item.label}>
+          <span className="rank-bar-label" title={item.label}>
+            {item.label || "Unspecified"}
+          </span>
+          <span className="rank-bar-value">{formatNumber(item.count)}</span>
+          <div className="rank-bar-track">
+            <div className="rank-bar-fill" style={{ width: `${Math.max((item.count / max) * 100, 3)}%` }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const [password, setPassword] = useState("");
   const [authenticated, setAuthenticated] = useState(false);
@@ -187,6 +339,13 @@ export default function AdminPage() {
   const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
   const [dataRequests, setDataRequests] = useState<DataRequest[]>([]);
   const [reportSummary, setReportSummary] = useState<ReportSummary | null>(null);
+  const [analyticsOverview, setAnalyticsOverview] = useState<AnalyticsOverview | null>(null);
+  const [analyticsFilters, setAnalyticsFilters] = useState<AnalyticsFilters>(emptyAnalyticsFilters);
+  const [dashboardAccess, setDashboardAccess] = useState<DashboardAccessResponse | null>(null);
+  const [dashboardAccessFilters, setDashboardAccessFilters] = useState<DashboardAccessFilters>(
+    emptyDashboardAccessFilters,
+  );
+  const [dashboardAccessPage, setDashboardAccessPage] = useState(1);
   const [editingNews, setEditingNews] = useState<NewsItem>(emptyNews);
   const [editingPublication, setEditingPublication] = useState<PublicationItem>(emptyPublication);
   const [publicationFile, setPublicationFile] = useState<File | null>(null);
@@ -282,11 +441,132 @@ export default function AdminPage() {
       setDataRequests(Array.isArray(dataRequestsData) ? dataRequestsData : []);
       setReportSummary(reportsData);
       setMessage(reportsResponse.ok ? "Data loaded." : "Data loaded. Reports are unavailable until analytics is configured.");
+
+      void loadAnalytics(authValue, emptyAnalyticsFilters);
+      void loadDashboardAccess(authValue, emptyDashboardAccessFilters, 1);
     } catch (error) {
       setMessage("Unable to load admin data.");
     } finally {
       setLoading(false);
     }
+  }
+
+  function buildQuery(filters: Record<string, string>) {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(filters)) {
+      if (value) params.set(key, value);
+    }
+    return params.toString();
+  }
+
+  async function loadAnalytics(authValue: string, filters: AnalyticsFilters) {
+    try {
+      const query = buildQuery(filters);
+      const response = await fetch(`/api/admin/analytics${query ? `?${query}` : ""}`, {
+        headers: authHeader(authValue),
+      });
+      if (response.status === 401) {
+        setAuthenticated(false);
+        return;
+      }
+      if (!response.ok) return;
+      setAnalyticsOverview(await response.json());
+    } catch {
+      // analytics is best-effort in the admin UI; leave prior data in place
+    }
+  }
+
+  async function loadDashboardAccess(authValue: string, filters: DashboardAccessFilters, page: number) {
+    try {
+      const query = buildQuery({ ...filters, page: String(page), limit: "50" });
+      const response = await fetch(`/api/admin/dashboard-access?${query}`, {
+        headers: authHeader(authValue),
+      });
+      if (response.status === 401) {
+        setAuthenticated(false);
+        return;
+      }
+      if (!response.ok) return;
+      setDashboardAccess(await response.json());
+    } catch {
+      // best-effort
+    }
+  }
+
+  function handleApplyAnalyticsFilters() {
+    void loadAnalytics(password, analyticsFilters);
+  }
+
+  function handleApplyDashboardAccessFilters() {
+    setDashboardAccessPage(1);
+    void loadDashboardAccess(password, dashboardAccessFilters, 1);
+  }
+
+  function handleDashboardAccessPageChange(nextPage: number) {
+    setDashboardAccessPage(nextPage);
+    void loadDashboardAccess(password, dashboardAccessFilters, nextPage);
+  }
+
+  async function handleExportDashboardAccessCsv() {
+    setLoading(true);
+    try {
+      const query = buildQuery(dashboardAccessFilters);
+      const response = await fetch(`/api/admin/dashboard-access?export=csv${query ? `&${query}` : ""}`, {
+        headers,
+      });
+      if (response.status === 401) {
+        setAuthenticated(false);
+        setMessage("Authorization failed. Please log in again.");
+        return;
+      }
+      if (!response.ok) {
+        setMessage("Could not export dashboard access records.");
+        return;
+      }
+      await downloadCsvResponse(response, "sema-dashboard-access.csv");
+      setMessage("Dashboard access records exported.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleExportAnalyticsCsv(kind: "summary" | "events") {
+    setLoading(true);
+    try {
+      const query = buildQuery(analyticsFilters);
+      const response = await fetch(
+        `/api/admin/analytics?export=${kind}${query ? `&${query}` : ""}`,
+        { headers },
+      );
+      if (response.status === 401) {
+        setAuthenticated(false);
+        setMessage("Authorization failed. Please log in again.");
+        return;
+      }
+      if (!response.ok) {
+        setMessage("Could not export analytics.");
+        return;
+      }
+      await downloadCsvResponse(response, `sema-analytics-${kind}.csv`);
+      setMessage("Analytics exported.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function downloadCsvResponse(response: Response, fallbackFilename: string) {
+    const blob = await response.blob();
+    const disposition = response.headers.get("content-disposition") || "";
+    const filenameMatch = disposition.match(/filename="([^"]+)"/);
+    const filename = filenameMatch?.[1] || fallbackFilename;
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
   }
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
@@ -352,18 +632,7 @@ export default function AdminPage() {
         return;
       }
 
-      const blob = await response.blob();
-      const disposition = response.headers.get("content-disposition") || "";
-      const filenameMatch = disposition.match(/filename="([^"]+)"/);
-      const filename = filenameMatch?.[1] || `sema-${type}.csv`;
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
+      await downloadCsvResponse(response, `sema-${type}.csv`);
       setMessage("Report exported.");
     } finally {
       setLoading(false);
@@ -1176,6 +1445,541 @@ export default function AdminPage() {
                     <p className="muted">No website tab clicks recorded yet.</p>
                   )}
                 </article>
+              </div>
+            </section>
+          ) : null}
+
+          {tab === "analytics" ? (
+            <section className="admin-section">
+              <div className="section-heading admin-report-heading">
+                <div>
+                  <h2>Website analytics</h2>
+                  <p>
+                    Site-wide traffic, navigation, and dashboard-access analytics. Unique visitor and
+                    session figures are estimates based on anonymous, first-party browser identifiers —
+                    not verified individual people.
+                  </p>
+                </div>
+                <button
+                  className="button light"
+                  type="button"
+                  onClick={() => loadAnalytics(password, analyticsFilters)}
+                  disabled={loading}
+                >
+                  Refresh
+                </button>
+              </div>
+
+              <div className="filter-bar">
+                <label className="filter-field">
+                  From
+                  <input
+                    type="date"
+                    value={analyticsFilters.dateFrom}
+                    onChange={(e) => setAnalyticsFilters((prev) => ({ ...prev, dateFrom: e.target.value }))}
+                  />
+                </label>
+                <label className="filter-field">
+                  To
+                  <input
+                    type="date"
+                    value={analyticsFilters.dateTo}
+                    onChange={(e) => setAnalyticsFilters((prev) => ({ ...prev, dateTo: e.target.value }))}
+                  />
+                </label>
+                <label className="filter-field">
+                  Dashboard
+                  <select
+                    value={analyticsFilters.dashboardId}
+                    onChange={(e) => setAnalyticsFilters((prev) => ({ ...prev, dashboardId: e.target.value }))}
+                  >
+                    <option value="">All dashboards</option>
+                    {dashboardList
+                      .filter((item) => item.id)
+                      .map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.title}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+                <label className="filter-field">
+                  Page contains
+                  <input
+                    value={analyticsFilters.page}
+                    onChange={(e) => setAnalyticsFilters((prev) => ({ ...prev, page: e.target.value }))}
+                    placeholder="/dashboards"
+                  />
+                </label>
+                <label className="filter-field">
+                  Language
+                  <select
+                    value={analyticsFilters.locale}
+                    onChange={(e) => setAnalyticsFilters((prev) => ({ ...prev, locale: e.target.value }))}
+                  >
+                    <option value="">All languages</option>
+                    <option value="en">English</option>
+                    <option value="so">Somali</option>
+                  </select>
+                </label>
+                <button className="button" type="button" onClick={handleApplyAnalyticsFilters} disabled={loading}>
+                  Apply filters
+                </button>
+              </div>
+
+              <div className="report-grid">
+                <article className="report-card">
+                  <span>Page views</span>
+                  <strong>{formatNumber(analyticsOverview?.totals.pageViews)}</strong>
+                </article>
+                <article className="report-card">
+                  <span>Estimated unique visitors</span>
+                  <strong>{formatNumber(analyticsOverview?.totals.uniqueVisitors)}</strong>
+                </article>
+                <article className="report-card">
+                  <span>Sessions</span>
+                  <strong>{formatNumber(analyticsOverview?.totals.totalSessions)}</strong>
+                </article>
+                <article className="report-card">
+                  <span>Returning visitor rate</span>
+                  <strong>{analyticsOverview?.totals.returningVisitorRate ?? 0}%</strong>
+                </article>
+                <article className="report-card">
+                  <span>Dashboard opens</span>
+                  <strong>{formatNumber(analyticsOverview?.totals.dashboardOpens)}</strong>
+                </article>
+                <article className="report-card">
+                  <span>Unique organizations</span>
+                  <strong>{formatNumber(analyticsOverview?.totals.uniqueOrganizations)}</strong>
+                </article>
+                <article className="report-card">
+                  <span>Dashboard form submissions</span>
+                  <strong>{formatNumber(analyticsOverview?.totals.dashboardFormSubmissions)}</strong>
+                </article>
+                <article className="report-card">
+                  <span>Dashboard form completion rate</span>
+                  <strong>
+                    {analyticsOverview?.totals.dashboardFormCompletionRate === null ||
+                    analyticsOverview?.totals.dashboardFormCompletionRate === undefined
+                      ? "—"
+                      : `${analyticsOverview.totals.dashboardFormCompletionRate}%`}
+                  </strong>
+                </article>
+                <article className="report-card">
+                  <span>Publication downloads</span>
+                  <strong>{formatNumber(analyticsOverview?.totals.publicationDownloads)}</strong>
+                </article>
+                <article className="report-card">
+                  <span>Data requests submitted</span>
+                  <strong>{formatNumber(analyticsOverview?.totals.dataRequestsSubmitted)}</strong>
+                </article>
+                <article className="report-card">
+                  <span>Contact forms submitted</span>
+                  <strong>{formatNumber(analyticsOverview?.totals.contactFormsSubmitted)}</strong>
+                </article>
+                <article className="report-card">
+                  <span>External link clicks</span>
+                  <strong>{formatNumber(analyticsOverview?.totals.externalLinkClicks)}</strong>
+                </article>
+              </div>
+
+              <div className="admin-export-panel">
+                <h3>Exports</h3>
+                <div className="button-row">
+                  <button
+                    className="button light"
+                    type="button"
+                    disabled={loading}
+                    onClick={() => handleExportAnalyticsCsv("summary")}
+                  >
+                    Export analytics summary (CSV)
+                  </button>
+                  <button
+                    className="button light"
+                    type="button"
+                    disabled={loading}
+                    onClick={() => handleExportAnalyticsCsv("events")}
+                  >
+                    Export raw analytics events (CSV)
+                  </button>
+                </div>
+                <p className="muted">Exports respect the date, dashboard, page, and language filters above.</p>
+              </div>
+
+              <div className="analytics-grid">
+                <article className="analytics-panel">
+                  <h3>Dashboard access popup funnel</h3>
+                  <RankBarList
+                    items={[
+                      { label: "Popup opened", count: analyticsOverview?.dashboardGateFunnel.opened ?? 0 },
+                      { label: "Form submitted", count: analyticsOverview?.dashboardGateFunnel.submitted ?? 0 },
+                      { label: "Popup cancelled", count: analyticsOverview?.dashboardGateFunnel.cancelled ?? 0 },
+                    ]}
+                    emptyLabel="No popup activity recorded yet."
+                  />
+                </article>
+
+                <article className="analytics-panel">
+                  <h3>Most accessed dashboards</h3>
+                  <RankBarList
+                    items={(analyticsOverview?.mostAccessedDashboards ?? []).map((row) => ({
+                      label: row.title,
+                      count: row.count,
+                    }))}
+                    emptyLabel="No dashboard opens recorded yet."
+                  />
+                </article>
+
+                <article className="analytics-panel">
+                  <h3>Most visited pages</h3>
+                  <RankBarList
+                    items={(analyticsOverview?.mostVisitedPages ?? []).map((row) => ({
+                      label: row.path,
+                      count: row.count,
+                    }))}
+                    emptyLabel="No page views recorded yet."
+                  />
+                </article>
+
+                <article className="analytics-panel">
+                  <h3>Most clicked navigation tabs</h3>
+                  <RankBarList
+                    items={(analyticsOverview?.mostClickedNav ?? []).map((row) => ({
+                      label: row.label,
+                      count: row.count,
+                    }))}
+                    emptyLabel="No navigation clicks recorded yet."
+                  />
+                </article>
+
+                <article className="analytics-panel">
+                  <h3>Most downloaded publications</h3>
+                  <RankBarList
+                    items={(analyticsOverview?.mostDownloadedPublications ?? []).map((row) => ({
+                      label: row.label,
+                      count: row.count,
+                    }))}
+                    emptyLabel="No publication downloads recorded yet."
+                  />
+                </article>
+
+                <article className="analytics-panel">
+                  <h3>Traffic sources / referrers</h3>
+                  <RankBarList
+                    items={(analyticsOverview?.referrers ?? []).map((row) => ({
+                      label: row.referrer,
+                      count: row.count,
+                    }))}
+                    emptyLabel="No referrer data recorded yet."
+                  />
+                </article>
+
+                <article className="analytics-panel">
+                  <h3>Device categories</h3>
+                  <RankBarList
+                    items={(analyticsOverview?.deviceCategories ?? []).map((row) => ({
+                      label: row.category,
+                      count: row.count,
+                    }))}
+                    emptyLabel="No device data recorded yet."
+                  />
+                </article>
+
+                <article className="analytics-panel">
+                  <h3>Browser categories</h3>
+                  <RankBarList
+                    items={(analyticsOverview?.browserCategories ?? []).map((row) => ({
+                      label: row.category,
+                      count: row.count,
+                    }))}
+                    emptyLabel="No browser data recorded yet."
+                  />
+                </article>
+
+                <article className="analytics-panel">
+                  <h3>English vs Somali usage</h3>
+                  <RankBarList
+                    items={(analyticsOverview?.localeUsage ?? []).map((row) => ({
+                      label: row.locale === "en" ? "English" : row.locale === "so" ? "Somali" : row.locale,
+                      count: row.count,
+                    }))}
+                    emptyLabel="No language usage recorded yet."
+                  />
+                </article>
+
+                <article className="analytics-panel">
+                  <h3>Visitors by approximate country</h3>
+                  <RankBarList
+                    items={(analyticsOverview?.visitorsByCountry ?? []).map((row) => ({
+                      label: row.country,
+                      count: row.count,
+                    }))}
+                    emptyLabel="No location data available yet."
+                  />
+                </article>
+
+                <article className="analytics-panel">
+                  <h3>Visitors by approximate city</h3>
+                  <RankBarList
+                    items={(analyticsOverview?.visitorsByCity ?? []).map((row) => ({
+                      label: row.city,
+                      count: row.count,
+                    }))}
+                    emptyLabel="No city-level location data available yet."
+                  />
+                </article>
+
+                <article className="analytics-panel">
+                  <h3>Visitors by day</h3>
+                  <RankBarList
+                    items={(analyticsOverview?.visitorsByDay ?? []).slice(0, 14).map((row) => ({
+                      label: row.day,
+                      count: row.count,
+                    }))}
+                    emptyLabel="No daily traffic recorded yet."
+                  />
+                  <p className="analytics-note">Most recent 14 days shown; export the raw events for the full range.</p>
+                </article>
+
+                <article className="analytics-panel">
+                  <h3>Dashboard opens over time</h3>
+                  <RankBarList
+                    items={(analyticsOverview?.dashboardOpensOverTime ?? []).slice(0, 14).map((row) => ({
+                      label: row.day,
+                      count: row.count,
+                    }))}
+                    emptyLabel="No dashboard opens recorded yet."
+                  />
+                </article>
+              </div>
+
+              {analyticsOverview?.note ? <p className="analytics-note">{analyticsOverview.note}</p> : null}
+            </section>
+          ) : null}
+
+          {tab === "access" ? (
+            <section className="admin-section">
+              <div className="section-heading admin-report-heading">
+                <div>
+                  <h2>Dashboard access registrations</h2>
+                  <p>
+                    Organizations that have registered to access a SEMA dashboard. This information is
+                    never displayed publicly.
+                  </p>
+                </div>
+                <button
+                  className="button light"
+                  type="button"
+                  onClick={() => loadDashboardAccess(password, dashboardAccessFilters, dashboardAccessPage)}
+                  disabled={loading}
+                >
+                  Refresh
+                </button>
+              </div>
+
+              <div className="filter-bar">
+                <label className="filter-field">
+                  From
+                  <input
+                    type="date"
+                    value={dashboardAccessFilters.dateFrom}
+                    onChange={(e) => setDashboardAccessFilters((prev) => ({ ...prev, dateFrom: e.target.value }))}
+                  />
+                </label>
+                <label className="filter-field">
+                  To
+                  <input
+                    type="date"
+                    value={dashboardAccessFilters.dateTo}
+                    onChange={(e) => setDashboardAccessFilters((prev) => ({ ...prev, dateTo: e.target.value }))}
+                  />
+                </label>
+                <label className="filter-field">
+                  Organization
+                  <input
+                    value={dashboardAccessFilters.organization}
+                    onChange={(e) => setDashboardAccessFilters((prev) => ({ ...prev, organization: e.target.value }))}
+                    placeholder="Search organization name"
+                  />
+                </label>
+                <label className="filter-field">
+                  Organization type
+                  <select
+                    value={dashboardAccessFilters.organizationType}
+                    onChange={(e) =>
+                      setDashboardAccessFilters((prev) => ({ ...prev, organizationType: e.target.value }))
+                    }
+                  >
+                    <option value="">All types</option>
+                    {ORGANIZATION_TYPES.map((type) => (
+                      <option key={type} value={type}>
+                        {type.replace(/_/g, " ")}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="filter-field">
+                  Activity type
+                  <select
+                    value={dashboardAccessFilters.activityType}
+                    onChange={(e) => setDashboardAccessFilters((prev) => ({ ...prev, activityType: e.target.value }))}
+                  >
+                    <option value="">All activities</option>
+                    {ACTIVITY_TYPES.map((type) => (
+                      <option key={type} value={type}>
+                        {type.replace(/_/g, " ")}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="filter-field">
+                  Country
+                  <input
+                    value={dashboardAccessFilters.country}
+                    onChange={(e) => setDashboardAccessFilters((prev) => ({ ...prev, country: e.target.value }))}
+                    placeholder="Country of operation"
+                  />
+                </label>
+                <label className="filter-field">
+                  Dashboard
+                  <select
+                    value={dashboardAccessFilters.dashboardId}
+                    onChange={(e) => setDashboardAccessFilters((prev) => ({ ...prev, dashboardId: e.target.value }))}
+                  >
+                    <option value="">All dashboards</option>
+                    {dashboardList
+                      .filter((item) => item.id)
+                      .map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.title}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+                <label className="filter-field">
+                  Language
+                  <select
+                    value={dashboardAccessFilters.language}
+                    onChange={(e) => setDashboardAccessFilters((prev) => ({ ...prev, language: e.target.value }))}
+                  >
+                    <option value="">All languages</option>
+                    <option value="en">English</option>
+                    <option value="so">Somali</option>
+                  </select>
+                </label>
+                <button className="button" type="button" onClick={handleApplyDashboardAccessFilters} disabled={loading}>
+                  Apply filters
+                </button>
+              </div>
+
+              <div className="admin-export-panel">
+                <h3>Exports</h3>
+                <div className="button-row">
+                  <button className="button light" type="button" disabled={loading} onClick={handleExportDashboardAccessCsv}>
+                    Export dashboard access records (CSV)
+                  </button>
+                </div>
+                <p className="muted">Excel export is not yet available — open the CSV export in Excel or Google Sheets.</p>
+              </div>
+
+              <div className="analytics-grid">
+                <article className="analytics-panel">
+                  <h3>Organizations by activity type</h3>
+                  <RankBarList
+                    items={(dashboardAccess?.byActivityType ?? []).map((row) => ({
+                      label: (row.key || "unspecified").replace(/_/g, " "),
+                      count: row.count,
+                    }))}
+                    emptyLabel="No dashboard access records yet."
+                  />
+                </article>
+                <article className="analytics-panel">
+                  <h3>Organizations by organization type</h3>
+                  <RankBarList
+                    items={(dashboardAccess?.byOrganizationType ?? []).map((row) => ({
+                      label: (row.key || "unspecified").replace(/_/g, " "),
+                      count: row.count,
+                    }))}
+                    emptyLabel="No dashboard access records yet."
+                  />
+                </article>
+                <article className="analytics-panel">
+                  <h3>Organizations by country of operation</h3>
+                  <RankBarList
+                    items={(dashboardAccess?.byCountry ?? []).map((row) => ({
+                      label: row.key || "Unspecified",
+                      count: row.count,
+                    }))}
+                    emptyLabel="No dashboard access records yet."
+                  />
+                </article>
+              </div>
+
+              <div className="admin-report-panel" style={{ marginTop: "1.5rem" }}>
+                <h3>
+                  Organization access records
+                  {dashboardAccess ? ` (${formatNumber(dashboardAccess.total)})` : ""}
+                </h3>
+                {dashboardAccess?.rows.length ? (
+                  <div className="report-table-wrap">
+                    <table className="report-table">
+                      <thead>
+                        <tr>
+                          <th>Organization</th>
+                          <th>Type</th>
+                          <th>Activities</th>
+                          <th>Country of operation</th>
+                          <th>Dashboard</th>
+                          <th>Approx. visitor location</th>
+                          <th>Source page</th>
+                          <th>Access date</th>
+                          <th>Repeat</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {dashboardAccess.rows.map((row) => (
+                          <tr key={row.id}>
+                            <td>{row.organizationName}</td>
+                            <td>{row.organizationType ? row.organizationType.replace(/_/g, " ") : "—"}</td>
+                            <td>{row.activityTypes.map((a) => a.replace(/_/g, " ")).join(", ")}</td>
+                            <td>{row.countryOfOperation || "—"}</td>
+                            <td>{row.dashboardTitle || "—"}</td>
+                            <td>
+                              {[row.visitorCity, row.visitorRegion, row.visitorCountry].filter(Boolean).join(", ") ||
+                                "Unknown"}
+                            </td>
+                            <td>{row.sourcePage || "—"}</td>
+                            <td>{formatDateTime(row.createdAt)}</td>
+                            <td>{row.isRepeatAccess ? "Yes" : "No"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="muted">No dashboard access records match the current filters.</p>
+                )}
+
+                {dashboardAccess && dashboardAccess.total > dashboardAccess.limit ? (
+                  <div className="button-row">
+                    <button
+                      className="button light"
+                      type="button"
+                      disabled={dashboardAccessPage <= 1 || loading}
+                      onClick={() => handleDashboardAccessPageChange(dashboardAccessPage - 1)}
+                    >
+                      Previous page
+                    </button>
+                    <button
+                      className="button light"
+                      type="button"
+                      disabled={dashboardAccessPage * dashboardAccess.limit >= dashboardAccess.total || loading}
+                      onClick={() => handleDashboardAccessPageChange(dashboardAccessPage + 1)}
+                    >
+                      Next page
+                    </button>
+                  </div>
+                ) : null}
               </div>
             </section>
           ) : null}

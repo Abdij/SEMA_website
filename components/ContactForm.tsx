@@ -2,12 +2,14 @@
 
 import { FormEvent, useState } from "react";
 import { Send } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { trackEvent } from "@/lib/analytics-client";
 
 type FormState = "idle" | "submitting" | "success" | "error";
 
 export function ContactForm() {
   const t = useTranslations("contact");
+  const locale = useLocale();
   const [state, setState] = useState<FormState>("idle");
   const [message, setMessage] = useState("");
 
@@ -36,6 +38,12 @@ export function ContactForm() {
       form.reset();
       setState("success");
       setMessage(t("successMessage"));
+      trackEvent({
+        eventType: "contact_form_submitted",
+        eventCategory: "form",
+        locale,
+        metadata: { enquiryType: String(payload.enquiryType || "") },
+      });
     } catch (error) {
       setState("error");
       setMessage(error instanceof Error ? error.message : t("errorFallback"));

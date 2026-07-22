@@ -1,6 +1,7 @@
 import { Download, ExternalLink } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { PageHero } from "@/components/PageHero";
+import { PublicationLink } from "@/components/PublicationLink";
 import { getPublications } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -51,9 +52,15 @@ export default async function PublicationsPage() {
                     <h3>{item.title}</h3>
                     <p>{item.description}</p>
                     <p className="publication-meta">{t("source")} {item.source}</p>
-                    <a className="text-link" href={item.href} target={action.target} rel="noreferrer">
+                    <PublicationLink
+                      href={item.href}
+                      target={action.target}
+                      publicationId={item.id}
+                      title={item.title}
+                      fileType={item.fileMime || item.type}
+                    >
                       {action.label} {action.icon}
-                    </a>
+                    </PublicationLink>
                   </article>
                 );
               })}

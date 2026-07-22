@@ -18,7 +18,8 @@
     "contact": "Xiriiri",
     "resources": "Kheyraadka",
     "partners": "Wadaajayaasha",
-    "operators": "Hawlwadeennada"
+    "operators": "Hawlwadeennada",
+    "privacy": "Asturnaanta"
   },
   "header": {
     "govBar": "Jamhuuriyadda Federaalka Soomaaliya",
@@ -43,7 +44,9 @@
     "followSema": "Raac SEMA",
     "xLabel": "Raac SEMA xog-ogaalnimada X",
     "xLink": "X: @SomaliaSema",
-    "copyright": "© 2026 Hay'adda Maaraynta Qaraxaha Soomaaliya · Muqdisho, Soomaaliya"
+    "copyright": "© 2026 Hay'adda Maaraynta Qaraxaha Soomaaliya · Muqdisho, Soomaaliya",
+    "legal": "Sharciga",
+    "privacyLink": "Ogeysiiska Asturnaanta"
   },
   "home": {
     "heroEyebrow": "Dowladda Federaalka Soomaaliya",
@@ -323,5 +326,127 @@
     "title": "Dowladda Federaalka Soomaaliya — Hay'adaha Rasmi ah",
     "text": "SEMA waxay u shaqaysaa Dowladda Federaalka Soomaaliya oo ay la jiraan wasaaradaha asxaabta iyo wakaaladaha mas'uul ka ah ammaanka, xukumaynta, iyo maaraynta musiibada.",
     "visitWebsite": "Booqo bogga →"
+  },
+  "dashboardAccess": {
+    "title": "Gal Dashboordka Hawlaha Miinaha ee SEMA",
+    "explanation": "SEMA waxay ururisaa macluumaad xaddidan oo ku saabsan ururrada helaya dashboordkan si loo fahmo isticmaalayaasha, loo horumariyo alaabta macluumaadka, oo loo taageero iskaashiga xisaabtan hore. Macluumaadkan si guud looma soo bandhigi doono.",
+    "fields": {
+      "organizationName": {
+        "label": "Magaca ururka",
+        "placeholder": "Tusaale: Hay'adda Maaraynta Qodxinta Soomaaliya"
+      },
+      "organizationType": {
+        "label": "Nooca ururka (ikhtiyaari)",
+        "placeholder": "Dooro nooca ururka"
+      },
+      "organizationTypeOther": {
+        "label": "Fadlan sharax",
+        "placeholder": "Sharax nooca ururkaaga"
+      },
+      "activityTypes": {
+        "label": "Aaggaga hawsha"
+      },
+      "activityTypeOther": {
+        "label": "Fadlan sharax",
+        "placeholder": "Sharax hawsha"
+      },
+      "countryOfOperation": {
+        "label": "Dalka lagu shaqeeyo (ikhtiyaari)",
+        "placeholder": "Tusaale: Soomaaliya"
+      },
+      "consent": {
+        "label": "Waan fahmay oo waxaan ogolaanayaa in SEMA ay ururiso macluumaadkan sida kor lagu sharaxay."
+      }
+    },
+    "orgTypes": {
+      "government": "Dawladda",
+      "united_nations": "Qaramada Midoobay",
+      "international_ngo": "Hay'ad NGO Caalami ah",
+      "national_ngo": "Hay'ad NGO Qaran",
+      "civil_society": "Ururka Bulshada Rayidka ah",
+      "donor": "Deeqbixiye",
+      "academic": "Machad Waxbarasho ama Cilmi-baaris",
+      "private_sector": "Qaska (Private Sector)",
+      "media": "Warbaahinta",
+      "independent_consultant": "La-taliye Madaxbannaan",
+      "other": "Kale"
+    },
+    "activityOptions": {
+      "humanitarian": "Bini'aadmi (Humanitarian)",
+      "development": "Horumarinta",
+      "peacebuilding": "Dhismaha Nabadda",
+      "stabilization": "Xasilinta",
+      "mine_action": "Hawlaha Miinaha",
+      "protection": "Ilaalinta",
+      "emergency_response": "Ka-jawaabidda Xaaladaha Degdegga ah",
+      "government_services": "Adeegyada Dawladda",
+      "research_academia": "Cilmi-baaris ama Waxbarasho",
+      "donor_funding": "Deeqbixin ama Maalgelin",
+      "private_sector": "Qaska (Private Sector)",
+      "media": "Warbaahinta",
+      "other": "Kale"
+    },
+    "buttons": {
+      "cancel": "Jooji",
+      "continue": "Sii wad Dashboordka",
+      "submitting": "Waa la gudbinayaa…",
+      "openDashboard": "Fur Dashboordka",
+      "changeInfo": "Beddel macluumaadka ururka",
+      "viewInNewTab": "Fiiri Dashboordka",
+      "close": "Xir"
+    },
+    "errors": {
+      "organizationName": "Geli magaca ururkaaga.",
+      "activityTypes": "Dooro ugu yaraan hal aag oo hawl ah.",
+      "consent": "Waa inaad ogolaataa ka hor inta aadan gelin dashboordka.",
+      "generic": "Wax baa qaldamay. Macluumaadkaaga waa la haystaa — fadlan isku day mar kale."
+    },
+    "notices": {
+      "privacy": "Akhri",
+      "privacyLinkLabel": "ogeysiiska asturnaanta",
+      "reusing": "Waxaa la isticmaalayaa macluumaadka ururkaaga ee hore la geliyay."
+    },
+    "gateLockedMessage": "Bixi macluumaadka ururkaaga si aad u aragto dashboordkan.",
+    "gateProviderArcgis": "Dashboord ArcGIS ah — macluumaadka ururka ayaa loo baahan yahay.",
+    "gateProviderPowerbi": "Dashboord Power BI ah — macluumaadka ururka ayaa loo baahan yahay."
+  },
+  "privacy": {
+    "eyebrow": "Asturnaanta",
+    "title": "Ogeysiiska asturnaanta falanqaynta iyo gelitaanka dashboordka",
+    "intro": "Ogeysiiskani wuxuu sharaxayaa macluumaadka SEMA ururiso markaad booqato websaydkan iyo marka aad gasho dashboord SEMA oo Power BI ama ArcGIS ah, sababta loo ururiyo, iyo sida loo maareeyo.",
+    "sections": {
+      "whatWebsite": {
+        "title": "Falanqaynta websaydka",
+        "body": "Marka aad booqato websaydkan, SEMA waxay diiwaan geliso macluumaad qarsoodi ah oo guud: boggaga la booqday, xiriirinnada iyo badhamada la riixay, daabacaadaha la soo dejiyay, xiriirinnada dibedda la riixay, luqadda aad isticmaasho, goobta kaa tiray, iyo taariikhda iyo waqtiga qiyaasta ah ee booqashadaada. Waxaan sidoo kale abuurnaa aqoonsi kooban, dhinaca hore, oo lagu kaydiyo biraawsarkaaga si booqashooyinka soo noqnoqda ee biraawsar isku mid ah loo tirin karo — aqoonsigan lama xiriiriyo magacaaga, iimaylkaaga, ama wax kale oo shakhsi ah."
+      },
+      "whatDashboard": {
+        "title": "Macluumaadka gelitaanka dashboordka",
+        "body": "Ka hor inta aan la furin dashboordka hawlaha miinaha ee SEMA, waxaan ku weydiinaa magaca ururkaaga, aagagga hawshaada, iyo — ikhtiyaar ahaan — nooca ururkaaga iyo dalka aad ku shaqeyso. Macluumaadkani wuxuu SEMA caawiyaa inay fahamto cida isticmaasha dashboordyadeeda, hagaajiso alaabta macluumaadkeeda, oo taageerto iskaashiga xisaabtan hore. Waligeed si guud looma soo bandhigi doono."
+      },
+      "location": {
+        "title": "Goobta qiyaasta ah",
+        "body": "Marka ay ka heli karto qaab-dhismeedka martida u ah, waxaan diiwaan gelinaa dal, gobol, iyo magaalo qiyaasta ah oo la xiriira booqashadaada. Ma weydiisanno goobta GPS-ka qalabkaaga, mana ururino ama kaydino isku-dhafka sax ah ee goobta. Cinwaanka IP-ga sax ah ee gaarka ah si joogto ah uma kaydinno, welina lagama muujiyo qaybta maamulka SEMA."
+      },
+      "estimates": {
+        "title": "Tirada booqdayaasha gaarka ah waa qiyaas",
+        "body": "Tirooyinka sida \"booqdayaasha gaarka ah\" ee loo soo sheegayo shaqaalaha SEMA waa qiyaasyo ku salaysan aqoonsiyada biraawsarka ee qarsoodiga ah. Waxay matalaan biraawsarro ama qalab kala duwan, ma aha dad la xaqiijiyay, qofka isticmaala laba qalab ayaa laga yaabaa in laba jeer la tiriyo."
+      },
+      "retention": {
+        "title": "Muddada macluumaadka la haysto",
+        "body": "Diiwaanada ururka ee gelitaanka dashboordka iyo dhacdooyinka falanqaynta websaydka waxaa la haystaa muddo xaddidan, oo ay qeexdo SEMA, ka dibna diiwaanada duugga ah waa la tirtiri karaa. La xiriir SEMA faahfaahinta hoose si aad u ogaato mudooyinka hadda jira."
+      },
+      "access": {
+        "title": "Yaa arki kara macluumaadkan",
+        "body": "Kaliya maamulayaasha SEMA ee la ogol yahay ayaa arki kara diiwaanada heerka ururka ee gelitaanka dashboordka iyo falanqaynta faahfaahsan ee websaydka. Macluumaadkani waligiis si guud looma daayo, lamana wadaago dhinacyo saddexaad ujeeddo suuq-geyn ah."
+      },
+      "contact": {
+        "title": "Su'aalaha ku saabsan xogtaada",
+        "body": "Si aad u weydiiso su'aal ku saabsan macluumaadka ogeysiiskan lagu sharaxay, la xiriir SEMA emailka info@sema.gov.so ama foomka xiriirka ee websaydkan."
+      },
+      "powerbi": {
+        "title": "Ku saabsan dashboordyada Power BI",
+        "body": "Foomkan gelitaanku wuxuu SEMA u caawiyaa inay fahanto oo la xiriirto dhinacyada danaha leh — maaha xakameyn amni. Haddii dashboord lagu daabacay Power BI \"Publish to web\", warbixinta hoose ayaa laga yaabaa inay weli si toos ah u gaadhi karto qof kasta oo horeba u haysta xiriirinta toos ah, iyada oo ka madax-bannaan websaydkan."
+      }
+    }
   }
 }

@@ -1,15 +1,25 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { trackEvent } from "@/lib/analytics-client";
 
 type FormState = "idle" | "submitting" | "success" | "error";
 
 export function DataRequestForm() {
   const t = useTranslations("dataRequest");
+  const locale = useLocale();
   const [state, setState] = useState<FormState>("idle");
   const [message, setMessage] = useState("");
+  const startTracked = useRef(false);
+
+  useEffect(() => {
+    if (startTracked.current) return;
+    startTracked.current = true;
+    trackEvent({ eventType: "data_request_started", eventCategory: "form", locale });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -40,6 +50,12 @@ export function DataRequestForm() {
           ? t("successRef", { ref: data.requestRef })
           : t("successNoRef"),
       );
+      trackEvent({
+        eventType: "data_request_submitted",
+        eventCategory: "form",
+        locale,
+        metadata: { requesterType: String(payload.requesterType || ""), preferredFormat: String(payload.preferredFormat || "") },
+      });
     } catch (error) {
       setState("error");
       setMessage(error instanceof Error ? error.message : t("errorFallback"));

@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/lib/navigation";
+import { TrackedAnchor } from "@/components/TrackedLink";
 import { govLinks } from "@/lib/content";
 
 export async function Footer() {
@@ -34,30 +35,37 @@ export async function Footer() {
         <div>
           <h3>{t("governmentLinks")}</h3>
           {govLinks.map((link) => (
-            <a
+            <TrackedAnchor
               key={link.href}
               href={link.href}
+              eventType="external_link_clicked"
+              label={link.name}
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`Visit ${link.name} (opens in new tab)`}
             >
               {link.name}
-            </a>
+            </TrackedAnchor>
           ))}
           <h3 style={{ marginTop: "1.25rem" }}>{t("followSema")}</h3>
-          <a
+          <TrackedAnchor
             href="https://x.com/SomaliaSema"
+            eventType="external_link_clicked"
+            label={t("xLink")}
             target="_blank"
             rel="noopener noreferrer"
             aria-label={t("xLabel")}
           >
             {t("xLink")}
-          </a>
+          </TrackedAnchor>
         </div>
       </div>
       <div className="footer-bottom">
         <span>{t("copyright")}</span>
-        <a href="mailto:info@sema.gov.so">info@sema.gov.so</a>
+        <div className="footer-bottom-links">
+          <Link href="/privacy">{t("privacyLink")}</Link>
+          <a href="mailto:info@sema.gov.so">info@sema.gov.so</a>
+        </div>
       </div>
     </footer>
   );

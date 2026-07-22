@@ -13,7 +13,7 @@ export default async function DashboardsPage() {
     <>
       <PageHero eyebrow={t("eyebrow")} title={t("title")} text={t("text")} />
       {dashboardEmbeds.map((dashboard) => (
-        <DashboardEmbed key={dashboard.title} {...dashboard} />
+        <DashboardEmbed key={dashboard.id || dashboard.title} {...dashboard} />
       ))}
     </>
   );
