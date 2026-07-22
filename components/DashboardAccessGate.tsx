@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ExternalLink, Lock } from "lucide-react";
+import { Maximize2, Lock } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import {
-  clearDashboardRegistration,
   getOrCreateSessionId,
   getOrCreateVisitorId,
   getStoredDashboardRegistration,
   storeDashboardRegistration,
   trackEvent,
+  type StoredDashboardRegistration,
 } from "@/lib/analytics-client";
 import { DashboardAccessModal, type DashboardAccessFormValues } from "@/components/DashboardAccessModal";
 
@@ -20,16 +20,21 @@ type Props = {
   provider?: string;
 };
 
-type Status = "locked" | "reusing" | "modal" | "unlocked";
-
 export function DashboardAccessGate({ dashboardId, title, description, provider }: Props) {
   const t = useTranslations("dashboardAccess");
   const locale = useLocale();
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const unlockedLinkRef = useRef<HTMLAnchorElement>(null);
+  const expandButtonRef = useRef<HTMLButtonElement>(null);
 
-  const [status, setStatus] = useState<Status>("locked");
+  // Whether the dashboard itself is open (iframe visible) is tracked
+  // independently of whether the form modal is showing, so that opening the
+  // modal to edit organization info never re-locks a dashboard that's
+  // already unlocked for this session — and cancelling that edit leaves the
+  // dashboard exactly as it was.
+  const [unlocked, setUnlocked] = useState(false);
   const [dashboardUrl, setDashboardUrl] = useState<string | null>(null);
+  const [reusing, setReusing] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [hasStoredRegistration, setHasStoredRegistration] = useState(false);
   const [modalInitialValues, setModalInitialValues] = useState<Partial<DashboardAccessFormValues>>();
 
@@ -38,23 +43,22 @@ export function DashboardAccessGate({ dashboardId, title, description, provider 
   }, []);
 
   useEffect(() => {
-    if (status === "unlocked") {
-      unlockedLinkRef.current?.focus();
+    if (unlocked && !showModal) {
+      expandButtonRef.current?.focus();
     }
-  }, [status]);
+  }, [unlocked, showModal]);
 
   function sourcePage() {
     return typeof window !== "undefined" ? window.location.pathname : "";
   }
 
-  async function reuseStoredAccess() {
-    const stored = getStoredDashboardRegistration();
-    if (!stored) {
-      setStatus("modal");
-      return;
-    }
+  function openModal(initialValues: Partial<DashboardAccessFormValues> | undefined) {
+    setModalInitialValues(initialValues);
+    setShowModal(true);
+  }
 
-    setStatus("reusing");
+  async function reuseStoredAccess(stored: StoredDashboardRegistration) {
+    setReusing(true);
 
     try {
       const response = await fetch("/api/dashboard-access", {
@@ -74,16 +78,16 @@ export function DashboardAccessGate({ dashboardId, title, description, provider 
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        setModalInitialValues(stored);
-        setStatus("modal");
+        openModal(stored);
         return;
       }
 
       setDashboardUrl(data.dashboardUrl);
-      setStatus("unlocked");
+      setUnlocked(true);
     } catch {
-      setModalInitialValues(stored);
-      setStatus("modal");
+      openModal(stored);
+    } finally {
+      setReusing(false);
     }
   }
 
@@ -97,11 +101,11 @@ export function DashboardAccessGate({ dashboardId, title, description, provider 
       metadata: { sourcePage: sourcePage(), reused: hasStoredRegistration },
     });
 
-    if (hasStoredRegistration) {
-      void reuseStoredAccess();
+    const stored = getStoredDashboardRegistration();
+    if (stored) {
+      void reuseStoredAccess(stored);
     } else {
-      setModalInitialValues(undefined);
-      setStatus("modal");
+      openModal(undefined);
     }
   }
 
@@ -113,7 +117,10 @@ export function DashboardAccessGate({ dashboardId, title, description, provider 
       dashboardTitle: title,
       locale,
     });
-    setStatus("locked");
+    // Only the modal closes — an already-unlocked dashboard stays open and
+    // visible, and a not-yet-unlocked one stays locked. Nothing here should
+    // touch `unlocked`/`dashboardUrl`.
+    setShowModal(false);
   }
 
   function handleSuccess(result: { dashboardUrl: string; accessId: string; values: DashboardAccessFormValues }) {
@@ -128,15 +135,31 @@ export function DashboardAccessGate({ dashboardId, title, description, provider 
     });
     setHasStoredRegistration(true);
     setDashboardUrl(result.dashboardUrl);
-    setStatus("unlocked");
+    setUnlocked(true);
+    setShowModal(false);
   }
 
   function handleChangeInfo() {
+    // Pre-fill with whatever is currently stored — and do NOT clear it or
+    // touch `unlocked` here. If the visitor cancels, both the dashboard's
+    // open/closed state and the stored registration must be exactly as they
+    // were before they clicked "change organization information".
     const stored = getStoredDashboardRegistration();
-    clearDashboardRegistration();
-    setHasStoredRegistration(false);
-    setModalInitialValues(stored ?? undefined);
-    setStatus("modal");
+    openModal(stored ?? undefined);
+  }
+
+  function openInNewTab() {
+    if (!dashboardUrl) return;
+    trackEvent({
+      eventType: "external_link_clicked",
+      eventCategory: "dashboard",
+      label: title,
+      targetUrl: dashboardUrl,
+      dashboardId,
+      dashboardTitle: title,
+      locale,
+    });
+    window.open(dashboardUrl, "_blank", "noopener,noreferrer");
   }
 
   return (
@@ -146,39 +169,18 @@ export function DashboardAccessGate({ dashboardId, title, description, provider 
         <h2>{title}</h2>
         <p>{description}</p>
 
-        {status === "unlocked" && dashboardUrl ? (
-          <a
-            ref={unlockedLinkRef}
-            className="text-link"
-            href={dashboardUrl}
-            target="_blank"
-            rel="noreferrer"
-            onClick={() =>
-              trackEvent({
-                eventType: "external_link_clicked",
-                eventCategory: "dashboard",
-                label: title,
-                targetUrl: dashboardUrl,
-                dashboardId,
-                dashboardTitle: title,
-                locale,
-              })
-            }
-          >
-            {t("buttons.viewInNewTab")} <ExternalLink aria-hidden="true" size={16} />
-          </a>
-        ) : (
+        {!unlocked ? (
           <button
             ref={triggerRef}
             type="button"
             className="button"
             onClick={handleOpenClick}
-            disabled={status === "reusing"}
+            disabled={reusing}
           >
             <Lock aria-hidden="true" size={16} />
-            {status === "reusing" ? t("buttons.submitting") : t("buttons.openDashboard")}
+            {reusing ? t("buttons.submitting") : t("buttons.openDashboard")}
           </button>
-        )}
+        ) : null}
 
         {hasStoredRegistration ? (
           <button type="button" className="link-button" onClick={handleChangeInfo}>
@@ -188,14 +190,26 @@ export function DashboardAccessGate({ dashboardId, title, description, provider 
       </div>
 
       <div className="embed-shell">
-        {status === "unlocked" && dashboardUrl ? (
-          <iframe
-            title={title}
-            src={dashboardUrl}
-            loading="lazy"
-            allowFullScreen
-            referrerPolicy="no-referrer-when-downgrade"
-          />
+        {unlocked && dashboardUrl ? (
+          <>
+            <iframe
+              title={title}
+              src={dashboardUrl}
+              loading="lazy"
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+            <button
+              ref={expandButtonRef}
+              type="button"
+              className="embed-expand-button"
+              onClick={openInNewTab}
+              aria-label={t("buttons.viewInNewTab")}
+              title={t("buttons.viewInNewTab")}
+            >
+              <Maximize2 aria-hidden="true" size={16} />
+            </button>
+          </>
         ) : (
           <div className="embed-placeholder embed-locked">
             <Lock aria-hidden="true" size={28} />
@@ -205,7 +219,7 @@ export function DashboardAccessGate({ dashboardId, title, description, provider 
         )}
       </div>
 
-      {status === "modal" ? (
+      {showModal ? (
         <DashboardAccessModal
           dashboardId={dashboardId}
           sourcePage={sourcePage()}

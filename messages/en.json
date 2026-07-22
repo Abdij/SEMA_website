@@ -19,7 +19,8 @@
     "resources": "Resources",
     "partners": "Partners",
     "operators": "Operators",
-    "privacy": "Privacy"
+    "privacy": "Privacy",
+    "eoreResources": "EORE Resources"
   },
   "header": {
     "govBar": "Federal Republic of Somalia",
@@ -448,5 +449,13 @@
         "body": "This access form helps SEMA understand and engage with its stakeholders — it is not a security control. If a dashboard is published using Power BI \"Publish to web\", the underlying report may still be reachable directly by anyone who already has that direct link, independent of this website."
       }
     }
+  },
+  "eoreResources": {
+    "eyebrow": "EORE",
+    "title": "Explosive Ordnance Risk Education resources",
+    "text": "Posters, pamphlets, guidance, and other public safety materials that help communities recognize and avoid explosive hazards across Somalia.",
+    "libraryEyebrow": "Resource library",
+    "libraryTitle": "EORE materials",
+    "empty": "No EORE resources are published yet. Check back soon."
   }
 }

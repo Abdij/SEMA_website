@@ -19,7 +19,8 @@
     "resources": "Kheyraadka",
     "partners": "Wadaajayaasha",
     "operators": "Hawlwadeennada",
-    "privacy": "Asturnaanta"
+    "privacy": "Asturnaanta",
+    "eoreResources": "Kheyraadka EORE"
   },
   "header": {
     "govBar": "Jamhuuriyadda Federaalka Soomaaliya",
@@ -448,5 +449,13 @@
         "body": "Foomkan gelitaanku wuxuu SEMA u caawiyaa inay fahanto oo la xiriirto dhinacyada danaha leh — maaha xakameyn amni. Haddii dashboord lagu daabacay Power BI \"Publish to web\", warbixinta hoose ayaa laga yaabaa inay weli si toos ah u gaadhi karto qof kasta oo horeba u haysta xiriirinta toos ah, iyada oo ka madax-bannaan websaydkan."
       }
     }
+  },
+  "eoreResources": {
+    "eyebrow": "EORE",
+    "title": "Kheyraadka Waxbarashada Halista Qodxinta (EORE)",
+    "text": "Boostarro, buug-yare, tilmaamo, iyo agabyada kale ee badbaadada bulshada oo caawiya bulshooyinka inay aqoonsadaan oo ka fogaadaan khataraha qodxinta ee Soomaaliya.",
+    "libraryEyebrow": "Maktabadda kheyraadka",
+    "libraryTitle": "Agabyada EORE",
+    "empty": "Wali kheyraad EORE ah lama daabicin. Fadlan dib u soo booqo."
   }
 }

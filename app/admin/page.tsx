@@ -989,8 +989,13 @@ export default function AdminPage() {
                       type="text"
                       value={editingPublication.type}
                       onChange={(event) => setEditingPublication({ ...editingPublication, type: event.target.value })}
+                      placeholder='e.g. "Treaty report" or "EORE Resource"'
                     />
                   </label>
+                  <p className="muted" style={{ marginTop: "-0.6rem", fontSize: "0.8rem" }}>
+                    Set Type to exactly &quot;EORE Resource&quot; to also show this publication under the
+                    EORE Resources tab.
+                  </p>
                   <label>
                     Description
                     <textarea

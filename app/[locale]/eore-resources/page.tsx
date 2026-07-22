@@ -2,17 +2,20 @@ import { getTranslations } from "next-intl/server";
 import { PageHero } from "@/components/PageHero";
 import { PublicationGrid } from "@/components/PublicationGrid";
 import { getPublications } from "@/lib/db";
+import { isEoreResource } from "@/lib/eore";
 
 export const dynamic = "force-dynamic";
 
-export default async function PublicationsPage() {
-  const t = await getTranslations("publications");
+export default async function EoreResourcesPage() {
+  const t = await getTranslations("eoreResources");
+  const p = await getTranslations("publications");
   const allPublications = await getPublications();
 
-  const publications = allPublications.filter(
+  const resources = allPublications.filter(
     (item) =>
       item.href &&
-      (item.href.startsWith("http") || item.href.startsWith("/api/publications/file")),
+      (item.href.startsWith("http") || item.href.startsWith("/api/publications/file")) &&
+      isEoreResource(item.type),
   );
 
   return (
@@ -27,11 +30,11 @@ export default async function PublicationsPage() {
             </div>
           </div>
           <PublicationGrid
-            publications={publications}
+            publications={resources}
             labels={{
-              openSource: t("openSource"),
-              download: t("download"),
-              source: t("source"),
+              openSource: p("openSource"),
+              download: p("download"),
+              source: p("source"),
               empty: t("empty"),
             }}
           />

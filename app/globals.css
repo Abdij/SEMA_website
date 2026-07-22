@@ -726,8 +726,33 @@ main {
 }
 
 .embed-shell {
+  position: relative;
   min-height: 430px;
   overflow: hidden;
+}
+
+.embed-expand-button {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--blue-dark);
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+
+.embed-expand-button:hover,
+.embed-expand-button:focus-visible {
+  background: white;
+  border-color: var(--blue);
 }
 
 .embed-shell iframe,

@@ -11,6 +11,7 @@ const topNavHrefs = [
   { href: "/about", key: "about" },
   { href: "/dashboards", key: "dashboards" },
   { href: "/publications", key: "publications" },
+  { href: "/eore-resources", key: "eoreResources" },
   { href: "/news", key: "news" },
 ] as const;
 
