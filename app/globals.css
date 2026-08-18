@@ -925,7 +925,8 @@ textarea {
 }
 
 .admin-tabs .button.secondary,
-.admin-page .button-row .button.secondary {
+.admin-page .button-row .button.secondary,
+.admin-page-header .button.secondary {
   border-color: var(--line);
   background: white;
   color: var(--blue-dark);
@@ -933,6 +934,7 @@ textarea {
 
 .admin-tabs .button.secondary:hover,
 .admin-page .button-row .button.secondary:hover,
+.admin-page-header .button.secondary:hover,
 .admin-page .button.light:hover {
   border-color: var(--blue);
   background: var(--blue-soft);
