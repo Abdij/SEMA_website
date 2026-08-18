@@ -19,7 +19,6 @@ const aboutHrefs = [
   { href: "/about", key: "about" },
   { href: "/mandate", key: "mandate" },
   { href: "/operations", key: "operations" },
-  { href: "/operators", key: "operators" },
   { href: "/conventions", key: "conventions" },
   { href: "/partners", key: "partners" },
   { href: "/leadership", key: "leadership" },
