@@ -36,12 +36,13 @@ export const navItems = [
   { href: "/mandate", label: "Mandate" },
   { href: "/leadership", label: "Leadership" },
   { href: "/operations", label: "Operations" },
-  { href: "/dashboards", label: "Dashboards" },
-  { href: "/publications", label: "Publications" },
+  { href: "/operators", label: "Operators" },
   { href: "/conventions", label: "Convention Progress" },
+  { href: "/partners", label: "Partners" },
+  { href: "/dashboards", label: "Dashboards" },
+  { href: "/eore-resources", label: "EORE Resources" },
   { href: "/news", label: "News" },
   { href: "/data-request", label: "Data Request" },
-  { href: "/government-links", label: "Government Links" },
   { href: "/contact", label: "Contact" },
 ];
 

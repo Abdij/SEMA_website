@@ -9,7 +9,7 @@ The rebuilt site replaces the Streamlit prototype with an official public websit
 - Contact form
 - Data request process and form
 - ArcGIS and Power BI dashboard embeds
-- Publications and policy downloads
+- EORE (explosive ordnance risk education) resource downloads
 - Convention progress tracking
 - Partners and external sources
 

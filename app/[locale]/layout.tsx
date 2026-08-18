@@ -7,6 +7,7 @@ import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { UsefulLinksBar } from "@/components/UsefulLinksBar";
 import { PageViewTracker } from "@/components/PageViewTracker";
 import { routing } from "@/i18n/routing";
 
@@ -56,6 +57,7 @@ export default async function LocaleLayout({
           </Suspense>
           <Header />
           <main>{children}</main>
+          <UsefulLinksBar />
           <Footer />
         </NextIntlClientProvider>
       </body>

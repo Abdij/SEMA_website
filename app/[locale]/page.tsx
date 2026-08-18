@@ -17,6 +17,7 @@ const indicatorValues = [
 
 export default async function Home() {
   const t = await getTranslations("home");
+  const nav = await getTranslations("nav");
   const newsPosts = await getNewsPosts();
 
   const funcAreas = Array.from({ length: 4 }, (_, i) => ({
@@ -35,8 +36,8 @@ export default async function Home() {
             <Link className="button" href="/dashboards">
               {t("viewDashboards")} <BarChart3 aria-hidden="true" size={18} />
             </Link>
-            <Link className="button secondary" href="/publications">
-              {t("publications")} <Download aria-hidden="true" size={18} />
+            <Link className="button secondary" href="/eore-resources">
+              {nav("eoreResources")} <Download aria-hidden="true" size={18} />
             </Link>
             <Link className="button secondary" href="/contact">
               {t("contactSema")} <ArrowRight aria-hidden="true" size={18} />
@@ -151,7 +152,7 @@ export default async function Home() {
 
       <section className="section">
         <div className="section-inner grid three">
-          <Link className="card" href="/publications">
+          <Link className="card" href="/eore-resources">
             <Download aria-hidden="true" color="#c1121f" />
             <h3>{t("policiesTitle")}</h3>
             <p>{t("policiesText")}</p>

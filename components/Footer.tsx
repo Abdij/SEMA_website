@@ -1,7 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/lib/navigation";
 import { TrackedAnchor } from "@/components/TrackedLink";
-import { govLinks } from "@/lib/content";
 
 export async function Footer() {
   const t = await getTranslations("footer");
@@ -20,7 +19,6 @@ export async function Footer() {
         <div>
           <h3>{t("services")}</h3>
           <Link href="/dashboards">{nav("dashboards")}</Link>
-          <Link href="/publications">{nav("publications")}</Link>
           <Link href="/data-request">{nav("dataRequest")}</Link>
           <Link href="/contact">{nav("contact")}</Link>
         </div>
@@ -33,21 +31,7 @@ export async function Footer() {
           <Link href="/partners">{nav("partners")}</Link>
         </div>
         <div>
-          <h3>{t("governmentLinks")}</h3>
-          {govLinks.map((link) => (
-            <TrackedAnchor
-              key={link.href}
-              href={link.href}
-              eventType="external_link_clicked"
-              label={link.name}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`Visit ${link.name} (opens in new tab)`}
-            >
-              {link.name}
-            </TrackedAnchor>
-          ))}
-          <h3 style={{ marginTop: "1.25rem" }}>{t("followSema")}</h3>
+          <h3>{t("followSema")}</h3>
           <TrackedAnchor
             href="https://x.com/SomaliaSema"
             eventType="external_link_clicked"

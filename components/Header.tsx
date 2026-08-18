@@ -6,34 +6,37 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { ResourcesDropdown } from "@/components/ResourcesDropdown";
 import { MobileNav } from "@/components/MobileNav";
 
+const homeHref = { href: "/", key: "home" } as const;
+
 const topNavHrefs = [
-  { href: "/", key: "home" },
-  { href: "/about", key: "about" },
   { href: "/dashboards", key: "dashboards" },
-  { href: "/publications", key: "publications" },
   { href: "/eore-resources", key: "eoreResources" },
   { href: "/news", key: "news" },
+  { href: "/data-request", key: "dataRequest" },
 ] as const;
 
-const resourceHrefs = [
+const aboutHrefs = [
+  { href: "/about", key: "about" },
   { href: "/mandate", key: "mandate" },
-  { href: "/leadership", key: "leadership" },
   { href: "/operations", key: "operations" },
+  { href: "/operators", key: "operators" },
   { href: "/conventions", key: "conventions" },
-  { href: "/data-request", key: "dataRequest" },
-  { href: "/government-links", key: "governmentLinks" },
+  { href: "/partners", key: "partners" },
+  { href: "/leadership", key: "leadership" },
 ] as const;
 
 export async function Header() {
   const t = await getTranslations("header");
   const nav = await getTranslations("nav");
 
+  const homeItem = { href: homeHref.href, label: nav(homeHref.key) };
+
   const topItems = topNavHrefs.map((item) => ({
     href: item.href,
     label: nav(item.key),
   }));
 
-  const resourceItems = resourceHrefs.map((item) => ({
+  const aboutItems = aboutHrefs.map((item) => ({
     href: item.href,
     label: nav(item.key),
   }));
@@ -97,24 +100,28 @@ export async function Header() {
 
         {/* Mobile hamburger (hidden on desktop) */}
         <MobileNav
+          homeItem={homeItem}
           topItems={topItems}
-          resourceItems={resourceItems}
-          resourcesLabel={nav("resources")}
+          aboutItems={aboutItems}
+          aboutLabel={nav("about")}
           contactLabel={nav("contact")}
         />
       </div>
 
       {/* Desktop navigation (hidden on mobile) */}
       <nav className="nav" aria-label="Primary navigation">
+        <TrackedLink href={homeItem.href} label={homeItem.label}>
+          {homeItem.label}
+        </TrackedLink>
+        <ResourcesDropdown
+          label={nav("about")}
+          items={aboutItems}
+        />
         {topItems.map((item) => (
           <TrackedLink key={item.href} href={item.href} label={item.label}>
             {item.label}
           </TrackedLink>
         ))}
-        <ResourcesDropdown
-          label={nav("resources")}
-          items={resourceItems}
-        />
         <TrackedLink
           className="nav-cta"
           href="/contact"

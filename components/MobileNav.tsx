@@ -7,13 +7,14 @@ import { Link } from "@/lib/navigation";
 type NavItem = { href: string; label: string };
 
 type Props = {
+  homeItem: NavItem;
   topItems: NavItem[];
-  resourceItems: NavItem[];
-  resourcesLabel: string;
+  aboutItems: NavItem[];
+  aboutLabel: string;
   contactLabel: string;
 };
 
-export function MobileNav({ topItems, resourceItems, resourcesLabel, contactLabel }: Props) {
+export function MobileNav({ homeItem, topItems, aboutItems, aboutLabel, contactLabel }: Props) {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
 
@@ -34,23 +35,27 @@ export function MobileNav({ topItems, resourceItems, resourcesLabel, contactLabe
 
       {open && (
         <div className="mobile-menu" aria-label="Mobile navigation">
-          {topItems.map((item) => (
+          <Link href={homeItem.href} className="mobile-link" onClick={close}>
+            {homeItem.label}
+          </Link>
+          <div className="mobile-divider" aria-hidden="true" />
+          <span className="mobile-section-label">{aboutLabel}</span>
+          {aboutItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="mobile-link"
+              className="mobile-link mobile-indent"
               onClick={close}
             >
               {item.label}
             </Link>
           ))}
           <div className="mobile-divider" aria-hidden="true" />
-          <span className="mobile-section-label">{resourcesLabel}</span>
-          {resourceItems.map((item) => (
+          {topItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="mobile-link mobile-indent"
+              className="mobile-link"
               onClick={close}
             >
               {item.label}

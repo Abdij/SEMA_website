@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { LogOut } from "lucide-react";
 import { ACTIVITY_TYPES, ORGANIZATION_TYPES } from "@/lib/dashboard-access-options";
 
 type AdminTab =
@@ -238,6 +239,17 @@ const adminTabs: AdminTab[] = [
   "access",
 ];
 
+const adminTabLabels: Record<AdminTab, string> = {
+  news: "news",
+  publications: "EORE resources",
+  dashboards: "dashboards",
+  messages: "messages",
+  requests: "requests",
+  reports: "reports",
+  analytics: "analytics",
+  access: "access",
+};
+
 const reportExports: Array<{ type: ReportExportType; label: string }> = [
   { type: "data-requests", label: "Export data requests" },
   { type: "contact-messages", label: "Export contact messages" },
@@ -369,6 +381,12 @@ export default function AdminPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password: value }),
       });
+
+      if (response.status === 429) {
+        setAuthenticated(false);
+        setMessage("Too many login attempts. Please wait a few minutes and try again.");
+        return;
+      }
 
       if (!response.ok) {
         setAuthenticated(false);
@@ -572,6 +590,13 @@ export default function AdminPage() {
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     await verifyPassword(password);
+  }
+
+  function handleSignOut() {
+    window.localStorage.removeItem("sema_admin_password");
+    setPassword("");
+    setAuthenticated(false);
+    setMessage("Signed out.");
   }
 
   function resetPageState() {
@@ -798,7 +823,7 @@ export default function AdminPage() {
         <section className="section">
           <div className="section-inner">
             <h1>SEMA Admin Dashboard</h1>
-            <p>Enter your admin password to manage news, publications, dashboard embeds, contact messages, data requests, and reports.</p>
+            <p>Enter your admin password to manage news, EORE resources, dashboard embeds, contact messages, data requests, and reports.</p>
             <form onSubmit={handleLogin} className="admin-login-form">
               <label>
                 Admin password
@@ -824,8 +849,16 @@ export default function AdminPage() {
     <main className="page admin-page">
       <section className="section">
         <div className="section-inner">
-          <h1>SEMA Admin Dashboard</h1>
-          <p>Manage news posts, document publications, dashboard embeds, incoming contact messages, data requests, and operational reports.</p>
+          <div className="admin-page-header">
+            <div>
+              <h1>SEMA Admin Dashboard</h1>
+              <p>Manage news posts, EORE resources, dashboard embeds, incoming contact messages, data requests, and operational reports.</p>
+            </div>
+            <button type="button" className="button secondary" onClick={handleSignOut}>
+              <LogOut aria-hidden="true" size={16} />
+              Sign out
+            </button>
+          </div>
           <div className="admin-tabs">
             {adminTabs.map((currentTab) => (
               <button
@@ -837,7 +870,7 @@ export default function AdminPage() {
                   resetPageState();
                 }}
               >
-                {currentTab}
+                {adminTabLabels[currentTab]}
               </button>
             ))}
           </div>
@@ -971,10 +1004,14 @@ export default function AdminPage() {
 
           {tab === "publications" ? (
             <section className="admin-section">
-              <h2>Publications</h2>
+              <h2>EORE Resources</h2>
+              <p className="muted" style={{ fontSize: "0.85rem" }}>
+                These entries power the public EORE Resources page. Only items with Type set to exactly
+                &quot;EORE Resource&quot; appear there.
+              </p>
               <div className="grid two admin-grid">
                 <div>
-                  <h3>{editingPublication.title ? "Edit publication" : "New publication"}</h3>
+                  <h3>{editingPublication.title ? "Edit resource" : "New resource"}</h3>
                   <label>
                     Title
                     <input
@@ -989,12 +1026,12 @@ export default function AdminPage() {
                       type="text"
                       value={editingPublication.type}
                       onChange={(event) => setEditingPublication({ ...editingPublication, type: event.target.value })}
-                      placeholder='e.g. "Treaty report" or "EORE Resource"'
+                      placeholder='e.g. "EORE Resource"'
                     />
                   </label>
                   <p className="muted" style={{ marginTop: "-0.6rem", fontSize: "0.8rem" }}>
-                    Set Type to exactly &quot;EORE Resource&quot; to also show this publication under the
-                    EORE Resources tab.
+                    Set Type to exactly &quot;EORE Resource&quot; to show this item on the public EORE
+                    Resources page.
                   </p>
                   <label>
                     Description

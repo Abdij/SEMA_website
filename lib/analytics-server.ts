@@ -185,6 +185,10 @@ export function getAnalyticsEventRateLimitPerMinute(): number {
   return envInt("ANALYTICS_EVENT_RATE_LIMIT_PER_MINUTE", 60);
 }
 
+export function getAdminLoginRateLimitPer5Minutes(): number {
+  return envInt("ADMIN_LOGIN_RATE_LIMIT_PER_5MIN", 8);
+}
+
 export function getConsentVersion(): string {
   return process.env.DASHBOARD_ACCESS_CONSENT_VERSION || "1.0";
 }
