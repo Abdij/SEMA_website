@@ -16,7 +16,6 @@
     "usefulLinks": "Useful Links",
     "contact": "Contact",
     "partners": "Partners",
-    "operators": "Operators",
     "privacy": "Privacy",
     "eoreResources": "EORE Resources"
   },
@@ -308,16 +307,6 @@
     "title": "Government, operators, donors, technical partners, and communities.",
     "text": "SEMA works through coordinated partnerships to strengthen national mine action systems, public safety, information management, and operational delivery.",
     "visitWebsite": "Visit website"
-  },
-  "operators": {
-    "eyebrow": "Operators",
-    "title": "A public coordination page for accredited operators and implementing partners.",
-    "text": "The operators section lists approved operators, accreditation status, areas of work, reporting expectations, and links to standards or guidance.",
-    "infoTitle": "Operator information",
-    "item0": "Accreditation requirements, forms, and quality management guidance.",
-    "item1": "Approved operator directory with organization profiles and public contact links.",
-    "item2": "Reporting templates for activity updates, progress reporting, and incident reporting.",
-    "item3": "National standards, technical notes, and coordination meeting resources."
   },
   "governmentLinks": {
     "eyebrow": "Useful Links",

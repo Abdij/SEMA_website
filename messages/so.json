@@ -16,7 +16,6 @@
     "usefulLinks": "Xiriiriyo Waxtar Leh",
     "contact": "Xiriiri",
     "partners": "Wadaajayaasha",
-    "operators": "Hawlwadeennada",
     "privacy": "Asturnaanta",
     "eoreResources": "Kheyraadka EORE"
   },
@@ -308,16 +307,6 @@
     "title": "Dowladda, hawlwadeennada, deeqbiixiyaasha, asxaabta farsamo, iyo bulshooyinka.",
     "text": "SEMA waxay ka shaqeysaa iyada oo loo marayo iskaashiga habaynsan si loo xoojiyo nidaamyada waxqabadka maynka qaranka, ammaanka bulshada, maaraynta macluumaadka, iyo gaarsiinta hawlgaleedka.",
     "visitWebsite": "Booqo bogga"
-  },
-  "operators": {
-    "eyebrow": "Hawlwadeennada",
-    "title": "Bogga iskaashiga bulshada ee hawlwadeennada xaqijisan iyo asxaabta hirgelinta.",
-    "text": "Qeybta hawlwadeennada waxay liis galinaysaa hawlwadeennada la oggolaanshay, xaaladda ogolaanshaha, dhinacyada shaqada, filashadaha warbixinta, iyo xiriiriyaha heerarka ama tilmaamaha.",
-    "infoTitle": "Macluumaadka hawlwadeennada",
-    "item0": "Shuruudaha ogolaanshaha, foomamka, iyo tilmaamaha maaraynta tayada.",
-    "item1": "Liiska hawlwadeennada la oggolaanshay oo leh xulashooyinka hay'adda iyo xiriiriyaha xiriirka bulshada.",
-    "item2": "Qaababka warbixinta ee cusboonaysiinta hawlaha, warbixinta horumarka, iyo warbixinta dhacdooyinka.",
-    "item3": "Heerarka qaranka, xusuusinnada farsamada, iyo kheyraadka shirarka iskaashiga."
   },
   "governmentLinks": {
     "eyebrow": "Xiriiriyo Waxtar Leh",

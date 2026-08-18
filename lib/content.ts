@@ -36,7 +36,6 @@ export const navItems = [
   { href: "/mandate", label: "Mandate" },
   { href: "/leadership", label: "Leadership" },
   { href: "/operations", label: "Operations" },
-  { href: "/operators", label: "Operators" },
   { href: "/conventions", label: "Convention Progress" },
   { href: "/partners", label: "Partners" },
   { href: "/dashboards", label: "Dashboards" },
