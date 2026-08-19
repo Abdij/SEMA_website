@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Link } from "@/lib/navigation";
 
-type NavItem = { href: string; label: string };
+type NavItem = { href: string; label: string; key?: string };
 
 type Props = {
   homeItem: NavItem;
@@ -55,7 +55,9 @@ export function MobileNav({ homeItem, topItems, aboutItems, aboutLabel, contactL
             <Link
               key={item.href}
               href={item.href}
-              className="mobile-link"
+              className={
+                item.key === "dashboards" ? "mobile-link nav-fire" : "mobile-link"
+              }
               onClick={close}
             >
               {item.label}

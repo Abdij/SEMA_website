@@ -33,6 +33,7 @@ export async function Header() {
   const topItems = topNavHrefs.map((item) => ({
     href: item.href,
     label: nav(item.key),
+    key: item.key,
   }));
 
   const aboutItems = aboutHrefs.map((item) => ({
@@ -117,7 +118,12 @@ export async function Header() {
           items={aboutItems}
         />
         {topItems.map((item) => (
-          <TrackedLink key={item.href} href={item.href} label={item.label}>
+          <TrackedLink
+            key={item.href}
+            href={item.href}
+            label={item.label}
+            className={item.key === "dashboards" ? "nav-fire" : undefined}
+          >
             {item.label}
           </TrackedLink>
         ))}

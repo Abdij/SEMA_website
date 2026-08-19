@@ -69,17 +69,6 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="section">
-        <div className="section-inner grid four">
-          {funcAreas.map((area) => (
-            <div className="stat-card" key={area.title}>
-              <strong>{area.title}</strong>
-              <p>{area.text}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
       <section className="band">
         <div className="section-inner feature-row">
           <div className="content-block">
