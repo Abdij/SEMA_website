@@ -1289,22 +1289,45 @@ textarea {
 
 .indicators-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
 }
 
 .indicator-card {
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 10px;
   background: white;
   padding: 1.75rem 1.25rem;
   text-align: center;
   box-shadow: 0 6px 20px rgba(10, 35, 55, 0.05);
-  transition: box-shadow 0.18s;
+  transition: transform 0.18s, box-shadow 0.18s;
 }
 
 .indicator-card:hover {
+  transform: translateY(-3px);
   box-shadow: 0 12px 32px rgba(10, 35, 55, 0.1);
+}
+
+.indicator-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 0.9rem;
+  border-radius: 50%;
+  background: var(--blue-soft);
+  color: var(--blue-dark);
+}
+
+.indicator-icon--teal {
+  background: #e2f5f4;
+  color: var(--teal);
+}
+
+.indicator-icon--red {
+  background: #fdece9;
+  color: var(--red);
 }
 
 .indicator-value {

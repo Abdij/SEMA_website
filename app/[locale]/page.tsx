@@ -1,4 +1,15 @@
-import { ArrowRight, BarChart3, Download, FileText, ShieldCheck } from "lucide-react";
+import {
+  Activity,
+  AlertTriangle,
+  ArrowRight,
+  BarChart3,
+  Download,
+  FileText,
+  Map,
+  Search,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/lib/navigation";
 import { NewsImage } from "@/components/NewsImage";
@@ -6,14 +17,13 @@ import { getNewsPosts } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-const indicatorValues = [
-  "2,111,131",
-  "123 Million m²",
-  "331",
-  "201",
-  "1,684",
-  "6",
-];
+const indicators = [
+  { value: "2,111,131", icon: Users, accent: "blue" },
+  { value: "123 Million m²", icon: Map, accent: "teal" },
+  { value: "331", icon: AlertTriangle, accent: "red" },
+  { value: "201", icon: Search, accent: "blue" },
+  { value: "1,684", icon: Activity, accent: "red" },
+] as const;
 
 export default async function Home() {
   const t = await getTranslations("home");
@@ -58,9 +68,12 @@ export default async function Home() {
             </div>
           </div>
           <div className="indicators-grid">
-            {indicatorValues.map((value, i) => (
+            {indicators.map((indicator, i) => (
               <article className="indicator-card" key={i}>
-                <strong className="indicator-value">{value}</strong>
+                <span className={`indicator-icon indicator-icon--${indicator.accent}`}>
+                  <indicator.icon aria-hidden="true" size={22} />
+                </span>
+                <strong className="indicator-value">{indicator.value}</strong>
                 <p className="indicator-label">{t(`indicator${i}`)}</p>
               </article>
             ))}
