@@ -194,7 +194,16 @@
     "clusterTitle": "Related treaty milestones",
     "sourcesEyebrow": "Source links",
     "sourcesTitle": "Official references",
-    "openReference": "Open reference"
+    "openReference": "Open reference",
+    "statAccession": "Year Somalia acceded to the Mine Ban Convention",
+    "statExtension": "Article 5 extension granted",
+    "statDeadline": "Current Article 5 clearance deadline",
+    "statDaysLeft": "Days remaining to the deadline",
+    "progressLabel": "Progress toward the Article 5 clearance deadline",
+    "progressStart": "2012 — Accession",
+    "progressEnd": "2027 — Deadline",
+    "badgeComplete": "Completed",
+    "badgeUpcoming": "Target"
   },
   "news": {
     "eyebrow": "News and updates",

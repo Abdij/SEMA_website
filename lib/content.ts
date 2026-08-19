@@ -177,21 +177,29 @@ export const conventionMilestones = [
     date: "16 April 2012",
     title: "Somalia acceded to the Anti-Personnel Mine Ban Convention",
     text: "Somalia became a State Party through accession, establishing treaty obligations on anti-personnel mines.",
+    icon: "signature",
+    status: "complete",
   },
   {
     date: "1 October 2012",
     title: "Convention entered into force for Somalia",
     text: "The Anti-Personnel Mine Ban Convention entered into force for Somalia on this date.",
+    icon: "shield",
+    status: "complete",
   },
   {
     date: "2022",
     title: "Article 5 extension granted",
     text: "Somalia's first Article 5 deadline extension was granted, setting the current deadline for completion of clearance obligations.",
+    icon: "extension",
+    status: "complete",
   },
   {
     date: "1 October 2027",
     title: "Current Article 5 clearance deadline",
     text: "Somalia must complete clearance of all anti-personnel mines in known and suspected mined areas by this deadline. SEMA coordinates national progress towards meeting this obligation.",
+    icon: "target",
+    status: "upcoming",
   },
 ];
 
@@ -200,16 +208,22 @@ export const clusterConventionMilestones = [
     date: "3 December 2008",
     title: "Somalia signed the Convention on Cluster Munitions",
     text: "Somalia signed the convention when it opened for signature in Oslo.",
+    icon: "signature",
+    status: "complete",
   },
   {
     date: "30 September 2015",
     title: "Somalia ratified the Convention on Cluster Munitions",
     text: "Ratification made Somalia a State Party to the cluster munition ban framework.",
+    icon: "check",
+    status: "complete",
   },
   {
     date: "1 March 2016",
     title: "Convention entered into force for Somalia",
     text: "The convention became binding for Somalia, including reporting, clearance, and victim assistance obligations.",
+    icon: "shield",
+    status: "complete",
   },
 ];
 

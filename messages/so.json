@@ -194,7 +194,16 @@
     "clusterTitle": "Calaamadaha heshiisyada la xiriira",
     "sourcesEyebrow": "Xiriiriyaha ilaha",
     "sourcesTitle": "Tixraacyada rasmi ah",
-    "openReference": "Fur tixraaca"
+    "openReference": "Fur tixraaca",
+    "statAccession": "Sannadkii Soomaaliya ku biirtay Heshiiska Mamnuucista Maynada",
+    "statExtension": "Kordhinta Qodobka 5 ee la ansixiyay",
+    "statDeadline": "Kharadka hadda ee Qodobka 5",
+    "statDaysLeft": "Maalmaha ka hadhsan kharadka",
+    "progressLabel": "Horumarka lagu gaadhayo kharadka nadiifinta Qodobka 5",
+    "progressStart": "2012 — Ku biirid",
+    "progressEnd": "2027 — Kharadka",
+    "badgeComplete": "La dhammeeyay",
+    "badgeUpcoming": "Bartilmaameedka"
   },
   "news": {
     "eyebrow": "Wararka iyo cusboonaysiinta",
