@@ -195,7 +195,7 @@ export const conventionMilestones = [
     status: "complete",
   },
   {
-    date: "1 October 2027",
+    date: "31 October 2027",
     title: "Current Article 5 clearance deadline",
     text: "Somalia must complete clearance of all anti-personnel mines in known and suspected mined areas by this deadline. SEMA coordinates national progress towards meeting this obligation.",
     icon: "target",
@@ -257,10 +257,10 @@ export const newsPosts: NewsPost[] = [
     title: "Somalia on track with Article 5 convention progress reporting",
     date: "2026-06-21",
     category: "Convention progress",
-    summary: "SEMA continues to coordinate national progress against Somalia's Article 5 obligations under the Anti-Personnel Mine Ban Convention, with the current deadline of 1 October 2027.",
+    summary: "SEMA continues to coordinate national progress against Somalia's Article 5 obligations under the Anti-Personnel Mine Ban Convention, with the current deadline of 31 October 2027.",
     image: "/images/mine-survey.jpg",
     body: [
-      "Somalia is a State Party to the Anti-Personnel Mine Ban Convention, with an Article 5 clearance deadline of 1 October 2027. SEMA leads national coordination to meet this obligation.",
+      "Somalia is a State Party to the Anti-Personnel Mine Ban Convention, with an Article 5 clearance deadline of 31 October 2027. SEMA leads national coordination to meet this obligation.",
       "The SEMA website includes a dedicated convention-progress section covering verified national milestones, annual Article 7 reports, and official treaty references.",
       "SEMA publishes progress information in accordance with treaty reporting requirements and in coordination with national mine action partners.",
     ],

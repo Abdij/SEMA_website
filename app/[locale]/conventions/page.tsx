@@ -27,7 +27,7 @@ const MILESTONE_ICONS: Record<string, typeof FileSignature> = {
 };
 
 const ACCESSION_DATE = new Date("2012-04-16");
-const DEADLINE_DATE = new Date("2027-10-01");
+const DEADLINE_DATE = new Date("2027-10-31");
 
 export default async function ConventionsPage() {
   const t = await getTranslations("conventions");
