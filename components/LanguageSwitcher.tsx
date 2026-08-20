@@ -2,7 +2,7 @@
 
 import { useLocale } from "next-intl";
 import { usePathname, useRouter } from "@/lib/navigation";
-import { useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { trackEvent } from "@/lib/analytics-client";
 
 export function LanguageSwitcher() {
@@ -10,9 +10,21 @@ export function LanguageSwitcher() {
   const router = useRouter();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
+  const [showSoNotice, setShowSoNotice] = useState(false);
+
+  useEffect(() => {
+    if (!showSoNotice) return;
+    const timer = setTimeout(() => setShowSoNotice(false), 3500);
+    return () => clearTimeout(timer);
+  }, [showSoNotice]);
 
   function switchLocale(next: string) {
     if (next === locale) return;
+
+    if (next === "so") {
+      setShowSoNotice(true);
+      return;
+    }
 
     trackEvent({
       eventType: "language_changed",
@@ -37,14 +49,21 @@ export function LanguageSwitcher() {
         EN
       </button>
       <span className="gov-bar-sep" aria-hidden="true">|</span>
-      <button
-        className={`lang-btn${locale === "so" ? " active" : ""}`}
-        onClick={() => switchLocale("so")}
-        disabled={isPending || locale === "so"}
-        lang="so"
-      >
-        SO
-      </button>
+      <div className="lang-btn-wrap">
+        <button
+          className={`lang-btn${locale === "so" ? " active" : ""}`}
+          onClick={() => switchLocale("so")}
+          disabled={isPending || locale === "so"}
+          lang="so"
+        >
+          SO
+        </button>
+        {showSoNotice ? (
+          <span className="lang-notice" role="status">
+            Somali translation is under development.
+          </span>
+        ) : null}
+      </div>
     </div>
   );
 }
