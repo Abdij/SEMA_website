@@ -251,7 +251,7 @@ const adminTabLabels: Record<AdminTab, string> = {
 };
 
 const reportExports: Array<{ type: ReportExportType; label: string }> = [
-  { type: "data-requests", label: "Export data requests" },
+  { type: "data-requests", label: "Export information requests" },
   { type: "contact-messages", label: "Export contact messages" },
   { type: "news-by-theme-date", label: "Export news by theme/date" },
   { type: "dashboard-clicks", label: "Export dashboard clicks" },
@@ -807,7 +807,7 @@ export default function AdminPage() {
         sensitivityLevel,
       });
       if (result && !result.message) {
-        setMessage("Data request status updated.");
+        setMessage("Information request status updated.");
         await loadAllData(password);
       } else {
         setMessage(result?.message || "Could not update request status.");
@@ -823,7 +823,7 @@ export default function AdminPage() {
         <section className="section">
           <div className="section-inner">
             <h1>SEMA Admin Dashboard</h1>
-            <p>Enter your admin password to manage news, EORE resources, dashboard embeds, contact messages, data requests, and reports.</p>
+            <p>Enter your admin password to manage news, EORE resources, dashboard embeds, contact messages, information requests, and reports.</p>
             <form onSubmit={handleLogin} className="admin-login-form">
               <label>
                 Admin password
@@ -852,7 +852,7 @@ export default function AdminPage() {
           <div className="admin-page-header">
             <div>
               <h1>SEMA Admin Dashboard</h1>
-              <p>Manage news posts, EORE resources, dashboard embeds, incoming contact messages, data requests, and operational reports.</p>
+              <p>Manage news posts, EORE resources, dashboard embeds, incoming contact messages, information requests, and operational reports.</p>
             </div>
             <button type="button" className="button secondary" onClick={handleSignOut}>
               <LogOut aria-hidden="true" size={16} />
@@ -1273,7 +1273,7 @@ export default function AdminPage() {
 
           {tab === "requests" ? (
             <section className="admin-section">
-              <h2>Data requests</h2>
+              <h2>Information requests</h2>
               <div className="admin-list">
                 {dataRequests.map((request) => (
                   <article key={request.id} className="admin-list-card">
@@ -1346,7 +1346,7 @@ export default function AdminPage() {
                 <div>
                   <h2>Reports</h2>
                   <p>
-                    Export SEMA data requests, contact messages, news publishing counts, dashboard opens, and website tab clicks.
+                    Export SEMA information requests, contact messages, news publishing counts, dashboard opens, and website tab clicks.
                   </p>
                 </div>
                 <button className="button light" type="button" onClick={() => loadAllData(password)} disabled={loading}>
@@ -1356,7 +1356,7 @@ export default function AdminPage() {
 
               <div className="report-grid">
                 <article className="report-card">
-                  <span>Data requests</span>
+                  <span>Information requests</span>
                   <strong>{formatNumber(reportSummary?.totals.dataRequests ?? dataRequests.length)}</strong>
                 </article>
                 <article className="report-card">
@@ -1612,7 +1612,7 @@ export default function AdminPage() {
                   <strong>{formatNumber(analyticsOverview?.totals.publicationDownloads)}</strong>
                 </article>
                 <article className="report-card">
-                  <span>Data requests submitted</span>
+                  <span>Information requests submitted</span>
                   <strong>{formatNumber(analyticsOverview?.totals.dataRequestsSubmitted)}</strong>
                 </article>
                 <article className="report-card">

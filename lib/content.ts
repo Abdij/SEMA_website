@@ -41,7 +41,7 @@ export const navItems = [
   { href: "/dashboards", label: "Dashboards" },
   { href: "/eore-resources", label: "EORE Resources" },
   { href: "/news", label: "News" },
-  { href: "/data-request", label: "Data Request" },
+  { href: "/data-request", label: "Information Request" },
   { href: "/contact", label: "Contact" },
 ];
 
