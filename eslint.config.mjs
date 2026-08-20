@@ -20,7 +20,6 @@ const eslintConfig = [
       "pages/**",
       "scripts/**",
       "next-env.d.ts",
-      "streamlit_app.py",
       "streamlit_app_backup.py",
     ],
   },

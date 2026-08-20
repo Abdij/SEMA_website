@@ -88,6 +88,6 @@ behavior, and the Power BI "Publish to web" limitation.
 
 ## Notes
 
-- The old Streamlit files remain in the repository for reference during migration.
+- `streamlit_app_backup.py` remains in the repository for reference during migration.
 - `sema_reports.db` should not be included in the production branch or public repository history because it contains report records.
 - Dashboard embeds must be reviewed for public-safety and data-sensitivity before publication.
