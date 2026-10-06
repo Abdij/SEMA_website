@@ -156,7 +156,7 @@ export function DashboardAccessModal({
           dashboardId,
           sourcePage,
           locale,
-          visitorId: getOrCreateVisitorId(),
+          anonymousVisitorId: getOrCreateVisitorId(),
           sessionId: getOrCreateSessionId().sessionId,
           organizationName: values.organizationName.trim(),
           organizationType: values.organizationType || undefined,

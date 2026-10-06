@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { AdminUnauthorizedError, requireAdminAuth, unauthorizedResponse } from "@/lib/admin";
-import { createNewsPost, deleteNewsPost, getAdminNewsPosts, getNewsPostBySlug, updateNewsPost } from "@/lib/db";
+import { createNewsPost, deleteNewsPost, getAdminNewsPosts, getAdminNewsPostBySlug, updateNewsPost } from "@/lib/db";
 
 function serverErrorResponse(error: unknown) {
   return NextResponse.json(
@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     const slug = url.searchParams.get("slug");
 
     if (slug) {
-      const post = await getNewsPostBySlug(slug);
+      const post = await getAdminNewsPostBySlug(slug);
       if (!post) {
         return NextResponse.json({ message: "Not found" }, { status: 404 });
       }

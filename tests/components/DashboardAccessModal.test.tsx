@@ -114,6 +114,11 @@ describe("DashboardAccessModal", () => {
     );
     const call = onSuccess.mock.calls[0][0];
     expect(call.dashboardUrl).toBe("https://app.powerbi.com/view?r=trusted");
+    const request = fetchSpy.mock.calls.find(([url]) => url === "/api/dashboard-access");
+    const payload = JSON.parse(String(request?.[1]?.body));
+    expect(payload.anonymousVisitorId).toBe(window.localStorage.getItem("sema_visitor_id"));
+    expect(payload.anonymousVisitorId).toBeTruthy();
+    expect(payload).not.toHaveProperty("visitorId");
   });
 
   it("keeps the modal open and preserves entered data when the server errors", async () => {

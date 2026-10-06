@@ -28,7 +28,7 @@ const indicators = [
 export default async function Home() {
   const t = await getTranslations("home");
   const nav = await getTranslations("nav");
-  const newsPosts = await getNewsPosts();
+  const newsPosts = await getNewsPosts(6);
 
   const funcAreas = Array.from({ length: 4 }, (_, i) => ({
     title: t(`funcArea${i}Title`),

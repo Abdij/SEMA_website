@@ -18,9 +18,8 @@ type DashboardEmbedProps = {
  * dashboard-access gate is used: the trusted embed URL is never sent to the
  * browser until the visitor registers (or reuses a prior registration).
  *
- * The `url`-only branch is a resilience fallback for when the database is
- * unavailable (see lib/db.ts getDashboardEmbeds) and cannot be gated,
- * because there is no dashboard_id to register an access record against.
+ * When no database is configured, getDashboardEmbeds provides placeholders
+ * without URLs because registrations cannot be verified.
  */
 export function DashboardEmbed({ id, title, description, url, provider }: DashboardEmbedProps) {
   if (id) {

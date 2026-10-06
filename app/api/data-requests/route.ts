@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { insertDataRequest, requireString } from "@/lib/db";
+import { z } from "zod";
+import { sendDataRequestEmails } from "@/lib/data-request-email";
 
 export async function POST(request: Request) {
   try {
@@ -13,11 +15,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const saved = await insertDataRequest({
+    const email = z.email().safeParse(requireString(body.email, "Email"));
+    if (!email.success) {
+      return NextResponse.json({ message: "Please enter a valid email address." }, { status: 400 });
+    }
+
+    const input = {
       name: requireString(body.name, "Full name"),
       organization: typeof body.organization === "string" ? body.organization.trim() : undefined,
       role: typeof body.role === "string" ? body.role.trim() : undefined,
-      email: requireString(body.email, "Email"),
+      email: email.data,
       phone: typeof body.phone === "string" ? body.phone.trim() : undefined,
       requesterType: requireString(body.requesterType, "Requester type"),
       dataRequested: requireString(body.dataRequested, "Data requested"),
@@ -26,11 +33,19 @@ export async function POST(request: Request) {
       intendedUse: requireString(body.intendedUse, "Intended use"),
       preferredFormat: requireString(body.preferredFormat, "Preferred format"),
       deadline: typeof body.deadline === "string" && body.deadline ? body.deadline : undefined,
-    });
+    };
+    const saved = await insertDataRequest(input);
+    let emailNotifications = { requester: false, staff: false };
+    try {
+      emailNotifications = await sendDataRequestEmails(input, saved.request_ref);
+    } catch {
+      console.error("Information request email failed", { requestRef: saved.request_ref });
+    }
 
     return NextResponse.json({
       id: saved.id,
       requestRef: saved.request_ref,
+      emailNotifications,
       message: "Data request submitted.",
     });
   } catch (error) {

@@ -4,6 +4,7 @@ import {
   newsPosts as fallbackNewsPosts,
   publications as fallbackPublications,
 } from "./content";
+import type { AvailabilityStatus, FilterVerdict } from "./catalogue-constants";
 
 declare global {
   // eslint-disable-next-line no-var
@@ -272,11 +273,11 @@ function mapNewsRow(row: any): NewsPost {
   };
 }
 
-export async function getNewsPosts() {
+export async function getNewsPosts(limit?: number) {
   const pool = tryGetPool();
 
   if (!pool) {
-    return fallbackNewsPosts;
+    return limit ? fallbackNewsPosts.slice(0, limit) : fallbackNewsPosts;
   }
 
   const result = await pool.query(
@@ -284,17 +285,22 @@ export async function getNewsPosts() {
      from news_posts
      where status = 'published'
      order by published_at desc
-     limit 6`,
+     limit $1`,
+    [limit ?? null],
   );
-
-  if (!result.rows.length) {
-    return fallbackNewsPosts;
-  }
 
   return result.rows.map(mapNewsRow);
 }
 
 export async function getNewsPostBySlug(slug: string) {
+  return findNewsPostBySlug(slug, true);
+}
+
+export async function getAdminNewsPostBySlug(slug: string) {
+  return findNewsPostBySlug(slug, false);
+}
+
+async function findNewsPostBySlug(slug: string, publishedOnly: boolean) {
   const pool = tryGetPool();
 
   if (!pool) {
@@ -304,13 +310,13 @@ export async function getNewsPostBySlug(slug: string) {
   const result = await pool.query(
     `select slug, title, summary, image_url, body, category, source_label, source_url, status, published_at
      from news_posts
-     where slug = $1
+     where slug = $1 and ($2::boolean = false or status = 'published')
      limit 1`,
-    [slug],
+    [slug, publishedOnly],
   );
 
   if (!result.rows.length) {
-    return fallbackNewsPosts.find((post) => post.slug === slug);
+    return undefined;
   }
 
   return mapNewsRow(result.rows[0]);
@@ -403,23 +409,17 @@ export async function getDashboardEmbeds() {
   const pool = tryGetPool();
 
   if (!pool) {
-    // No database configured: fall back to static content, but this path
-    // cannot support the dashboard-access gate (there is no dashboard_id to
-    // register against), so the fallback dashboard's own URL is used
-    // directly by the (ungated) placeholder rendering in DashboardEmbed.
-    return fallbackDashboardEmbeds.map(mapFallbackDashboard);
+    // Registration requires the database. Show unavailable placeholders
+    // rather than exposing an ungated environment-configured embed URL.
+    return fallbackDashboardEmbeds.map((item) => ({ ...mapFallbackDashboard(item), url: "" }));
   }
 
   const result = await pool.query(
     `select id, title, provider, description, embed_url, public_safe, status
      from dashboard_embeds
-     where status = 'published'
+     where status = 'published' and public_safe = true
      order by created_at desc`,
   );
-
-  if (!result.rows.length) {
-    return fallbackDashboardEmbeds.map(mapFallbackDashboard);
-  }
 
   // Intentionally omit the raw embed_url here: this list feeds the public
   // dashboards page, which now gates access behind the organization form.
@@ -610,6 +610,7 @@ export async function createPublication(input: {
 }
 
 export async function updatePublication(id: string, input: {
+  title?: string;
   type?: string;
   description?: string;
   href?: string;
@@ -624,6 +625,7 @@ export async function updatePublication(id: string, input: {
   const fileBuffer = input.fileData ? Buffer.from(input.fileData, "base64") : null;
   const result = await pool.query(
     `update publications set
+      title = coalesce($11, title),
       document_type = coalesce($1, document_type),
       description = coalesce($2, description),
       file_url = coalesce($3, file_url),
@@ -647,6 +649,7 @@ export async function updatePublication(id: string, input: {
       input.fileMime || null,
       fileBuffer,
       id,
+      input.title?.trim() || null,
     ],
   );
 
@@ -1051,11 +1054,28 @@ export async function getPublishedDashboardById(id: string) {
   const result = await pool.query(
     `select id, title, provider, description, embed_url, public_safe, status
      from dashboard_embeds
-     where id = $1 and status = 'published'`,
+     where id = $1 and status = 'published' and public_safe = true`,
     [id],
   );
 
   return result.rows[0] || null;
+}
+
+export async function hasValidDashboardRegistration(
+  id: string,
+  visitorId: string,
+  consentVersion: string,
+  rememberDays: number,
+): Promise<boolean> {
+  const result = await getPool().query(
+    `select id from dashboard_accesses
+     where id = $1 and anonymous_visitor_id = $2
+       and consent_given = true and consent_version = $3
+       and created_at > now() - ($4::integer * interval '1 day')
+     limit 1`,
+    [id, visitorId, consentVersion, rememberDays],
+  );
+  return result.rows.length > 0;
 }
 
 export async function createDashboardAccess(input: DashboardAccessInput): Promise<DashboardAccessRecord> {
@@ -1105,4 +1125,1006 @@ export async function createDashboardAccess(input: DashboardAccessInput): Promis
     id: row.id,
     createdAt: row.created_at.toISOString(),
   };
+}
+
+// ===========================================================================
+// Data Catalogue
+//
+// Public metadata about mine-action data availability. These functions never
+// return raw IMSMA records, PII, or exact hazard coordinates -- only
+// aggregate counts, date ranges, and status breakdowns.
+// ===========================================================================
+
+export type CatalogueGeoLevel = "state" | "region" | "district" | "settlement";
+
+export type CatalogueGeoArea = {
+  id: string;
+  level: CatalogueGeoLevel;
+  parentId?: string;
+  slug: string;
+  name: string;
+  pcode?: string;
+  geojsonFeatureId?: string;
+  isOfficial: boolean;
+  dataQualityNote?: string;
+  parentSlug?: string;
+  parentName?: string;
+  parentLevel?: CatalogueGeoLevel;
+};
+
+export type CatalogueDataset = {
+  id: string;
+  slug: string;
+  name: string;
+  category: string;
+  description?: string;
+  statusOptions: string[];
+  displayOrder: number;
+  status: string;
+};
+
+export type CatalogueDatasetSummary = CatalogueDataset & {
+  areasWithData: number;
+  totalRecordCount: number;
+  earliestDate?: string;
+  latestDate?: string;
+};
+
+export type CatalogueDatasetAvailabilityRow = {
+  datasetSlug: string;
+  datasetName: string;
+  category: string;
+  statusOptions: string[];
+  availability: AvailabilityStatus;
+  recordCount: number;
+  earliestDate?: string;
+  latestDate?: string;
+  notes?: string;
+};
+
+export type CatalogueIndicators = {
+  regionsRepresented: number;
+  districtsRepresented: number;
+  settlementsRepresented: number;
+  datasetCategoriesCount: number;
+  earliestYear?: number;
+  latestYear?: number;
+  catalogueLastUpdated?: string;
+};
+
+export type CatalogueSyncLog = {
+  id: string;
+  startedAt: string;
+  finishedAt?: string;
+  status: string;
+  triggeredBy: string;
+  datasetsSynced: string[];
+  recordsProcessed: number;
+  errorMessage?: string;
+  details: Record<string, unknown>;
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapGeoAreaRow(row: any): CatalogueGeoArea {
+  return {
+    id: row.id,
+    level: row.level,
+    parentId: row.parent_id || undefined,
+    slug: row.slug,
+    name: row.name,
+    pcode: row.pcode || undefined,
+    geojsonFeatureId: row.geojson_feature_id || undefined,
+    isOfficial: row.is_official,
+    dataQualityNote: row.data_quality_note || undefined,
+    parentSlug: row.parent_slug || undefined,
+    parentName: row.parent_name || undefined,
+    parentLevel: row.parent_level || undefined,
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapDatasetRow(row: any): CatalogueDataset {
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    category: row.category,
+    description: row.description || undefined,
+    statusOptions: row.status_options || [],
+    displayOrder: row.display_order,
+    status: row.status,
+  };
+}
+
+function toDateString(value: unknown): string | undefined {
+  if (!value) return undefined;
+  if (value instanceof Date) return value.toISOString().split("T")[0];
+  return String(value);
+}
+
+async function getDatasetAvailabilityForArea(
+  pool: Pool,
+  areaId: string,
+): Promise<CatalogueDatasetAvailabilityRow[]> {
+  const result = await pool.query(
+    `with direct as (
+       select dataset_id, record_count, earliest_date, latest_date, access_classification, data_quality_flag, notes
+       from catalogue_dataset_geo_stats
+       where geo_area_id = $1
+     ),
+     rollup as (
+       select s.dataset_id,
+              sum(s.record_count) as record_count,
+              min(s.earliest_date) as earliest_date,
+              max(s.latest_date) as latest_date,
+              bool_or(s.access_classification = 'restricted') as any_restricted
+       from catalogue_dataset_geo_stats s
+       join catalogue_geo_areas ga on ga.id = s.geo_area_id
+       where ga.parent_id = $1
+       group by s.dataset_id
+     )
+     select d.slug as dataset_slug, d.name as dataset_name, d.category, d.status_options,
+            coalesce(direct.record_count, rollup.record_count, 0) as record_count,
+            coalesce(direct.earliest_date, rollup.earliest_date) as earliest_date,
+            coalesce(direct.latest_date, rollup.latest_date) as latest_date,
+            case
+              when direct.dataset_id is not null then direct.access_classification
+              when rollup.any_restricted then 'restricted'
+              else 'public'
+            end as access_classification,
+            direct.data_quality_flag,
+            direct.notes
+     from catalogue_datasets d
+     left join direct on direct.dataset_id = d.id
+     left join rollup on rollup.dataset_id = d.id
+     where d.status = 'published'
+     order by d.display_order asc`,
+    [areaId],
+  );
+
+  return result.rows.map((row) => {
+    const recordCount = Number(row.record_count) || 0;
+    let availability: AvailabilityStatus;
+
+    if (row.data_quality_flag === "verification_required") {
+      availability = "verification_required";
+    } else if (recordCount === 0) {
+      availability = "none";
+    } else if (row.access_classification === "restricted") {
+      availability = "restricted";
+    } else if (row.data_quality_flag === "needs_review") {
+      availability = "partial";
+    } else {
+      availability = "available";
+    }
+
+    return {
+      datasetSlug: row.dataset_slug,
+      datasetName: row.dataset_name,
+      category: row.category,
+      statusOptions: row.status_options || [],
+      availability,
+      recordCount,
+      earliestDate: toDateString(row.earliest_date),
+      latestDate: toDateString(row.latest_date),
+      notes: row.notes || undefined,
+    };
+  });
+}
+
+export async function getCatalogueLastUpdated(): Promise<string | undefined> {
+  const pool = tryGetPool();
+  if (!pool) return undefined;
+
+  const result = await pool.query(
+    `select greatest(
+       coalesce((select max(updated_at) from catalogue_dataset_geo_stats), 'epoch'::timestamptz),
+       coalesce((select max(finished_at) from catalogue_sync_log where status in ('success', 'partial')), 'epoch'::timestamptz)
+     ) as last_updated`,
+  );
+
+  const value = result.rows[0]?.last_updated;
+  if (!value || new Date(value).getTime() === 0) return undefined;
+  return new Date(value).toISOString();
+}
+
+export async function getCatalogueIndicators(): Promise<CatalogueIndicators> {
+  const pool = tryGetPool();
+  const empty: CatalogueIndicators = {
+    regionsRepresented: 0,
+    districtsRepresented: 0,
+    settlementsRepresented: 0,
+    datasetCategoriesCount: 0,
+  };
+
+  if (!pool) return empty;
+
+  const result = await pool.query(
+    `with areas_with_data as (
+       select distinct ga.id, ga.level, ga.parent_id
+       from catalogue_dataset_geo_stats s
+       join catalogue_geo_areas ga on ga.id = s.geo_area_id
+     ),
+     regions_with_data as (
+       select id from areas_with_data where level = 'region'
+       union
+       select parent_id from areas_with_data where level = 'district' and parent_id is not null
+     )
+     select
+       (select count(*) from regions_with_data) as regions_represented,
+       (select count(*) from areas_with_data where level = 'district') as districts_represented,
+       (select coalesce(sum(settlements_represented), 0) from catalogue_dataset_geo_stats) as settlements_represented,
+       (select count(distinct category) from catalogue_datasets d where d.status = 'published' and exists (
+         select 1 from catalogue_dataset_geo_stats s where s.dataset_id = d.id
+       )) as dataset_categories_count,
+       (select min(earliest_date) from catalogue_dataset_geo_stats) as earliest_date,
+       (select max(latest_date) from catalogue_dataset_geo_stats) as latest_date`,
+  );
+
+  const row = result.rows[0];
+  const catalogueLastUpdated = await getCatalogueLastUpdated();
+
+  return {
+    regionsRepresented: Number(row.regions_represented) || 0,
+    districtsRepresented: Number(row.districts_represented) || 0,
+    settlementsRepresented: Number(row.settlements_represented) || 0,
+    datasetCategoriesCount: Number(row.dataset_categories_count) || 0,
+    earliestYear: row.earliest_date ? new Date(row.earliest_date).getFullYear() : undefined,
+    latestYear: row.latest_date ? new Date(row.latest_date).getFullYear() : undefined,
+    catalogueLastUpdated,
+  };
+}
+
+export async function getCatalogueDatasets(): Promise<CatalogueDatasetSummary[]> {
+  const pool = tryGetPool();
+  if (!pool) return [];
+
+  const result = await pool.query(
+    `select
+       d.id, d.slug, d.name, d.category, d.description, d.status_options, d.display_order, d.status,
+       count(distinct s.geo_area_id) as areas_with_data,
+       coalesce(sum(s.record_count), 0) as total_record_count,
+       min(s.earliest_date) as earliest_date,
+       max(s.latest_date) as latest_date
+     from catalogue_datasets d
+     left join catalogue_dataset_geo_stats s on s.dataset_id = d.id
+     where d.status = 'published'
+     group by d.id, d.slug, d.name, d.category, d.description, d.status_options, d.display_order, d.status
+     order by d.display_order asc`,
+  );
+
+  return result.rows.map((row) => ({
+    ...mapDatasetRow(row),
+    areasWithData: Number(row.areas_with_data) || 0,
+    totalRecordCount: Number(row.total_record_count) || 0,
+    earliestDate: toDateString(row.earliest_date),
+    latestDate: toDateString(row.latest_date),
+  }));
+}
+
+export async function getCatalogueDatasetBySlug(slug: string) {
+  const pool = tryGetPool();
+  if (!pool) return undefined;
+
+  const datasetResult = await pool.query(
+    `select id, slug, name, category, description, status_options, display_order, status
+     from catalogue_datasets
+     where slug = $1 and status = 'published'
+     limit 1`,
+    [slug],
+  );
+
+  if (!datasetResult.rows.length) return undefined;
+  const dataset = mapDatasetRow(datasetResult.rows[0]);
+
+  const [coverageResult, statusResult, yearResult] = await Promise.all([
+    pool.query(
+      `select ga.level, count(*) as area_count, coalesce(sum(s.record_count), 0) as total,
+              min(s.earliest_date) as earliest_date, max(s.latest_date) as latest_date
+       from catalogue_dataset_geo_stats s
+       join catalogue_geo_areas ga on ga.id = s.geo_area_id
+       where s.dataset_id = $1
+       group by ga.level`,
+      [dataset.id],
+    ),
+    pool.query(
+      `select status, sum(count) as count
+       from catalogue_dataset_status_counts
+       where dataset_id = $1
+       group by status
+       order by status asc`,
+      [dataset.id],
+    ),
+    pool.query(
+      `select year, sum(count) as count
+       from catalogue_dataset_year_counts
+       where dataset_id = $1
+       group by year
+       order by year asc`,
+      [dataset.id],
+    ),
+  ]);
+
+  const regionCoverage = coverageResult.rows.find((row) => row.level === "region");
+  const districtCoverage = coverageResult.rows.find((row) => row.level === "district");
+  const earliestDate = coverageResult.rows.reduce<string | undefined>((min, row) => {
+    const value = toDateString(row.earliest_date);
+    if (!value) return min;
+    return !min || value < min ? value : min;
+  }, undefined);
+  const latestDate = coverageResult.rows.reduce<string | undefined>((max, row) => {
+    const value = toDateString(row.latest_date);
+    if (!value) return max;
+    return !max || value > max ? value : max;
+  }, undefined);
+
+  return {
+    dataset,
+    regionsWithData: Number(regionCoverage?.area_count) || 0,
+    districtsWithData: Number(districtCoverage?.area_count) || 0,
+    totalRecordCount: coverageResult.rows.reduce((sum, row) => sum + (Number(row.total) || 0), 0),
+    earliestDate,
+    latestDate,
+    statusCounts: statusResult.rows.map((row) => ({ status: row.status, count: Number(row.count) || 0 })),
+    yearCounts: yearResult.rows.map((row) => ({ year: Number(row.year), count: Number(row.count) || 0 })),
+  };
+}
+
+export async function getCatalogueGeoAreas(level?: string, parentId?: string): Promise<CatalogueGeoArea[]> {
+  const pool = tryGetPool();
+  if (!pool) return [];
+
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+
+  if (level) {
+    params.push(level);
+    conditions.push(`level = $${params.length}`);
+  }
+
+  if (parentId) {
+    params.push(parentId);
+    conditions.push(`parent_id = $${params.length}`);
+  }
+
+  const where = conditions.length ? `where ${conditions.join(" and ")}` : "";
+
+  const result = await pool.query(
+    `select id, level, parent_id, slug, name, pcode, geojson_feature_id, is_official, data_quality_note
+     from catalogue_geo_areas
+     ${where}
+     order by name asc`,
+    params,
+  );
+
+  return result.rows.map(mapGeoAreaRow);
+}
+
+export async function getCatalogueGeoAreaBySlug(slug: string): Promise<CatalogueGeoArea | undefined> {
+  const pool = tryGetPool();
+  if (!pool) return undefined;
+
+  const result = await pool.query(
+    `select ga.id, ga.level, ga.parent_id, ga.slug, ga.name, ga.pcode, ga.geojson_feature_id, ga.is_official, ga.data_quality_note,
+            parent.slug as parent_slug, parent.name as parent_name, parent.level as parent_level
+     from catalogue_geo_areas ga
+     left join catalogue_geo_areas parent on parent.id = ga.parent_id
+     where ga.slug = $1
+     limit 1`,
+    [slug],
+  );
+
+  if (!result.rows.length) return undefined;
+  return mapGeoAreaRow(result.rows[0]);
+}
+
+export async function getCatalogueRegionProfile(slug: string) {
+  const pool = tryGetPool();
+  if (!pool) return undefined;
+
+  const area = await getCatalogueGeoAreaBySlug(slug);
+  if (!area || area.level !== "region") return undefined;
+
+  const [availability, districtsResult] = await Promise.all([
+    getDatasetAvailabilityForArea(pool, area.id),
+    pool.query(
+      `select ga.slug, ga.name, coalesce(sum(s.record_count), 0) as record_count
+       from catalogue_geo_areas ga
+       left join catalogue_dataset_geo_stats s on s.geo_area_id = ga.id
+       where ga.parent_id = $1 and ga.level = 'district'
+       group by ga.id, ga.slug, ga.name
+       order by ga.name asc`,
+      [area.id],
+    ),
+  ]);
+
+  return {
+    area,
+    availability,
+    districts: districtsResult.rows.map((row) => ({
+      slug: row.slug,
+      name: row.name,
+      hasData: (Number(row.record_count) || 0) > 0,
+    })),
+  };
+}
+
+export async function getCatalogueDistrictProfile(slug: string) {
+  const pool = tryGetPool();
+  if (!pool) return undefined;
+
+  const area = await getCatalogueGeoAreaBySlug(slug);
+  if (!area || area.level !== "district") return undefined;
+
+  const availability = await getDatasetAvailabilityForArea(pool, area.id);
+
+  return { area, availability };
+}
+
+export async function searchCatalogueLocations(query: string) {
+  const pool = tryGetPool();
+  const trimmed = query.trim();
+  if (!pool || !trimmed) return [];
+
+  const result = await pool.query(
+    `select ga.slug, ga.name, ga.level, parent.name as parent_name, parent.level as parent_level
+     from catalogue_geo_areas ga
+     left join catalogue_geo_areas parent on parent.id = ga.parent_id
+     where ga.name ilike $1
+     order by ga.level asc, ga.name asc
+     limit 20`,
+    [`%${trimmed}%`],
+  );
+
+  return result.rows.map((row) => ({
+    slug: row.slug,
+    name: row.name,
+    level: row.level as CatalogueGeoLevel,
+    parentName: row.parent_name || undefined,
+    parentLevel: (row.parent_level as CatalogueGeoLevel) || undefined,
+  }));
+}
+
+export type CatalogueCombinationFilterInput = {
+  datasetSlug: string;
+  regionSlug?: string;
+  districtSlug?: string;
+  status?: string;
+  yearFrom?: number;
+  yearTo?: number;
+};
+
+export type CatalogueCombinationFilterResult = {
+  verdict: FilterVerdict;
+  datasetName?: string;
+  recordCount?: number;
+  earliestDate?: string;
+  latestDate?: string;
+  reason?: string;
+};
+
+export async function getCatalogueCombinationFilter(
+  params: CatalogueCombinationFilterInput,
+): Promise<CatalogueCombinationFilterResult> {
+  const pool = tryGetPool();
+  if (!pool) {
+    return { verdict: "verification_required", reason: "catalogue_unavailable" };
+  }
+
+  const datasetResult = await pool.query(
+    `select id, name from catalogue_datasets where slug = $1 and status = 'published' limit 1`,
+    [params.datasetSlug],
+  );
+
+  if (!datasetResult.rows.length) {
+    return { verdict: "no_records_identified", reason: "unknown_dataset" };
+  }
+
+  const dataset = datasetResult.rows[0];
+  const geoSlug = params.districtSlug || params.regionSlug;
+
+  if (!geoSlug) {
+    const totalsResult = await pool.query(
+      `select coalesce(sum(record_count), 0) as total, min(earliest_date) as earliest_date, max(latest_date) as latest_date
+       from catalogue_dataset_geo_stats
+       where dataset_id = $1`,
+      [dataset.id],
+    );
+    const total = Number(totalsResult.rows[0]?.total) || 0;
+    return {
+      verdict: total > 0 ? "data_identified" : "no_records_identified",
+      datasetName: dataset.name,
+      recordCount: total,
+      earliestDate: toDateString(totalsResult.rows[0]?.earliest_date),
+      latestDate: toDateString(totalsResult.rows[0]?.latest_date),
+    };
+  }
+
+  const areaResult = await pool.query(`select id from catalogue_geo_areas where slug = $1 limit 1`, [geoSlug]);
+  if (!areaResult.rows.length) {
+    return { verdict: "verification_required", datasetName: dataset.name, reason: "unknown_location" };
+  }
+
+  const areaId = areaResult.rows[0].id;
+  const availability = await getDatasetAvailabilityForArea(pool, areaId);
+  const row = availability.find((item) => item.datasetSlug === params.datasetSlug);
+
+  if (!row || row.availability === "none") {
+    return { verdict: "no_records_identified", datasetName: dataset.name };
+  }
+
+  if (row.availability === "verification_required") {
+    return { verdict: "verification_required", datasetName: dataset.name };
+  }
+
+  if (row.availability === "restricted" || row.availability === "partial") {
+    return {
+      verdict: "partial_availability",
+      datasetName: dataset.name,
+      recordCount: row.recordCount,
+      earliestDate: row.earliestDate,
+      latestDate: row.latestDate,
+    };
+  }
+
+  if (params.yearFrom || params.yearTo) {
+    const earliestYear = row.earliestDate ? new Date(row.earliestDate).getFullYear() : undefined;
+    const latestYear = row.latestDate ? new Date(row.latestDate).getFullYear() : undefined;
+    const outOfRange =
+      (params.yearTo !== undefined && earliestYear !== undefined && params.yearTo < earliestYear) ||
+      (params.yearFrom !== undefined && latestYear !== undefined && params.yearFrom > latestYear);
+
+    if (outOfRange) {
+      return { verdict: "no_records_identified", datasetName: dataset.name };
+    }
+  }
+
+  if (params.status) {
+    const statusResult = await pool.query(
+      `select coalesce(sum(count), 0) as count
+       from catalogue_dataset_status_counts
+       where dataset_id = $1 and status = $2
+         and geo_area_id in (select id from catalogue_geo_areas where id = $3 or parent_id = $3)`,
+      [dataset.id, params.status, areaId],
+    );
+    const statusCount = Number(statusResult.rows[0]?.count) || 0;
+    if (statusCount === 0) {
+      return { verdict: "partial_availability", datasetName: dataset.name, reason: "status_not_found" };
+    }
+  }
+
+  return {
+    verdict: "data_identified",
+    datasetName: dataset.name,
+    recordCount: row.recordCount,
+    earliestDate: row.earliestDate,
+    latestDate: row.latestDate,
+  };
+}
+
+// --- Admin: Data Catalogue -------------------------------------------------
+
+export async function getAdminCatalogueDatasets(): Promise<CatalogueDataset[]> {
+  const pool = getPool();
+  const result = await pool.query(
+    `select id, slug, name, category, description, status_options, display_order, status
+     from catalogue_datasets
+     order by display_order asc`,
+  );
+  return result.rows.map(mapDatasetRow);
+}
+
+export async function createCatalogueDataset(input: {
+  slug: string;
+  name: string;
+  category: string;
+  description?: string;
+  statusOptions?: string[];
+  displayOrder?: number;
+  status?: string;
+}): Promise<CatalogueDataset> {
+  const pool = getPool();
+  const result = await pool.query(
+    `insert into catalogue_datasets (slug, name, category, description, status_options, display_order, status)
+     values ($1, $2, $3, $4, $5, $6, $7)
+     returning *`,
+    [
+      input.slug,
+      input.name,
+      input.category,
+      input.description || null,
+      input.statusOptions || [],
+      input.displayOrder ?? 0,
+      input.status || "published",
+    ],
+  );
+  return mapDatasetRow(result.rows[0]);
+}
+
+export async function updateCatalogueDataset(
+  id: string,
+  input: {
+    slug?: string;
+    name?: string;
+    category?: string;
+    description?: string;
+    statusOptions?: string[];
+    displayOrder?: number;
+    status?: string;
+  },
+): Promise<CatalogueDataset> {
+  const pool = getPool();
+  const result = await pool.query(
+    `update catalogue_datasets set
+       slug = coalesce($1, slug),
+       name = coalesce($2, name),
+       category = coalesce($3, category),
+       description = coalesce($4, description),
+       status_options = coalesce($5, status_options),
+       display_order = coalesce($6, display_order),
+       status = coalesce($7, status),
+       updated_at = now()
+     where id = $8
+     returning *`,
+    [
+      input.slug || null,
+      input.name || null,
+      input.category || null,
+      input.description ?? null,
+      input.statusOptions || null,
+      input.displayOrder ?? null,
+      input.status || null,
+      id,
+    ],
+  );
+  if (!result.rows.length) throw new Error("Dataset not found");
+  return mapDatasetRow(result.rows[0]);
+}
+
+export async function deleteCatalogueDataset(id: string) {
+  const pool = getPool();
+  await pool.query(`delete from catalogue_datasets where id = $1`, [id]);
+}
+
+export async function getAdminCatalogueGeoAreas(): Promise<CatalogueGeoArea[]> {
+  const pool = getPool();
+  const result = await pool.query(
+    `select ga.id, ga.level, ga.parent_id, ga.slug, ga.name, ga.pcode, ga.geojson_feature_id, ga.is_official, ga.data_quality_note,
+            parent.slug as parent_slug, parent.name as parent_name, parent.level as parent_level
+     from catalogue_geo_areas ga
+     left join catalogue_geo_areas parent on parent.id = ga.parent_id
+     order by ga.level asc, ga.name asc`,
+  );
+  return result.rows.map(mapGeoAreaRow);
+}
+
+export async function createCatalogueGeoArea(input: {
+  level: string;
+  parentId?: string;
+  slug: string;
+  name: string;
+  pcode?: string;
+  geojsonFeatureId?: string;
+  isOfficial?: boolean;
+  dataQualityNote?: string;
+}): Promise<CatalogueGeoArea> {
+  const pool = getPool();
+  const result = await pool.query(
+    `insert into catalogue_geo_areas (level, parent_id, slug, name, pcode, geojson_feature_id, is_official, data_quality_note)
+     values ($1, $2, $3, $4, $5, $6, $7, $8)
+     returning *`,
+    [
+      input.level,
+      input.parentId || null,
+      input.slug,
+      input.name,
+      input.pcode || null,
+      input.geojsonFeatureId || null,
+      input.isOfficial ?? true,
+      input.dataQualityNote || null,
+    ],
+  );
+  return mapGeoAreaRow(result.rows[0]);
+}
+
+export async function updateCatalogueGeoArea(
+  id: string,
+  input: {
+    level?: string;
+    parentId?: string | null;
+    slug?: string;
+    name?: string;
+    pcode?: string;
+    geojsonFeatureId?: string;
+    isOfficial?: boolean;
+    dataQualityNote?: string;
+  },
+): Promise<CatalogueGeoArea> {
+  const pool = getPool();
+  const result = await pool.query(
+    `update catalogue_geo_areas set
+       level = coalesce($1, level),
+       parent_id = case when $2::boolean then $3::uuid else parent_id end,
+       slug = coalesce($4, slug),
+       name = coalesce($5, name),
+       pcode = coalesce($6, pcode),
+       geojson_feature_id = coalesce($7, geojson_feature_id),
+       is_official = coalesce($8, is_official),
+       data_quality_note = coalesce($9, data_quality_note),
+       updated_at = now()
+     where id = $10
+     returning *`,
+    [
+      input.level || null,
+      input.parentId !== undefined,
+      input.parentId || null,
+      input.slug || null,
+      input.name || null,
+      input.pcode || null,
+      input.geojsonFeatureId || null,
+      input.isOfficial,
+      input.dataQualityNote ?? null,
+      id,
+    ],
+  );
+  if (!result.rows.length) throw new Error("Geo area not found");
+  return mapGeoAreaRow(result.rows[0]);
+}
+
+export async function deleteCatalogueGeoArea(id: string) {
+  const pool = getPool();
+  await pool.query(`delete from catalogue_geo_areas where id = $1`, [id]);
+}
+
+export type CatalogueStatInput = {
+  datasetId: string;
+  geoAreaId: string;
+  recordCount?: number;
+  settlementsRepresented?: number;
+  earliestDate?: string;
+  latestDate?: string;
+  accessClassification?: string;
+  dataQualityFlag?: string | null;
+  notes?: string;
+  source?: string;
+};
+
+export async function getAdminCatalogueStats() {
+  const pool = getPool();
+  const result = await pool.query(
+    `select s.*, d.slug as dataset_slug, d.name as dataset_name, ga.slug as geo_area_slug, ga.name as geo_area_name
+     from catalogue_dataset_geo_stats s
+     join catalogue_datasets d on d.id = s.dataset_id
+     join catalogue_geo_areas ga on ga.id = s.geo_area_id
+     order by d.display_order asc, ga.name asc`,
+  );
+  return result.rows.map((row) => ({
+    id: row.id,
+    datasetId: row.dataset_id,
+    datasetSlug: row.dataset_slug,
+    datasetName: row.dataset_name,
+    geoAreaId: row.geo_area_id,
+    geoAreaSlug: row.geo_area_slug,
+    geoAreaName: row.geo_area_name,
+    recordCount: row.record_count,
+    settlementsRepresented: row.settlements_represented,
+    earliestDate: toDateString(row.earliest_date),
+    latestDate: toDateString(row.latest_date),
+    accessClassification: row.access_classification,
+    dataQualityFlag: row.data_quality_flag || undefined,
+    notes: row.notes || undefined,
+    source: row.source,
+    lastSyncedAt: row.last_synced_at?.toISOString(),
+  }));
+}
+
+export async function upsertCatalogueStat(input: CatalogueStatInput) {
+  const pool = getPool();
+  const result = await pool.query(
+    `insert into catalogue_dataset_geo_stats
+       (dataset_id, geo_area_id, record_count, settlements_represented, earliest_date, latest_date, access_classification, data_quality_flag, notes, source)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+     on conflict (dataset_id, geo_area_id) do update set
+       record_count = excluded.record_count,
+       settlements_represented = excluded.settlements_represented,
+       earliest_date = excluded.earliest_date,
+       latest_date = excluded.latest_date,
+       access_classification = excluded.access_classification,
+       data_quality_flag = excluded.data_quality_flag,
+       notes = excluded.notes,
+       source = excluded.source,
+       updated_at = now()
+     returning *`,
+    [
+      input.datasetId,
+      input.geoAreaId,
+      input.recordCount ?? 0,
+      input.settlementsRepresented ?? 0,
+      input.earliestDate || null,
+      input.latestDate || null,
+      input.accessClassification || "public",
+      input.dataQualityFlag || null,
+      input.notes || null,
+      input.source || "manual",
+    ],
+  );
+  return result.rows[0];
+}
+
+export async function deleteCatalogueStat(id: string) {
+  const pool = getPool();
+  await pool.query(`delete from catalogue_dataset_geo_stats where id = $1`, [id]);
+}
+
+export async function getAdminCatalogueStatusCounts() {
+  const pool = getPool();
+  const result = await pool.query(
+    `select c.*, d.slug as dataset_slug, d.name as dataset_name, ga.slug as geo_area_slug, ga.name as geo_area_name
+     from catalogue_dataset_status_counts c
+     join catalogue_datasets d on d.id = c.dataset_id
+     join catalogue_geo_areas ga on ga.id = c.geo_area_id
+     order by d.display_order asc, ga.name asc, c.status asc`,
+  );
+  return result.rows.map((row) => ({
+    id: row.id,
+    datasetId: row.dataset_id,
+    datasetSlug: row.dataset_slug,
+    datasetName: row.dataset_name,
+    geoAreaId: row.geo_area_id,
+    geoAreaSlug: row.geo_area_slug,
+    geoAreaName: row.geo_area_name,
+    status: row.status,
+    count: row.count,
+  }));
+}
+
+export async function upsertCatalogueStatusCount(input: {
+  datasetId: string;
+  geoAreaId: string;
+  status: string;
+  count: number;
+}) {
+  const pool = getPool();
+  const result = await pool.query(
+    `insert into catalogue_dataset_status_counts (dataset_id, geo_area_id, status, count)
+     values ($1, $2, $3, $4)
+     on conflict (dataset_id, geo_area_id, status) do update set
+       count = excluded.count,
+       updated_at = now()
+     returning *`,
+    [input.datasetId, input.geoAreaId, input.status, input.count],
+  );
+  return result.rows[0];
+}
+
+export async function deleteCatalogueStatusCount(id: string) {
+  const pool = getPool();
+  await pool.query(`delete from catalogue_dataset_status_counts where id = $1`, [id]);
+}
+
+export async function getAdminCatalogueYearCounts() {
+  const pool = getPool();
+  const result = await pool.query(
+    `select y.*, d.slug as dataset_slug, d.name as dataset_name, ga.slug as geo_area_slug, ga.name as geo_area_name
+     from catalogue_dataset_year_counts y
+     join catalogue_datasets d on d.id = y.dataset_id
+     join catalogue_geo_areas ga on ga.id = y.geo_area_id
+     order by d.display_order asc, ga.name asc, y.year asc`,
+  );
+  return result.rows.map((row) => ({
+    id: row.id,
+    datasetId: row.dataset_id,
+    datasetSlug: row.dataset_slug,
+    datasetName: row.dataset_name,
+    geoAreaId: row.geo_area_id,
+    geoAreaSlug: row.geo_area_slug,
+    geoAreaName: row.geo_area_name,
+    year: row.year,
+    count: row.count,
+  }));
+}
+
+export async function upsertCatalogueYearCount(input: {
+  datasetId: string;
+  geoAreaId: string;
+  year: number;
+  count: number;
+}) {
+  const pool = getPool();
+  const result = await pool.query(
+    `insert into catalogue_dataset_year_counts (dataset_id, geo_area_id, year, count)
+     values ($1, $2, $3, $4)
+     on conflict (dataset_id, geo_area_id, year) do update set
+       count = excluded.count,
+       updated_at = now()
+     returning *`,
+    [input.datasetId, input.geoAreaId, input.year, input.count],
+  );
+  return result.rows[0];
+}
+
+export async function deleteCatalogueYearCount(id: string) {
+  const pool = getPool();
+  await pool.query(`delete from catalogue_dataset_year_counts where id = $1`, [id]);
+}
+
+function mapSyncLogRow(row: {
+  id: string;
+  started_at: Date;
+  finished_at?: Date | null;
+  status: string;
+  triggered_by: string;
+  datasets_synced: string[];
+  records_processed: number;
+  error_message?: string | null;
+  details: Record<string, unknown>;
+}): CatalogueSyncLog {
+  return {
+    id: row.id,
+    startedAt: row.started_at.toISOString(),
+    finishedAt: row.finished_at ? row.finished_at.toISOString() : undefined,
+    status: row.status,
+    triggeredBy: row.triggered_by,
+    datasetsSynced: row.datasets_synced || [],
+    recordsProcessed: row.records_processed,
+    errorMessage: row.error_message || undefined,
+    details: row.details || {},
+  };
+}
+
+export async function getCatalogueSyncLogs(limit = 20): Promise<CatalogueSyncLog[]> {
+  const pool = getPool();
+  const result = await pool.query(
+    `select id, started_at, finished_at, status, triggered_by, datasets_synced, records_processed, error_message, details
+     from catalogue_sync_log
+     order by started_at desc
+     limit $1`,
+    [limit],
+  );
+  return result.rows.map(mapSyncLogRow);
+}
+
+export async function insertCatalogueSyncLog(triggeredBy: "admin" | "cron"): Promise<CatalogueSyncLog> {
+  const pool = getPool();
+  const result = await pool.query(
+    `insert into catalogue_sync_log (triggered_by) values ($1) returning *`,
+    [triggeredBy],
+  );
+  return mapSyncLogRow(result.rows[0]);
+}
+
+export async function updateCatalogueSyncLog(
+  id: string,
+  patch: {
+    status?: "running" | "success" | "partial" | "failed";
+    datasetsSynced?: string[];
+    recordsProcessed?: number;
+    errorMessage?: string;
+    details?: Record<string, unknown>;
+    finished?: boolean;
+  },
+): Promise<CatalogueSyncLog> {
+  const pool = getPool();
+  const result = await pool.query(
+    `update catalogue_sync_log set
+       status = coalesce($1, status),
+       datasets_synced = coalesce($2, datasets_synced),
+       records_processed = coalesce($3, records_processed),
+       error_message = coalesce($4, error_message),
+       details = coalesce($5::jsonb, details),
+       finished_at = case when $6::boolean then now() else finished_at end
+     where id = $7
+     returning *`,
+    [
+      patch.status || null,
+      patch.datasetsSynced || null,
+      patch.recordsProcessed ?? null,
+      patch.errorMessage || null,
+      patch.details ? JSON.stringify(patch.details) : null,
+      patch.finished ?? false,
+      id,
+    ],
+  );
+  if (!result.rows.length) throw new Error("Sync log not found");
+  return mapSyncLogRow(result.rows[0]);
 }

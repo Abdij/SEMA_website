@@ -91,3 +91,11 @@ behavior, and the Power BI "Publish to web" limitation.
 - `streamlit_app_backup.py` remains in the repository for reference during migration.
 - `sema_reports.db` should not be included in the production branch or public repository history because it contains report records.
 - Dashboard embeds must be reviewed for public-safety and data-sensitivity before publication.
+
+## Information request email notifications
+
+After saving an information request, the server sends a confirmation with its reference to the submitted email address and a separate notification with the request details to `dahiru@sema.org.so`. Replies to the confirmation go to Dahiru; replies to the staff notification go to the requester.
+
+Configure `SMTP_HOST`, `SMTP_PORT` (default `587`), `SMTP_USER`, `SMTP_PASSWORD`, and `SMTP_FROM` in the deployment environment and in `.env.local` for local use. Use an authorized sender address for `SMTP_FROM`. Port `465` uses implicit TLS; other ports require STARTTLS. See the [Nodemailer SMTP documentation](https://nodemailer.com/smtp).
+
+Both email sends are awaited before responding. A failed email does not undo a saved request. The API reports each send result, the form warns when confirmation fails, and server logs identify the request reference and failed recipient category. Failed sends are not automatically retried; staff should follow up using the saved request in the admin panel. SMTP acceptance does not guarantee inbox delivery. Verify both inboxes with a real submission after configuring the deployment.

@@ -37,7 +37,7 @@ export function DataRequestForm() {
         body: JSON.stringify(payload),
       });
 
-      const data = (await response.json()) as { message?: string; requestRef?: string };
+      const data = (await response.json()) as { message?: string; requestRef?: string; emailNotifications?: { requester: boolean; staff: boolean } };
 
       if (!response.ok) {
         throw new Error(data.message || t("errorFallback"));
@@ -46,9 +46,9 @@ export function DataRequestForm() {
       form.reset();
       setState("success");
       setMessage(
-        data.requestRef
+        (data.requestRef
           ? t("successRef", { ref: data.requestRef })
-          : t("successNoRef"),
+          : t("successNoRef")) + " " + t(data.emailNotifications?.requester ? "emailSent" : "emailFailed"),
       );
       trackEvent({
         eventType: "data_request_submitted",
