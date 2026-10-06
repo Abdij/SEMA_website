@@ -481,7 +481,7 @@ export default function AdminPage() {
     try {
       const query = buildQuery(filters);
       const response = await fetch(`/api/admin/analytics${query ? `?${query}` : ""}`, {
-        
+
       });
       if (response.status === 401) {
         setAuthenticated(false);
@@ -498,7 +498,7 @@ export default function AdminPage() {
     try {
       const query = buildQuery({ ...filters, page: String(page), limit: "50" });
       const response = await fetch(`/api/admin/dashboard-access?${query}`, {
-        
+
       });
       if (response.status === 401) {
         setAuthenticated(false);
