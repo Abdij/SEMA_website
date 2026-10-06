@@ -1176,7 +1176,7 @@ export type CatalogueDatasetAvailabilityRow = {
   category: string;
   statusOptions: string[];
   availability: AvailabilityStatus;
-  recordCount: number;
+  recordCount?: number;
   earliestDate?: string;
   latestDate?: string;
   notes?: string;
@@ -1242,6 +1242,14 @@ function toDateString(value: unknown): string | undefined {
   return String(value);
 }
 
+async function isCatalogueDatasetRestricted(pool: Pool, datasetId: string): Promise<boolean> {
+  const result = await pool.query(
+    `select exists(select 1 from catalogue_dataset_geo_stats
+      where dataset_id = $1 and access_classification = 'restricted') as restricted`, [datasetId],
+  );
+  return result.rows[0]?.restricted === true;
+}
+
 async function getDatasetAvailabilityForArea(
   pool: Pool,
   areaId: string,
@@ -1268,6 +1276,8 @@ async function getDatasetAvailabilityForArea(
             coalesce(direct.earliest_date, rollup.earliest_date) as earliest_date,
             coalesce(direct.latest_date, rollup.latest_date) as latest_date,
             case
+              when exists (select 1 from catalogue_dataset_geo_stats hidden
+                where hidden.dataset_id = d.id and hidden.access_classification = 'restricted') then 'restricted'
               when direct.dataset_id is not null then direct.access_classification
               when rollup.any_restricted then 'restricted'
               else 'public'
@@ -1286,12 +1296,18 @@ async function getDatasetAvailabilityForArea(
     const recordCount = Number(row.record_count) || 0;
     let availability: AvailabilityStatus;
 
+    if (row.access_classification === "restricted") {
+      return {
+        datasetSlug: row.dataset_slug, datasetName: row.dataset_name,
+        category: row.category, statusOptions: row.status_options || [],
+        availability: "restricted" as const,
+      };
+    }
     if (row.data_quality_flag === "verification_required") {
       availability = "verification_required";
     } else if (recordCount === 0) {
       availability = "none";
-    } else if (row.access_classification === "restricted") {
-      availability = "restricted";
+
     } else if (row.data_quality_flag === "needs_review") {
       availability = "partial";
     } else {
@@ -1317,10 +1333,11 @@ export async function getCatalogueLastUpdated(): Promise<string | undefined> {
   if (!pool) return undefined;
 
   const result = await pool.query(
-    `select greatest(
-       coalesce((select max(updated_at) from catalogue_dataset_geo_stats), 'epoch'::timestamptz),
-       coalesce((select max(finished_at) from catalogue_sync_log where status in ('success', 'partial')), 'epoch'::timestamptz)
-     ) as last_updated`,
+    `select max(s.updated_at) as last_updated
+     from catalogue_dataset_geo_stats s
+     join catalogue_datasets d on d.id = s.dataset_id and d.status = 'published'
+     where not exists (select 1 from catalogue_dataset_geo_stats hidden
+       where hidden.dataset_id = s.dataset_id and hidden.access_classification = 'restricted')`,
   );
 
   const value = result.rows[0]?.last_updated;
@@ -1340,9 +1357,14 @@ export async function getCatalogueIndicators(): Promise<CatalogueIndicators> {
   if (!pool) return empty;
 
   const result = await pool.query(
-    `with areas_with_data as (
+    `with public_stats as (
+       select s.* from catalogue_dataset_geo_stats s
+       join catalogue_datasets d on d.id = s.dataset_id and d.status = 'published'
+       where not exists (select 1 from catalogue_dataset_geo_stats hidden
+         where hidden.dataset_id = s.dataset_id and hidden.access_classification = 'restricted')
+     ), areas_with_data as (
        select distinct ga.id, ga.level, ga.parent_id
-       from catalogue_dataset_geo_stats s
+       from public_stats s
        join catalogue_geo_areas ga on ga.id = s.geo_area_id
      ),
      regions_with_data as (
@@ -1353,12 +1375,12 @@ export async function getCatalogueIndicators(): Promise<CatalogueIndicators> {
      select
        (select count(*) from regions_with_data) as regions_represented,
        (select count(*) from areas_with_data where level = 'district') as districts_represented,
-       (select coalesce(sum(settlements_represented), 0) from catalogue_dataset_geo_stats) as settlements_represented,
+       (select coalesce(sum(settlements_represented), 0) from public_stats) as settlements_represented,
        (select count(distinct category) from catalogue_datasets d where d.status = 'published' and exists (
-         select 1 from catalogue_dataset_geo_stats s where s.dataset_id = d.id
+         select 1 from public_stats s where s.dataset_id = d.id
        )) as dataset_categories_count,
-       (select min(earliest_date) from catalogue_dataset_geo_stats) as earliest_date,
-       (select max(latest_date) from catalogue_dataset_geo_stats) as latest_date`,
+       (select min(earliest_date) from public_stats) as earliest_date,
+       (select max(latest_date) from public_stats) as latest_date`,
   );
 
   const row = result.rows[0];
@@ -1388,7 +1410,9 @@ export async function getCatalogueDatasets(): Promise<CatalogueDatasetSummary[]>
        max(s.latest_date) as latest_date
      from catalogue_datasets d
      left join catalogue_dataset_geo_stats s on s.dataset_id = d.id
-     where d.status = 'published'
+     where d.status = 'published' and not exists (
+       select 1 from catalogue_dataset_geo_stats hidden
+       where hidden.dataset_id = d.id and hidden.access_classification = 'restricted')
      group by d.id, d.slug, d.name, d.category, d.description, d.status_options, d.display_order, d.status
      order by d.display_order asc`,
   );
@@ -1416,6 +1440,7 @@ export async function getCatalogueDatasetBySlug(slug: string) {
 
   if (!datasetResult.rows.length) return undefined;
   const dataset = mapDatasetRow(datasetResult.rows[0]);
+  if (await isCatalogueDatasetRestricted(pool, dataset.id)) return { dataset, availability: "restricted" as const };
 
   const [coverageResult, statusResult, yearResult] = await Promise.all([
     pool.query(
@@ -1531,6 +1556,9 @@ export async function getCatalogueRegionProfile(slug: string) {
       `select ga.slug, ga.name, coalesce(sum(s.record_count), 0) as record_count
        from catalogue_geo_areas ga
        left join catalogue_dataset_geo_stats s on s.geo_area_id = ga.id
+         and not exists (select 1 from catalogue_dataset_geo_stats hidden
+           where hidden.dataset_id = s.dataset_id and hidden.access_classification = 'restricted')
+         and exists (select 1 from catalogue_datasets d where d.id = s.dataset_id and d.status = 'published')
        where ga.parent_id = $1 and ga.level = 'district'
        group by ga.id, ga.slug, ga.name
        order by ga.name asc`,
@@ -1621,6 +1649,9 @@ export async function getCatalogueCombinationFilter(
   }
 
   const dataset = datasetResult.rows[0];
+  if (await isCatalogueDatasetRestricted(pool, dataset.id)) {
+    return { verdict: "verification_required", datasetName: dataset.name, reason: "approval_required" };
+  }
   const geoSlug = params.districtSlug || params.regionSlug;
 
   if (!geoSlug) {

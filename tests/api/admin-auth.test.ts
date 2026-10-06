@@ -1,7 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/db", () => ({
-  getPool: vi.fn(() => ({ query: vi.fn().mockResolvedValue({ rows: [] }) })),
+  getPool: vi.fn(() => ({ query: vi.fn().mockImplementation(async (sql: string) => ({
+    rows: sql.includes("from admin_sessions") ? [{ token_hash: "test" }] : [],
+  })) })),
+}));
+vi.mock("@/lib/security", async (importOriginal) => ({
+  ...await importOriginal<typeof import("@/lib/security")>(), enforceRateLimit: vi.fn(),
 }));
 
 import { GET as getDashboardAccess } from "@/app/api/admin/dashboard-access/route";
@@ -37,12 +42,18 @@ describe("admin analytics endpoints reject unauthenticated requests", () => {
     expect(response.status).toBe(401);
   });
 
-  it("GET /api/admin/analytics with the correct password is authorized", async () => {
+  it("GET /api/admin/analytics with a valid server session is authorized", async () => {
     const response = await getAnalytics(
       new Request("http://localhost/api/admin/analytics", {
-        headers: { Authorization: "Bearer correct-horse-battery-staple" },
+        headers: { Cookie: `sema_admin_session=${"a".repeat(64)}` },
       }),
     );
     expect(response.status).not.toBe(401);
+  });
+
+  it("does not accept the shared password as a Bearer token", async () => {
+    expect((await getAnalytics(new Request("http://localhost/api/admin/analytics", {
+      headers: { Authorization: "Bearer correct-horse-battery-staple" },
+    }))).status).toBe(401);
   });
 });

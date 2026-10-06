@@ -1,5 +1,6 @@
+import { SecurityError } from "@/lib/security";
 import { NextResponse } from "next/server";
-import { AdminUnauthorizedError, requireAdminAuth, unauthorizedResponse } from "@/lib/admin";
+import { requireAdminAuth, unauthorizedResponse } from "@/lib/admin";
 import { getDataRequests, updateDataRequestStatus } from "@/lib/db";
 
 function serverErrorResponse(error: unknown) {
@@ -11,12 +12,12 @@ function serverErrorResponse(error: unknown) {
 
 export async function GET(request: Request) {
   try {
-    requireAdminAuth(request);
+    await requireAdminAuth(request);
     const requests = await getDataRequests();
     return NextResponse.json(requests);
   } catch (error) {
-    if (error instanceof AdminUnauthorizedError) {
-      return unauthorizedResponse();
+    if (error instanceof SecurityError) {
+      return unauthorizedResponse(error);
     }
     return serverErrorResponse(error);
   }
@@ -24,7 +25,7 @@ export async function GET(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    requireAdminAuth(request);
+    await requireAdminAuth(request);
     const url = new URL(request.url);
     const id = url.searchParams.get("id");
     if (!id) {
@@ -40,8 +41,8 @@ export async function PATCH(request: Request) {
     const updated = await updateDataRequestStatus(id, status, sensitivityLevel, note, changedBy);
     return NextResponse.json(updated);
   } catch (error) {
-    if (error instanceof AdminUnauthorizedError) {
-      return unauthorizedResponse();
+    if (error instanceof SecurityError) {
+      return unauthorizedResponse(error);
     }
     return serverErrorResponse(error);
   }

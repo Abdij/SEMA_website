@@ -1,9 +1,19 @@
 import { NextResponse } from "next/server";
 import { insertContactMessage, requireString } from "@/lib/db";
+import { z } from "zod";
+import { getClientIdentifier } from "@/lib/analytics-server";
+import { enforceRateLimit, readLimitedJson, securityResponse } from "@/lib/security";
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as Record<string, unknown>;
+    await enforceRateLimit("contact", getClientIdentifier(request), 5, 3600);
+    const body = await readLimitedJson(request);
+    const parsed = z.object({
+      name: z.string().trim().min(1).max(200), email: z.email().max(254),
+      enquiryType: z.string().trim().min(1).max(200), subject: z.string().trim().min(1).max(300),
+      message: z.string().trim().min(1).max(10000),
+    }).safeParse(body);
+    if (!parsed.success) return NextResponse.json({ message: "Please enter valid contact details, email, subject and message." }, { status: 400 });
     const consent = body.consent;
 
     if (consent !== "on" && consent !== true) {
@@ -28,9 +38,6 @@ export async function POST(request: Request) {
       message: "Message submitted.",
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unable to submit contact message.";
-    const status = message.includes("DATABASE_URL") ? 503 : 400;
-
-    return NextResponse.json({ message }, { status });
+    return securityResponse(error) || NextResponse.json({ message: "Unable to save your message. Please try again later." }, { status: 503 });
   }
 }

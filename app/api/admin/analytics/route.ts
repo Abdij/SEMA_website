@@ -1,5 +1,6 @@
+import { SecurityError } from "@/lib/security";
 import { NextResponse } from "next/server";
-import { AdminUnauthorizedError, requireAdminAuth, unauthorizedResponse } from "@/lib/admin";
+import { requireAdminAuth, unauthorizedResponse } from "@/lib/admin";
 import { getPool } from "@/lib/db";
 
 function serverErrorResponse(error: unknown) {
@@ -332,7 +333,7 @@ function csvResponse(filename: string, csv: string) {
 
 export async function GET(request: Request) {
   try {
-    requireAdminAuth(request);
+    await requireAdminAuth(request);
     const url = new URL(request.url);
     const filters = parseFilters(url);
     const exportType = url.searchParams.get("export");
@@ -354,8 +355,8 @@ export async function GET(request: Request) {
 
     return NextResponse.json(await getOverview(filters));
   } catch (error) {
-    if (error instanceof AdminUnauthorizedError) {
-      return unauthorizedResponse();
+    if (error instanceof SecurityError) {
+      return unauthorizedResponse(error);
     }
     return serverErrorResponse(error);
   }

@@ -1,3 +1,4 @@
+import { isIP } from "node:net";
 // Server-side helpers shared by the analytics + dashboard-access API routes.
 //
 // Everything here is privacy-conscious by construction: we only ever derive
@@ -19,11 +20,13 @@ export type ApproxGeo = {
  */
 export function getRequestGeo(request: Request): ApproxGeo {
   const headers = request.headers;
+  const onVercel = process.env.VERCEL === "1";
+  const onCloudflare = process.env.TRUSTED_PROXY_GEO_PROVIDER === "cloudflare";
 
   const countryCode =
-    headers.get("x-vercel-ip-country") || headers.get("cf-ipcountry") || undefined;
-  const region = headers.get("x-vercel-ip-country-region") || undefined;
-  const rawCity = headers.get("x-vercel-ip-city") || undefined;
+    (onVercel ? headers.get("x-vercel-ip-country") : onCloudflare ? headers.get("cf-ipcountry") : undefined) || undefined;
+  const region = onVercel ? headers.get("x-vercel-ip-country-region") || undefined : undefined;
+  const rawCity = onVercel ? headers.get("x-vercel-ip-city") || undefined : undefined;
 
   let city: string | undefined;
   if (rawCity) {
@@ -142,10 +145,13 @@ export function checkRateLimit(key: string, limit: number, windowMs: number): bo
 
 /** Best-effort client identifier for rate limiting only (never persisted). */
 export function getClientIdentifier(request: Request): string {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  const realIp = request.headers.get("x-real-ip");
-  const ip = forwardedFor?.split(",")[0]?.trim() || realIp || "unknown";
-  return ip;
+  // Vercel overwrites these at its edge. On other hosts only trust a header
+  // explicitly configured after the front proxy has been verified to overwrite it.
+  const header = process.env.VERCEL === "1" ? "x-vercel-forwarded-for" : process.env.TRUSTED_PROXY_IP_HEADER;
+  const raw = header ? request.headers.get(header)?.trim() : undefined;
+  const ip = raw || (process.env.VERCEL === "1" ? request.headers.get("x-forwarded-for")?.trim() : undefined);
+  if (!ip || !isIP(ip)) return "unknown";
+  return isIP(ip) === 6 ? new URL(`http://[${ip}]/`).hostname.toLowerCase() : ip;
 }
 
 // --- Environment-driven configuration -----------------------------------

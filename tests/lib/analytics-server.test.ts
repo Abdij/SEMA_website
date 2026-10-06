@@ -1,10 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   checkRateLimit,
   classifyUserAgent,
   getRequestGeo,
+  getClientIdentifier,
   sanitizeText,
 } from "@/lib/analytics-server";
+afterEach(() => vi.unstubAllEnvs());
 
 describe("classifyUserAgent", () => {
   it("classifies a common desktop Chrome UA", () => {
@@ -45,6 +47,7 @@ describe("classifyUserAgent", () => {
 
 describe("getRequestGeo", () => {
   it("reads Vercel geo headers and decodes the city", () => {
+    vi.stubEnv("VERCEL", "1");
     const request = new Request("https://example.com", {
       headers: {
         "x-vercel-ip-country": "so",
@@ -73,6 +76,18 @@ describe("getRequestGeo", () => {
     });
     const geo = getRequestGeo(request);
     expect(JSON.stringify(geo)).not.toContain("203.0.113.42");
+  });
+});
+
+describe("trusted client identity", () => {
+  it("ignores spoofed headers outside a configured proxy", () => {
+    vi.stubEnv("VERCEL", ""); vi.stubEnv("TRUSTED_PROXY_IP_HEADER", "");
+    expect(getClientIdentifier(new Request("http://localhost", { headers: { "x-forwarded-for": "203.0.113.1", "x-real-ip": "203.0.113.2" } }))).toBe("unknown");
+  });
+  it("prefers Vercel's protected address and rejects invalid client addresses", () => {
+    vi.stubEnv("VERCEL", "1");
+    expect(getClientIdentifier(new Request("https://example.com", { headers: { "x-vercel-forwarded-for": "203.0.113.1", "x-forwarded-for": "203.0.113.2" } }))).toBe("203.0.113.1");
+    expect(getClientIdentifier(new Request("https://example.com", { headers: { "x-vercel-forwarded-for": "fake" } }))).toBe("unknown");
   });
 });
 

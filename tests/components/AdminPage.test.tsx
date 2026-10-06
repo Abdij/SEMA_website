@@ -17,9 +17,10 @@ async function signIn() {
 }
 
 function mockResponses(failure: () => "server" | "network" | "unauthorized" | null) {
-  return vi.spyOn(global, "fetch").mockImplementation(async (url) => {
+  return vi.spyOn(global, "fetch").mockImplementation(async (url, options) => {
     const path = String(url);
-    if (path === "/api/admin/auth") return Response.json({ ok: true });
+    if (path === "/api/admin/auth") return options?.method === "POST"
+      ? Response.json({ ok: true }) : Response.json({}, { status: 401 });
     if (path === "/api/admin/news") {
       const mode = failure();
       if (mode === "network") throw new Error("Connection lost");
@@ -34,6 +35,17 @@ function mockResponses(failure: () => "server" | "network" | "unauthorized" | nu
 }
 
 describe("admin data loading", () => {
+  it("clears legacy saved passwords and uses cookies for subsequent calls", async () => {
+    window.localStorage.setItem("sema_admin_password", "legacy-password");
+    const fetchMock = mockResponses(() => null);
+    await signIn();
+    await screen.findByText("Data loaded.");
+    expect(window.localStorage.getItem("sema_admin_password")).toBeNull();
+    for (const [url, options] of fetchMock.mock.calls) {
+      expect(new Headers(options?.headers).get("authorization")).toBeNull();
+      if (String(url) !== "/api/admin/auth") expect(JSON.stringify(options)).not.toContain("test-password");
+    }
+  });
   it.each(["server", "network"] as const)("preserves login and existing data after a %s failure, then recovers on refresh", async (failure) => {
     let mode: "server" | "network" | null = null;
     mockResponses(() => mode);

@@ -61,6 +61,10 @@ migration at `db/migrations/002_dashboard_access_analytics.sql` — see
 
 Core tables:
 
+Security release: apply `db/migrations/004_security.sql` before deploying to an
+existing database. Admin sessions now expire after eight hours and are revoked
+on sign-out or password rotation. See [security operations](docs/SECURITY.md).
+
 - `news_posts`
 - `publications`
 - `dashboard_embeds`

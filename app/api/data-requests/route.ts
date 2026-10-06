@@ -2,10 +2,13 @@ import { NextResponse } from "next/server";
 import { insertDataRequest, requireString } from "@/lib/db";
 import { z } from "zod";
 import { sendDataRequestEmails } from "@/lib/data-request-email";
+import { getClientIdentifier } from "@/lib/analytics-server";
+import { enforceRateLimit, readLimitedJson, securityResponse } from "@/lib/security";
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as Record<string, unknown>;
+    await enforceRateLimit("data-request", getClientIdentifier(request), 3, 3600);
+    const body = await readLimitedJson(request);
     const acceptedTerms = body.terms;
 
     if (acceptedTerms !== "on" && acceptedTerms !== true) {
@@ -15,7 +18,14 @@ export async function POST(request: Request) {
       );
     }
 
-    const email = z.email().safeParse(requireString(body.email, "Email"));
+    const fields = z.object({
+      name: z.string().trim().min(1).max(200), requesterType: z.string().trim().min(1).max(200),
+      dataRequested: z.string().trim().min(1).max(10000), intendedUse: z.string().trim().min(1).max(10000),
+      preferredFormat: z.string().trim().min(1).max(200),
+      deadline: z.union([z.literal(""), z.iso.date()]).optional(),
+    }).safeParse(body);
+    if (!fields.success) return NextResponse.json({ message: "Please complete the required fields with valid values." }, { status: 400 });
+    const email = z.email().max(254).safeParse(typeof body.email === "string" ? body.email.trim() : body.email);
     if (!email.success) {
       return NextResponse.json({ message: "Please enter a valid email address." }, { status: 400 });
     }
@@ -34,6 +44,9 @@ export async function POST(request: Request) {
       preferredFormat: requireString(body.preferredFormat, "Preferred format"),
       deadline: typeof body.deadline === "string" && body.deadline ? body.deadline : undefined,
     };
+    // Bound mail to any one recipient even when requests originate from different IPs.
+    await enforceRateLimit("data-request-recipient", email.data.toLowerCase(), 2, 3600);
+    await enforceRateLimit("data-request-total", "all", 100, 3600);
     const saved = await insertDataRequest(input);
     let emailNotifications = { requester: false, staff: false };
     try {
@@ -49,9 +62,6 @@ export async function POST(request: Request) {
       message: "Data request submitted.",
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unable to submit data request.";
-    const status = message.includes("DATABASE_URL") ? 503 : 400;
-
-    return NextResponse.json({ message }, { status });
+    return securityResponse(error) || NextResponse.json({ message: "Unable to save your request. Please try again later." }, { status: 503 });
   }
 }

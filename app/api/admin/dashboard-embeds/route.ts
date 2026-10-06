@@ -1,5 +1,6 @@
+import { SecurityError } from "@/lib/security";
 import { NextResponse } from "next/server";
-import { AdminUnauthorizedError, requireAdminAuth, unauthorizedResponse } from "@/lib/admin";
+import { requireAdminAuth, unauthorizedResponse } from "@/lib/admin";
 import { createDashboardEmbed, deleteDashboardEmbed, getAdminDashboardEmbeds, updateDashboardEmbed } from "@/lib/db";
 
 function serverErrorResponse(error: unknown) {
@@ -11,12 +12,12 @@ function serverErrorResponse(error: unknown) {
 
 export async function GET(request: Request) {
   try {
-    requireAdminAuth(request);
+    await requireAdminAuth(request);
     const dashboards = await getAdminDashboardEmbeds();
     return NextResponse.json(dashboards);
   } catch (error) {
-    if (error instanceof AdminUnauthorizedError) {
-      return unauthorizedResponse();
+    if (error instanceof SecurityError) {
+      return unauthorizedResponse(error);
     }
     return serverErrorResponse(error);
   }
@@ -24,13 +25,13 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    requireAdminAuth(request);
+    await requireAdminAuth(request);
     const body = await request.json();
     const created = await createDashboardEmbed(body);
     return NextResponse.json(created);
   } catch (error) {
-    if (error instanceof AdminUnauthorizedError) {
-      return unauthorizedResponse();
+    if (error instanceof SecurityError) {
+      return unauthorizedResponse(error);
     }
     return serverErrorResponse(error);
   }
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    requireAdminAuth(request);
+    await requireAdminAuth(request);
     const url = new URL(request.url);
     const id = url.searchParams.get("id");
     const title = url.searchParams.get("title");
@@ -51,8 +52,8 @@ export async function PATCH(request: Request) {
     const updated = await updateDashboardEmbed({ id: id || undefined, title: title || undefined }, body);
     return NextResponse.json(updated);
   } catch (error) {
-    if (error instanceof AdminUnauthorizedError) {
-      return unauthorizedResponse();
+    if (error instanceof SecurityError) {
+      return unauthorizedResponse(error);
     }
     return serverErrorResponse(error);
   }
@@ -60,7 +61,7 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    requireAdminAuth(request);
+    await requireAdminAuth(request);
     const url = new URL(request.url);
     const id = url.searchParams.get("id");
     const title = url.searchParams.get("title");
@@ -72,8 +73,8 @@ export async function DELETE(request: Request) {
     await deleteDashboardEmbed({ id: id || undefined, title: title || undefined });
     return NextResponse.json({ ok: true });
   } catch (error) {
-    if (error instanceof AdminUnauthorizedError) {
-      return unauthorizedResponse();
+    if (error instanceof SecurityError) {
+      return unauthorizedResponse(error);
     }
     return serverErrorResponse(error);
   }

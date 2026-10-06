@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getPool } from "@/lib/db";
+import { attachmentDisposition } from "@/lib/download";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -55,7 +56,7 @@ export async function GET(request: Request) {
   headers.set("X-Content-Type-Options", "nosniff");
   headers.set(
     "Content-Disposition",
-    `attachment; filename="${row.file_name || "publication"}"`,
+    attachmentDisposition(row.file_name || "publication"),
   );
 
   return new Response(row.file_data, { status: 200, headers });

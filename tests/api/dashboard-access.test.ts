@@ -14,7 +14,7 @@ import type { DashboardAccessInput } from "@/lib/db";
 const DASHBOARD_ID = "123e4567-e89b-42d3-a456-426614174000";
 const TRUSTED_URL = "https://app.powerbi.com/view?r=trusted-report-id";
 
-function makeRequest(body: unknown, ip = `10.0.0.${Math.floor(Math.random() * 1000)}`) {
+function makeRequest(body: unknown, ip = `10.0.0.${Math.floor(Math.random() * 250)}`) {
   return new Request("http://localhost/api/dashboard-access", {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-forwarded-for": ip },
@@ -41,6 +41,7 @@ function validRegisterBody(overrides: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.stubEnv("VERCEL", "1");
   vi.mocked(hasValidDashboardRegistration).mockResolvedValue(true);
   vi.mocked(getPublishedDashboardById).mockResolvedValue({
     id: DASHBOARD_ID,

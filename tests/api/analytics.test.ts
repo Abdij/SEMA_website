@@ -17,6 +17,7 @@ function makeRequest(body: unknown, ip = `198.51.100.${Math.floor(Math.random() 
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.stubEnv("VERCEL", "1");
   vi.mocked(recordAnalyticsEvent).mockResolvedValue(undefined as never);
 });
 

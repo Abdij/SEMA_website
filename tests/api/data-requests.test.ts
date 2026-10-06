@@ -8,10 +8,14 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 vi.mock("nodemailer", () => ({ default: { createTransport: vi.fn() } }));
+vi.mock("@/lib/security", async (importOriginal) => ({
+  ...await importOriginal<typeof import("@/lib/security")>(), enforceRateLimit: vi.fn(),
+}));
 
 import nodemailer from "nodemailer";
 import { insertDataRequest } from "@/lib/db";
 import { POST } from "@/app/api/data-requests/route";
+import { enforceRateLimit, SecurityError } from "@/lib/security";
 
 const sendMail = vi.fn();
 afterEach(() => {
@@ -58,7 +62,7 @@ describe("information request notifications", () => {
 
   it("does not email when saving fails", async () => {
     vi.mocked(insertDataRequest).mockRejectedValue(new Error("Database unavailable"));
-    expect((await submit()).status).toBe(400);
+    expect((await submit()).status).toBe(503);
     expect(sendMail).not.toHaveBeenCalled();
   });
 
@@ -82,5 +86,16 @@ describe("information request notifications", () => {
   it("reports rejected staff delivery separately", async () => {
     sendMail.mockResolvedValueOnce({ accepted: [body.email] }).mockResolvedValueOnce({ accepted: [] });
     expect((await (await submit()).json()).emailNotifications).toEqual({ requester: true, staff: false });
+  });
+
+  it("does not save or send email when either IP or recipient limits are exceeded", async () => {
+    vi.mocked(enforceRateLimit).mockRejectedValueOnce(new SecurityError("Too many requests", 429, 3600));
+    expect((await submit()).status).toBe(429);
+    vi.mocked(enforceRateLimit).mockResolvedValueOnce(undefined).mockRejectedValueOnce(new SecurityError("Too many requests", 429, 3600));
+    const response = await submit();
+    expect(response.status).toBe(429);
+    expect(response.headers.get("retry-after")).toBe("3600");
+    expect(insertDataRequest).not.toHaveBeenCalled();
+    expect(sendMail).not.toHaveBeenCalled();
   });
 });

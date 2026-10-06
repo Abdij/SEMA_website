@@ -107,6 +107,10 @@ npm run build
 
 ## 5. Deployment to Vercel
 
+Vercel is the verified production host as of 6 October 2026. `DEPLOYMENT.md`
+also contains an optional future cPanel migration plan. Apply migration 004
+before this security release; see [security operations](SECURITY.md).
+
 No change to the existing deployment process:
 
 1. Push to the repository connected to the Vercel project.
@@ -171,13 +175,19 @@ the existing `TrackedLink` component; they map onto the spec's "navigation" and
 - Rate limiting (`lib/analytics-server.ts checkRateLimit`) is an in-memory,
   per-serverless-instance sliding window — a reasonable abuse deterrent, not a
   distributed guarantee. Under real traffic across multiple Vercel instances,
-  the effective limit is looser than the configured number.
+  the effective limit is looser than the configured number. This applies only
+  to analytics events and dashboard registrations. Admin authentication/API
+  calls and public contact/information-request forms now use shared PostgreSQL
+  limits; see [security operations](SECURITY.md).
 
 ## 8. Approximate location
 
 `lib/analytics-server.ts getRequestGeo()` reads `x-vercel-ip-country`,
 `x-vercel-ip-country-region`, `x-vercel-ip-city` (Vercel's edge-provided
-headers), falling back to Cloudflare's `cf-ipcountry` if present. No browser
+headers) only when running on Vercel. Cloudflare's `cf-ipcountry` is accepted
+only with `TRUSTED_PROXY_GEO_PROVIDER=cloudflare` and verified Cloudflare-only
+ingress. On a cPanel host without a trusted geography provider, country/city
+data is unavailable and those charts will be empty. No browser
 geolocation permission is ever requested, no precise coordinates are collected,
 and the raw IP address is never stored or displayed — only country/region/city
 strings, and only when the hosting infrastructure provides them.
@@ -199,8 +209,9 @@ In `/admin`, two new tabs:
   visitor location, source page, date, repeat-access flag), plus breakdowns by
   activity type / organization type / country.
 
-Both tabs use the existing admin password auth (`requireAdminAuth`) — nothing
-here is reachable without it, and no analytics page is publicly exposed.
+Both tabs require an unexpired, server-validated admin session (`requireAdminAuth`).
+The password is used only for sign-in; it is no longer stored in localStorage or
+sent with each request. No analytics page is publicly exposed.
 
 ## 10. Export functionality
 

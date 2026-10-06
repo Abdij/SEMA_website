@@ -1,4 +1,21 @@
-# Deployment Plan — cPanel Hosting for sema.org.so
+# Deployment — sema.org.so
+
+## Current production host and security release
+
+As verified on 6 October 2026, **sema.org.so runs on Vercel**, project
+`sema-website-main` in team `zema`. The cPanel instructions below are an optional
+migration plan, not the current deployment. Do not change DNS as part of a routine release.
+
+Before deploying this security release, apply `db/migrations/004_security.sql` to
+the production database. It adds shared rate-limit and admin-session tables without
+altering existing content. Keep those tables when rolling back the application.
+Use `npm ci`, `npm test`, `npm run lint`, and `npm run build` before deployment.
+See [security operations](docs/SECURITY.md) for session expiry, proxy trust and checks.
+
+Admin authentication now uses an eight-hour HttpOnly cookie. Existing admins must
+sign in again; password-as-Bearer authentication is no longer supported.
+
+## Optional future cPanel migration
 
 This is the deployment package for standing up the SEMA website on a cPanel host under the
 domain **sema.org.so**, including the PostgreSQL database. Share this file directly with the
@@ -44,7 +61,7 @@ Everything below assumes Path A or Path B is chosen up front; the two only diffe
 
 ## 2. Runtime requirements
 
-- **Node.js 18.18+** (20 LTS or 22 LTS recommended) — required by Next.js 15.
+- **Node.js 22.12+** — use the same runtime for dependency installation, testing and serving.
 - npm (ships with Node).
 
 ## 3. Deploying the app via cPanel "Setup Node.js App"
@@ -57,7 +74,7 @@ Everything below assumes Path A or Path B is chosen up front; the two only diffe
    Node.js App tool manages its own proxy into the domain's public URL, so the app folder does
    not need to be the doc root.
 2. cPanel → **Software** → **Setup Node.js App** → **Create Application**:
-   - Node.js version: 20 LTS (or 22 LTS).
+   - Node.js version: 22.12 or newer in the 22 series.
    - Application mode: Production.
    - Application root: the folder from step 1 (e.g. `sema-website`).
    - Application URL: `sema.org.so`.

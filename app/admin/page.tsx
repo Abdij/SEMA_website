@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { LogOut } from "lucide-react";
 import { ACTIVITY_TYPES, ORGANIZATION_TYPES } from "@/lib/dashboard-access-options";
 
@@ -291,10 +291,6 @@ const emptyDashboard: DashboardItem = {
   status: "published",
 };
 
-function authHeader(password: string) {
-  return { Authorization: `Bearer ${password}` };
-}
-
 function formatNumber(value: number | undefined) {
   return new Intl.NumberFormat("en-US").format(value ?? 0);
 }
@@ -365,14 +361,17 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const saved = window.localStorage.getItem("sema_admin_password");
-    if (saved) {
-      setPassword(saved);
-      verifyPassword(saved);
-    }
+    // Remove credentials saved by earlier versions; never reuse or retransmit them.
+    try { window.localStorage.removeItem("sema_admin_password"); } catch { /* storage unavailable */ }
+    void fetch("/api/admin/auth").then(async (response) => {
+      if (response.ok) {
+        setAuthenticated(true);
+        await loadAllData();
+      }
+    }).catch(() => setMessage("Unable to check your session. Please sign in."));
+    // Runs once to restore the server-issued session.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const headers = useMemo(() => authHeader(password), [password]);
 
   async function verifyPassword(value: string) {
     try {
@@ -396,24 +395,24 @@ export default function AdminPage() {
 
       setAuthenticated(true);
       setMessage("Authenticated.");
-      window.localStorage.setItem("sema_admin_password", value);
-      loadAllData(value);
+      setPassword("");
+      loadAllData();
     } catch {
       setAuthenticated(false);
       setMessage("Unable to reach admin endpoint.");
     }
   }
 
-  async function loadAllData(authValue: string) {
+  async function loadAllData() {
     setLoading(true);
     try {
       const results = await Promise.allSettled([
-        fetch("/api/admin/news", { headers: authHeader(authValue) }),
-        fetch("/api/admin/publications", { headers: authHeader(authValue) }),
-        fetch("/api/admin/dashboard-embeds", { headers: authHeader(authValue) }),
-        fetch("/api/admin/contact-messages", { headers: authHeader(authValue) }),
-        fetch("/api/admin/data-requests", { headers: authHeader(authValue) }),
-        fetch("/api/admin/reports", { headers: authHeader(authValue) }),
+        fetch("/api/admin/news", {}),
+        fetch("/api/admin/publications", {}),
+        fetch("/api/admin/dashboard-embeds", {}),
+        fetch("/api/admin/contact-messages", {}),
+        fetch("/api/admin/data-requests", {}),
+        fetch("/api/admin/reports", {}),
       ]);
       const responses = results.map((result) => result.status === "fulfilled" ? result.value : null);
       const [
@@ -461,8 +460,8 @@ export default function AdminPage() {
         ? `Unable to refresh ${unavailable.join(", ")}. Previously loaded data may be out of date. Please try Refresh data again.`
         : "Data loaded.");
 
-      void loadAnalytics(authValue, emptyAnalyticsFilters);
-      void loadDashboardAccess(authValue, emptyDashboardAccessFilters, 1);
+      void loadAnalytics(emptyAnalyticsFilters);
+      void loadDashboardAccess(emptyDashboardAccessFilters, 1);
     } catch {
       setMessage("Unable to load admin data.");
     } finally {
@@ -478,11 +477,11 @@ export default function AdminPage() {
     return params.toString();
   }
 
-  async function loadAnalytics(authValue: string, filters: AnalyticsFilters) {
+  async function loadAnalytics(filters: AnalyticsFilters) {
     try {
       const query = buildQuery(filters);
       const response = await fetch(`/api/admin/analytics${query ? `?${query}` : ""}`, {
-        headers: authHeader(authValue),
+        
       });
       if (response.status === 401) {
         setAuthenticated(false);
@@ -495,11 +494,11 @@ export default function AdminPage() {
     }
   }
 
-  async function loadDashboardAccess(authValue: string, filters: DashboardAccessFilters, page: number) {
+  async function loadDashboardAccess(filters: DashboardAccessFilters, page: number) {
     try {
       const query = buildQuery({ ...filters, page: String(page), limit: "50" });
       const response = await fetch(`/api/admin/dashboard-access?${query}`, {
-        headers: authHeader(authValue),
+        
       });
       if (response.status === 401) {
         setAuthenticated(false);
@@ -513,17 +512,17 @@ export default function AdminPage() {
   }
 
   function handleApplyAnalyticsFilters() {
-    void loadAnalytics(password, analyticsFilters);
+    void loadAnalytics(analyticsFilters);
   }
 
   function handleApplyDashboardAccessFilters() {
     setDashboardAccessPage(1);
-    void loadDashboardAccess(password, dashboardAccessFilters, 1);
+    void loadDashboardAccess(dashboardAccessFilters, 1);
   }
 
   function handleDashboardAccessPageChange(nextPage: number) {
     setDashboardAccessPage(nextPage);
-    void loadDashboardAccess(password, dashboardAccessFilters, nextPage);
+    void loadDashboardAccess(dashboardAccessFilters, nextPage);
   }
 
   async function handleExportDashboardAccessCsv() {
@@ -531,7 +530,6 @@ export default function AdminPage() {
     try {
       const query = buildQuery(dashboardAccessFilters);
       const response = await fetch(`/api/admin/dashboard-access?export=csv${query ? `&${query}` : ""}`, {
-        headers,
       });
       if (response.status === 401) {
         setAuthenticated(false);
@@ -555,7 +553,7 @@ export default function AdminPage() {
       const query = buildQuery(analyticsFilters);
       const response = await fetch(
         `/api/admin/analytics?export=${kind}${query ? `&${query}` : ""}`,
-        { headers },
+        {},
       );
       if (response.status === 401) {
         setAuthenticated(false);
@@ -593,8 +591,14 @@ export default function AdminPage() {
     await verifyPassword(password);
   }
 
-  function handleSignOut() {
-    window.localStorage.removeItem("sema_admin_password");
+  async function handleSignOut() {
+    try {
+      const response = await fetch("/api/admin/auth", { method: "DELETE" });
+      if (!response.ok) throw new Error("Sign-out failed");
+    } catch {
+      setMessage("Unable to sign out. Please try again.");
+      return;
+    }
     setPassword("");
     setAuthenticated(false);
     setMessage("Signed out.");
@@ -625,7 +629,6 @@ export default function AdminPage() {
       method,
       headers: {
         "Content-Type": "application/json",
-        ...headers,
       },
       body: body ? JSON.stringify(body) : undefined,
     });
@@ -643,7 +646,6 @@ export default function AdminPage() {
     setLoading(true);
     try {
       const response = await fetch(`/api/admin/reports?export=${encodeURIComponent(type)}`, {
-        headers,
       });
 
       if (response.status === 401) {
@@ -678,7 +680,7 @@ export default function AdminPage() {
       const result = await sendAdminRequest(path, method, payload);
       if (result && !result.message) {
         setMessage("News item saved.");
-        await loadAllData(password);
+        await loadAllData();
         setEditingNews(emptyNews);
       } else {
         setMessage(result?.message || "Could not save news.");
@@ -694,7 +696,7 @@ export default function AdminPage() {
       const result = await sendAdminRequest(`/api/admin/news?slug=${encodeURIComponent(slug)}`, "DELETE");
       if (result?.ok) {
         setMessage("News item deleted.");
-        await loadAllData(password);
+        await loadAllData();
       } else {
         setMessage(result?.message || "Delete failed.");
       }
@@ -719,7 +721,7 @@ export default function AdminPage() {
       const result = await sendAdminRequest(path, method, payload);
       if (result && !result.message) {
         setMessage("Publication saved.");
-        await loadAllData(password);
+        await loadAllData();
         setEditingPublication(emptyPublication);
         setPublicationFile(null);
       } else {
@@ -736,7 +738,7 @@ export default function AdminPage() {
       const result = await sendAdminRequest(`/api/admin/publications?id=${encodeURIComponent(id)}`, "DELETE");
       if (result?.ok) {
         setMessage("Publication deleted.");
-        await loadAllData(password);
+        await loadAllData();
       } else {
         setMessage(result?.message || "Delete failed.");
       }
@@ -757,7 +759,7 @@ export default function AdminPage() {
       const result = await sendAdminRequest(path, method, payload);
       if (result && !result.message) {
         setMessage("Dashboard saved.");
-        await loadAllData(password);
+        await loadAllData();
         setEditingDashboard(emptyDashboard);
       } else {
         setMessage(result?.message || "Could not save dashboard.");
@@ -776,7 +778,7 @@ export default function AdminPage() {
       const result = await sendAdminRequest(`/api/admin/dashboard-embeds?${query}`, "DELETE");
       if (result?.ok) {
         setMessage("Dashboard deleted.");
-        await loadAllData(password);
+        await loadAllData();
       } else {
         setMessage(result?.message || "Delete failed.");
       }
@@ -791,7 +793,7 @@ export default function AdminPage() {
       const result = await sendAdminRequest(`/api/admin/contact-messages?id=${encodeURIComponent(id)}`, "PATCH", { status });
       if (result && !result.message) {
         setMessage("Contact message status updated.");
-        await loadAllData(password);
+        await loadAllData();
       } else {
         setMessage(result?.message || "Could not update message status.");
       }
@@ -809,7 +811,7 @@ export default function AdminPage() {
       });
       if (result && !result.message) {
         setMessage("Information request status updated.");
-        await loadAllData(password);
+        await loadAllData();
       } else {
         setMessage(result?.message || "Could not update request status.");
       }
@@ -855,7 +857,7 @@ export default function AdminPage() {
               <h1>SEMA Admin Dashboard</h1>
               <p>Manage news posts, EORE resources, dashboard embeds, incoming contact messages, information requests, and operational reports.</p>
             </div>
-            <button type="button" className="button secondary" onClick={() => loadAllData(password)} disabled={loading}>
+            <button type="button" className="button secondary" onClick={() => loadAllData()} disabled={loading}>
               Refresh data
             </button>
             <button type="button" className="button secondary" onClick={handleSignOut}>
@@ -1353,7 +1355,7 @@ export default function AdminPage() {
                     Export SEMA information requests, contact messages, news publishing counts, dashboard opens, and website tab clicks.
                   </p>
                 </div>
-                <button className="button light" type="button" onClick={() => loadAllData(password)} disabled={loading}>
+                <button className="button light" type="button" onClick={() => loadAllData()} disabled={loading}>
                   Refresh
                 </button>
               </div>
@@ -1509,7 +1511,7 @@ export default function AdminPage() {
                 <button
                   className="button light"
                   type="button"
-                  onClick={() => loadAnalytics(password, analyticsFilters)}
+                  onClick={() => loadAnalytics(analyticsFilters)}
                   disabled={loading}
                 >
                   Refresh
@@ -1816,7 +1818,7 @@ export default function AdminPage() {
                 <button
                   className="button light"
                   type="button"
-                  onClick={() => loadDashboardAccess(password, dashboardAccessFilters, dashboardAccessPage)}
+                  onClick={() => loadDashboardAccess(dashboardAccessFilters, dashboardAccessPage)}
                   disabled={loading}
                 >
                   Refresh

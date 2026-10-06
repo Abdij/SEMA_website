@@ -1,5 +1,6 @@
+import { SecurityError } from "@/lib/security";
 import { NextResponse } from "next/server";
-import { AdminUnauthorizedError, requireAdminAuth, unauthorizedResponse } from "@/lib/admin";
+import { requireAdminAuth, unauthorizedResponse } from "@/lib/admin";
 import { createNewsPost, deleteNewsPost, getAdminNewsPosts, getAdminNewsPostBySlug, updateNewsPost } from "@/lib/db";
 
 function serverErrorResponse(error: unknown) {
@@ -11,7 +12,7 @@ function serverErrorResponse(error: unknown) {
 
 export async function GET(request: Request) {
   try {
-    requireAdminAuth(request);
+    await requireAdminAuth(request);
     const url = new URL(request.url);
     const slug = url.searchParams.get("slug");
 
@@ -26,8 +27,8 @@ export async function GET(request: Request) {
     const posts = await getAdminNewsPosts();
     return NextResponse.json(posts);
   } catch (error) {
-    if (error instanceof AdminUnauthorizedError) {
-      return unauthorizedResponse();
+    if (error instanceof SecurityError) {
+      return unauthorizedResponse(error);
     }
     return serverErrorResponse(error);
   }
@@ -35,13 +36,13 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    requireAdminAuth(request);
+    await requireAdminAuth(request);
     const body = await request.json();
     const created = await createNewsPost(body);
     return NextResponse.json(created);
   } catch (error) {
-    if (error instanceof AdminUnauthorizedError) {
-      return unauthorizedResponse();
+    if (error instanceof SecurityError) {
+      return unauthorizedResponse(error);
     }
     return serverErrorResponse(error);
   }
@@ -49,7 +50,7 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    requireAdminAuth(request);
+    await requireAdminAuth(request);
     const url = new URL(request.url);
     const slug = url.searchParams.get("slug");
     const body = await request.json();
@@ -61,8 +62,8 @@ export async function PATCH(request: Request) {
     const updated = await updateNewsPost(slug, body);
     return NextResponse.json(updated);
   } catch (error) {
-    if (error instanceof AdminUnauthorizedError) {
-      return unauthorizedResponse();
+    if (error instanceof SecurityError) {
+      return unauthorizedResponse(error);
     }
     return serverErrorResponse(error);
   }
@@ -70,7 +71,7 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    requireAdminAuth(request);
+    await requireAdminAuth(request);
     const url = new URL(request.url);
     const slug = url.searchParams.get("slug");
 
@@ -81,8 +82,8 @@ export async function DELETE(request: Request) {
     await deleteNewsPost(slug);
     return NextResponse.json({ ok: true });
   } catch (error) {
-    if (error instanceof AdminUnauthorizedError) {
-      return unauthorizedResponse();
+    if (error instanceof SecurityError) {
+      return unauthorizedResponse(error);
     }
     return serverErrorResponse(error);
   }
