@@ -12,6 +12,11 @@ were introduced.
   `components/DashboardAccessGate.tsx`). The dashboard's embed URL is never sent to
   the browser until the visitor registers (or reuses a registration from the last
   30 days).
+- Public listings and access require both `published` status and `public_safe`.
+  Reuse is verified against a saved registration for the same anonymous visitor,
+  with consent, the current consent version, and an unexpired remember period.
+  Older registrations missing visitor attribution require the form once again.
+  Without a configured database, dashboards display unavailable placeholders.
 - Every dashboard opening — gated or reused — is recorded as a `dashboard_opened`
   analytics event.
 - Site-wide analytics (page views, sessions, navigation clicks, downloads, form

@@ -390,7 +390,7 @@ export default function AdminPage() {
 
       if (!response.ok) {
         setAuthenticated(false);
-        setMessage("Invalid admin password.");
+        setMessage(response.status === 401 ? "Invalid admin password." : "Admin sign-in is temporarily unavailable. Please try again.");
         return;
       }
 
@@ -398,7 +398,7 @@ export default function AdminPage() {
       setMessage("Authenticated.");
       window.localStorage.setItem("sema_admin_password", value);
       loadAllData(value);
-    } catch (error) {
+    } catch {
       setAuthenticated(false);
       setMessage("Unable to reach admin endpoint.");
     }
@@ -407,14 +407,7 @@ export default function AdminPage() {
   async function loadAllData(authValue: string) {
     setLoading(true);
     try {
-      const [
-        newsResponse,
-        publicationsResponse,
-        dashboardsResponse,
-        contactMessagesResponse,
-        dataRequestsResponse,
-        reportsResponse,
-      ] = await Promise.all([
+      const results = await Promise.allSettled([
         fetch("/api/admin/news", { headers: authHeader(authValue) }),
         fetch("/api/admin/publications", { headers: authHeader(authValue) }),
         fetch("/api/admin/dashboard-embeds", { headers: authHeader(authValue) }),
@@ -422,14 +415,18 @@ export default function AdminPage() {
         fetch("/api/admin/data-requests", { headers: authHeader(authValue) }),
         fetch("/api/admin/reports", { headers: authHeader(authValue) }),
       ]);
+      const responses = results.map((result) => result.status === "fulfilled" ? result.value : null);
+      const [
+        newsResponse,
+        publicationsResponse,
+        dashboardsResponse,
+        contactMessagesResponse,
+        dataRequestsResponse,
+        reportsResponse,
+      ] = responses;
 
       if (
-        !newsResponse.ok ||
-        !publicationsResponse.ok ||
-        !dashboardsResponse.ok ||
-        !contactMessagesResponse.ok ||
-        !dataRequestsResponse.ok ||
-        reportsResponse.status === 401
+        responses.some((response) => response?.status === 401)
       ) {
         setAuthenticated(false);
         setMessage("Authorization failed. Please log in again.");
@@ -444,25 +441,29 @@ export default function AdminPage() {
         dataRequestsData,
         reportsData,
       ] = await Promise.all([
-        newsResponse.json(),
-        publicationsResponse.json(),
-        dashboardsResponse.json(),
-        contactMessagesResponse.json(),
-        dataRequestsResponse.json(),
-        reportsResponse.ok ? reportsResponse.json() : Promise.resolve(null),
+        newsResponse?.ok ? newsResponse.json() : null,
+        publicationsResponse?.ok ? publicationsResponse.json() : null,
+        dashboardsResponse?.ok ? dashboardsResponse.json() : null,
+        contactMessagesResponse?.ok ? contactMessagesResponse.json() : null,
+        dataRequestsResponse?.ok ? dataRequestsResponse.json() : null,
+        reportsResponse?.ok ? reportsResponse.json() : null,
       ]);
 
-      setNewsList(Array.isArray(newsData) ? newsData : []);
-      setPublicationList(Array.isArray(publicationsData) ? publicationsData : []);
-      setDashboardList(Array.isArray(dashboardData) ? dashboardData : []);
-      setContactMessages(Array.isArray(contactMessagesData) ? contactMessagesData : []);
-      setDataRequests(Array.isArray(dataRequestsData) ? dataRequestsData : []);
-      setReportSummary(reportsData);
-      setMessage(reportsResponse.ok ? "Data loaded." : "Data loaded. Reports are unavailable until analytics is configured.");
+      if (newsResponse?.ok) setNewsList(Array.isArray(newsData) ? newsData : []);
+      if (publicationsResponse?.ok) setPublicationList(Array.isArray(publicationsData) ? publicationsData : []);
+      if (dashboardsResponse?.ok) setDashboardList(Array.isArray(dashboardData) ? dashboardData : []);
+      if (contactMessagesResponse?.ok) setContactMessages(Array.isArray(contactMessagesData) ? contactMessagesData : []);
+      if (dataRequestsResponse?.ok) setDataRequests(Array.isArray(dataRequestsData) ? dataRequestsData : []);
+      if (reportsResponse?.ok) setReportSummary(reportsData);
+      const names = ["news", "resources", "dashboards", "contact messages", "information requests", "reports"];
+      const unavailable = names.filter((_, index) => !responses[index]?.ok);
+      setMessage(unavailable.length
+        ? `Unable to refresh ${unavailable.join(", ")}. Previously loaded data may be out of date. Please try Refresh data again.`
+        : "Data loaded.");
 
       void loadAnalytics(authValue, emptyAnalyticsFilters);
       void loadDashboardAccess(authValue, emptyDashboardAccessFilters, 1);
-    } catch (error) {
+    } catch {
       setMessage("Unable to load admin data.");
     } finally {
       setLoading(false);
@@ -854,6 +855,9 @@ export default function AdminPage() {
               <h1>SEMA Admin Dashboard</h1>
               <p>Manage news posts, EORE resources, dashboard embeds, incoming contact messages, information requests, and operational reports.</p>
             </div>
+            <button type="button" className="button secondary" onClick={() => loadAllData(password)} disabled={loading}>
+              Refresh data
+            </button>
             <button type="button" className="button secondary" onClick={handleSignOut}>
               <LogOut aria-hidden="true" size={16} />
               Sign out

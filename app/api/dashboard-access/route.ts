@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createDashboardAccess, getPublishedDashboardById, recordAnalyticsEvent } from "@/lib/db";
+import { createDashboardAccess, getPublishedDashboardById, hasValidDashboardRegistration, recordAnalyticsEvent } from "@/lib/db";
 import {
   checkRateLimit,
   classifyUserAgent,
@@ -50,7 +50,8 @@ const registerSchema = z.object({
 const reuseSchema = z.object({
   ...baseFields,
   mode: z.literal("reuse"),
-  previousAccessId: z.string().uuid().optional(),
+  previousAccessId: z.string().uuid(),
+  anonymousVisitorId: z.string().regex(clientIdPattern),
 });
 
 const requestSchema = z.discriminatedUnion("mode", [registerSchema, reuseSchema]);
@@ -199,10 +200,18 @@ export async function POST(request: Request) {
     // mode === "reuse": a previously-registered visitor is opening another
     // (or the same) dashboard. No new organization record is created; we
     // still record that the dashboard was opened.
-    const previousAccessId =
-      input.previousAccessId && /^[0-9a-f-]{36}$/i.test(input.previousAccessId)
-        ? input.previousAccessId
-        : undefined;
+    const previousAccessId = input.previousAccessId;
+    const configuredDays = Number(process.env.NEXT_PUBLIC_DASHBOARD_ACCESS_REMEMBER_DAYS || 30);
+    const rememberDays = Number.isInteger(configuredDays) && configuredDays > 0 ? configuredDays : 30;
+    const validRegistration = await hasValidDashboardRegistration(
+      previousAccessId, input.anonymousVisitorId, getConsentVersion(), rememberDays,
+    );
+    if (!validRegistration) {
+      return NextResponse.json(
+        { message: "Please submit your organization details and consent again." },
+        { status: 403 },
+      );
+    }
 
     await recordAnalyticsEvent({
       eventType: "dashboard_opened",

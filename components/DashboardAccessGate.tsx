@@ -69,7 +69,7 @@ export function DashboardAccessGate({ dashboardId, title, description, provider 
           dashboardId,
           sourcePage: sourcePage(),
           locale,
-          visitorId: getOrCreateVisitorId(),
+          anonymousVisitorId: getOrCreateVisitorId(),
           sessionId: getOrCreateSessionId().sessionId,
           previousAccessId: stored.lastAccessId,
         }),

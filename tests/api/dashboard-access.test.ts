@@ -4,10 +4,11 @@ vi.mock("@/lib/db", () => ({
   getPublishedDashboardById: vi.fn(),
   createDashboardAccess: vi.fn(),
   recordAnalyticsEvent: vi.fn(),
+  hasValidDashboardRegistration: vi.fn(),
 }));
 
 import { POST } from "@/app/api/dashboard-access/route";
-import { createDashboardAccess, getPublishedDashboardById, recordAnalyticsEvent } from "@/lib/db";
+import { createDashboardAccess, getPublishedDashboardById, hasValidDashboardRegistration, recordAnalyticsEvent } from "@/lib/db";
 import type { DashboardAccessInput } from "@/lib/db";
 
 const DASHBOARD_ID = "123e4567-e89b-42d3-a456-426614174000";
@@ -27,7 +28,7 @@ function validRegisterBody(overrides: Record<string, unknown> = {}) {
     dashboardId: DASHBOARD_ID,
     sourcePage: "/dashboards",
     locale: "en",
-    visitorId: "visitor-abc",
+    anonymousVisitorId: "visitor-abc",
     sessionId: "session-abc",
     organizationName: "Example Humanitarian Org",
     organizationType: "international_ngo",
@@ -40,6 +41,7 @@ function validRegisterBody(overrides: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(hasValidDashboardRegistration).mockResolvedValue(true);
   vi.mocked(getPublishedDashboardById).mockResolvedValue({
     id: DASHBOARD_ID,
     title: "Mine Action Overview",
@@ -67,6 +69,8 @@ describe("POST /api/dashboard-access — valid submission", () => {
     expect(data.dashboardUrl).toBe(TRUSTED_URL);
     expect(data.dashboardTitle).toBe("Mine Action Overview");
     expect(createDashboardAccess).toHaveBeenCalledTimes(1);
+    expect(createDashboardAccess).toHaveBeenCalledWith(expect.objectContaining({ anonymousVisitorId: "visitor-abc" }));
+    expect(recordAnalyticsEvent).toHaveBeenCalledWith(expect.objectContaining({ anonymousVisitorId: "visitor-abc" }));
     // Both dashboard_access_submitted and dashboard_opened are recorded.
     expect(recordAnalyticsEvent).toHaveBeenCalledTimes(2);
     const eventTypes = vi.mocked(recordAnalyticsEvent).mock.calls.map((call) => call[0].eventType);
@@ -138,7 +142,7 @@ describe("POST /api/dashboard-access — reuse mode", () => {
         dashboardId: DASHBOARD_ID,
         sourcePage: "/dashboards",
         locale: "en",
-        visitorId: "visitor-abc",
+        anonymousVisitorId: "visitor-abc",
         sessionId: "session-def",
         previousAccessId: "223e4567-e89b-42d3-a456-426614174001",
       }),
@@ -148,8 +152,32 @@ describe("POST /api/dashboard-access — reuse mode", () => {
     expect(response.status).toBe(200);
     expect(data.dashboardUrl).toBe(TRUSTED_URL);
     expect(createDashboardAccess).not.toHaveBeenCalled();
+    expect(hasValidDashboardRegistration).toHaveBeenCalledWith(
+      "223e4567-e89b-42d3-a456-426614174001", "visitor-abc", "1.0", 30,
+    );
     expect(recordAnalyticsEvent).toHaveBeenCalledTimes(1);
     expect(vi.mocked(recordAnalyticsEvent).mock.calls[0][0].eventType).toBe("dashboard_opened");
+  });
+
+  it("rejects reuse without a registration or visitor identity", async () => {
+    for (const extra of [{}, { previousAccessId: "223e4567-e89b-42d3-a456-426614174001" }]) {
+      const response = await POST(makeRequest({ mode: "reuse", dashboardId: DASHBOARD_ID, ...extra }));
+      expect(response.status).toBe(400);
+      expect(await response.json()).not.toHaveProperty("dashboardUrl");
+    }
+    expect(recordAnalyticsEvent).not.toHaveBeenCalled();
+  });
+
+  it("rejects an unknown, expired, non-consenting, or different visitor's registration", async () => {
+    vi.mocked(hasValidDashboardRegistration).mockResolvedValue(false);
+    const response = await POST(makeRequest({
+      mode: "reuse", dashboardId: DASHBOARD_ID,
+      previousAccessId: "223e4567-e89b-42d3-a456-426614174001",
+      anonymousVisitorId: "another-visitor",
+    }));
+    expect(response.status).toBe(403);
+    expect(await response.json()).not.toHaveProperty("dashboardUrl");
+    expect(recordAnalyticsEvent).not.toHaveBeenCalled();
   });
 });
 

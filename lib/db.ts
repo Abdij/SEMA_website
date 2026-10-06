@@ -272,11 +272,11 @@ function mapNewsRow(row: any): NewsPost {
   };
 }
 
-export async function getNewsPosts() {
+export async function getNewsPosts(limit?: number) {
   const pool = tryGetPool();
 
   if (!pool) {
-    return fallbackNewsPosts;
+    return limit ? fallbackNewsPosts.slice(0, limit) : fallbackNewsPosts;
   }
 
   const result = await pool.query(
@@ -284,17 +284,22 @@ export async function getNewsPosts() {
      from news_posts
      where status = 'published'
      order by published_at desc
-     limit 6`,
+     limit $1`,
+    [limit ?? null],
   );
-
-  if (!result.rows.length) {
-    return fallbackNewsPosts;
-  }
 
   return result.rows.map(mapNewsRow);
 }
 
 export async function getNewsPostBySlug(slug: string) {
+  return findNewsPostBySlug(slug, true);
+}
+
+export async function getAdminNewsPostBySlug(slug: string) {
+  return findNewsPostBySlug(slug, false);
+}
+
+async function findNewsPostBySlug(slug: string, publishedOnly: boolean) {
   const pool = tryGetPool();
 
   if (!pool) {
@@ -304,13 +309,13 @@ export async function getNewsPostBySlug(slug: string) {
   const result = await pool.query(
     `select slug, title, summary, image_url, body, category, source_label, source_url, status, published_at
      from news_posts
-     where slug = $1
+     where slug = $1 and ($2::boolean = false or status = 'published')
      limit 1`,
-    [slug],
+    [slug, publishedOnly],
   );
 
   if (!result.rows.length) {
-    return fallbackNewsPosts.find((post) => post.slug === slug);
+    return undefined;
   }
 
   return mapNewsRow(result.rows[0]);
@@ -403,23 +408,17 @@ export async function getDashboardEmbeds() {
   const pool = tryGetPool();
 
   if (!pool) {
-    // No database configured: fall back to static content, but this path
-    // cannot support the dashboard-access gate (there is no dashboard_id to
-    // register against), so the fallback dashboard's own URL is used
-    // directly by the (ungated) placeholder rendering in DashboardEmbed.
-    return fallbackDashboardEmbeds.map(mapFallbackDashboard);
+    // Registration requires the database. Show unavailable placeholders
+    // rather than exposing an ungated environment-configured embed URL.
+    return fallbackDashboardEmbeds.map((item) => ({ ...mapFallbackDashboard(item), url: "" }));
   }
 
   const result = await pool.query(
     `select id, title, provider, description, embed_url, public_safe, status
      from dashboard_embeds
-     where status = 'published'
+     where status = 'published' and public_safe = true
      order by created_at desc`,
   );
-
-  if (!result.rows.length) {
-    return fallbackDashboardEmbeds.map(mapFallbackDashboard);
-  }
 
   // Intentionally omit the raw embed_url here: this list feeds the public
   // dashboards page, which now gates access behind the organization form.
@@ -610,6 +609,7 @@ export async function createPublication(input: {
 }
 
 export async function updatePublication(id: string, input: {
+  title?: string;
   type?: string;
   description?: string;
   href?: string;
@@ -624,6 +624,7 @@ export async function updatePublication(id: string, input: {
   const fileBuffer = input.fileData ? Buffer.from(input.fileData, "base64") : null;
   const result = await pool.query(
     `update publications set
+      title = coalesce($11, title),
       document_type = coalesce($1, document_type),
       description = coalesce($2, description),
       file_url = coalesce($3, file_url),
@@ -647,6 +648,7 @@ export async function updatePublication(id: string, input: {
       input.fileMime || null,
       fileBuffer,
       id,
+      input.title?.trim() || null,
     ],
   );
 
@@ -1051,11 +1053,28 @@ export async function getPublishedDashboardById(id: string) {
   const result = await pool.query(
     `select id, title, provider, description, embed_url, public_safe, status
      from dashboard_embeds
-     where id = $1 and status = 'published'`,
+     where id = $1 and status = 'published' and public_safe = true`,
     [id],
   );
 
   return result.rows[0] || null;
+}
+
+export async function hasValidDashboardRegistration(
+  id: string,
+  visitorId: string,
+  consentVersion: string,
+  rememberDays: number,
+): Promise<boolean> {
+  const result = await getPool().query(
+    `select id from dashboard_accesses
+     where id = $1 and anonymous_visitor_id = $2
+       and consent_given = true and consent_version = $3
+       and created_at > now() - ($4::integer * interval '1 day')
+     limit 1`,
+    [id, visitorId, consentVersion, rememberDays],
+  );
+  return result.rows.length > 0;
 }
 
 export async function createDashboardAccess(input: DashboardAccessInput): Promise<DashboardAccessRecord> {

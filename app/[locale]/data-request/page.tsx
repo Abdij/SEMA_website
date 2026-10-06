@@ -1,9 +1,11 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { DataRequestForm } from "@/components/DataRequestForm";
 import { PageHero } from "@/components/PageHero";
+import { PublicationLink } from "@/components/PublicationLink";
 
 export default async function DataRequestPage() {
   const t = await getTranslations("dataRequest");
+  const locale = await getLocale();
 
   const steps = Array.from({ length: 5 }, (_, i) => ({
     step: t(`step${i}Step`),
@@ -16,6 +18,27 @@ export default async function DataRequestPage() {
   return (
     <>
       <PageHero eyebrow={t("eyebrow")} title={t("title")} text={t("text")} />
+      {locale === "en" ? (
+        <section className="section">
+          <div className="section-inner">
+            <article className="card">
+              <p className="eyebrow">{t("catalogueEyebrow")}</p>
+              <h2>{t("catalogueTitle")}</h2>
+              <p>{t("catalogueDescription")}</p>
+              <p className="muted">{t("catalogueMetadata")}</p>
+              <PublicationLink
+                href="/documents/SEMA_Mine_Action_Data_Catalogue.pdf"
+                target="_blank"
+                publicationId="sema-mine-action-data-catalogue"
+                title="SEMA Mine Action Data Catalogue"
+                fileType="application/pdf"
+              >
+                {t("catalogueOpen")}
+              </PublicationLink>
+            </article>
+          </div>
+        </section>
+      ) : null}
       <section className="section">
         <div className="section-inner grid two">
           <div className="content-block">
