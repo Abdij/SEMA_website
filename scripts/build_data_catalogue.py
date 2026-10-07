@@ -291,7 +291,7 @@ para("<b>Dataset and indicators</b> - identify the topic and fields or summary r
 box(M,244,CW,98,NAVY)
 para("SUBMIT AN INFORMATION REQUEST",M+18,257,CW-36,8.5,colors.HexColor("#B8DEF4"),True)
 para(f'<link href="{REQUEST}" color="#FFFFFF">sema.org.so/en/data-request</link>',M+18,279,CW-36,16,WHITE,True)
-para('For follow-up: <link href="mailto:dahiru@sema.org.so" color="#FFFFFF">dahiru@sema.org.so</link><br/>Keep the reference displayed after successful submission.',M+18,309,CW-36,9,WHITE,leading=12)
+para('For follow-up: <link href="mailto:mainoffice@sema.org.so" color="#FFFFFF">mainoffice@sema.org.so</link><br/>Keep the reference displayed after successful submission.',M+18,309,CW-36,9,WHITE,leading=12)
 para("The current route is a manually completed information request form. The catalogue does not promise an interactive map, combined filters or automatic form prefilling.",M,356,CW,9.2)
 tag("Sources and editorial method",396)
 para("<b>[1] IMSMA Core Geographic Data Catalogue.</b> Supplied reference dated 6 October 2026. State and region tables reconcile point-dataset totals, CHA/SHA totals and regional aggregates. District and settlement detail is not supplied in those tables.",M,419,CW,9.1)

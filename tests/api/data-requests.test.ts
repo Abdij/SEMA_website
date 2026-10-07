@@ -49,8 +49,8 @@ describe("information request notifications", () => {
     expect(response.status).toBe(200);
     expect((await response.json()).emailNotifications).toEqual({ requester: true, staff: true });
     expect(sendMail).toHaveBeenCalledTimes(2);
-    expect(sendMail).toHaveBeenNthCalledWith(1, expect.objectContaining({ to: body.email, replyTo: "dahiru@sema.org.so", text: expect.stringContaining("SEMA-123") }));
-    expect(sendMail).toHaveBeenNthCalledWith(2, expect.objectContaining({ to: "dahiru@sema.org.so", replyTo: body.email, text: expect.stringContaining(body.dataRequested) }));
+    expect(sendMail).toHaveBeenNthCalledWith(1, expect.objectContaining({ to: body.email, replyTo: "mainoffice@sema.org.so", text: expect.stringContaining("SEMA-123") }));
+    expect(sendMail).toHaveBeenNthCalledWith(2, expect.objectContaining({ to: "mainoffice@sema.org.so", replyTo: body.email, text: expect.stringContaining(body.dataRequested) }));
   });
 
   it("rejects invalid email and missing consent without saving or emailing", async () => {

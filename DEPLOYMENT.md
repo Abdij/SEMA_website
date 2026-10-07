@@ -150,7 +150,7 @@ there (do not commit real values to git; `.env`/`.env.local` are already gitigno
 |---|---|
 | `DATABASE_URL` | From Section 4, Path A or B |
 | `ADMIN_PASSWORD` | Admin panel password |
-| `CONTACT_NOTIFICATION_EMAIL` | Where contact-form submissions notify (e.g. `dahiru@sema.org.so`) |
+| `CONTACT_NOTIFICATION_EMAIL` | Where contact-form submissions notify (e.g. `mainoffice@sema.org.so`) |
 | `ADMIN_LOGIN_RATE_LIMIT_PER_5MIN` | Optional, default `8` is fine |
 | `NEXT_PUBLIC_ARCGIS_DASHBOARD_URL` / `NEXT_PUBLIC_POWERBI_REPORT_URL` | Fallback only, used when the DB has no published dashboard rows |
 | `ANALYTICS_ENABLED` | `true`/`false` |

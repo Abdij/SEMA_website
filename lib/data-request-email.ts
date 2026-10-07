@@ -2,7 +2,7 @@ import nodemailer from "nodemailer";
 import type { insertDataRequest } from "@/lib/db";
 
 type RequestInput = Parameters<typeof insertDataRequest>[0];
-const notificationEmail = "dahiru@sema.org.so";
+const notificationEmail = "mainoffice@sema.org.so";
 
 export async function sendDataRequestEmails(input: RequestInput, requestRef: string) {
   const { SMTP_HOST, SMTP_USER, SMTP_PASSWORD, SMTP_FROM } = process.env;

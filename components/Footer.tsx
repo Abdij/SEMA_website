@@ -48,7 +48,7 @@ export async function Footer() {
         <span>{t("copyright")}</span>
         <div className="footer-bottom-links">
           <Link href="/privacy">{t("privacyLink")}</Link>
-          <a href="mailto:dahiru@sema.org.so">dahiru@sema.org.so</a>
+          <a href="mailto:mainoffice@sema.org.so">mainoffice@sema.org.so</a>
         </div>
       </div>
     </footer>

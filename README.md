@@ -98,7 +98,7 @@ behavior, and the Power BI "Publish to web" limitation.
 
 ## Information request email notifications
 
-After saving an information request, the server sends a confirmation with its reference to the submitted email address and a separate notification with the request details to `dahiru@sema.org.so`. Replies to the confirmation go to Dahiru; replies to the staff notification go to the requester.
+After saving an information request, the server sends a confirmation with its reference to the submitted email address and a separate notification with the request details to `mainoffice@sema.org.so`. Replies to the confirmation go to the main office; replies to the staff notification go to the requester.
 
 Configure `SMTP_HOST`, `SMTP_PORT` (default `587`), `SMTP_USER`, `SMTP_PASSWORD`, and `SMTP_FROM` in the deployment environment and in `.env.local` for local use. Use an authorized sender address for `SMTP_FROM`. Port `465` uses implicit TLS; other ports require STARTTLS. See the [Nodemailer SMTP documentation](https://nodemailer.com/smtp).
 
