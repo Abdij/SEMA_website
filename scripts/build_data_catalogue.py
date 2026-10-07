@@ -37,8 +37,9 @@ assert totals == [3341, 1641, 11233, 38156]
 assert totals == [sum(number(row[col]) for row in regions[1:]) for col in range(2, 6)]
 cha, sha = [sum(number(row[col]) for row in regions[1:]) for col in (6, 7)]
 assert (cha, sha) == (368, 109)
-original = PdfReader(ROOT / "data_catalogue/SEMA_Mine_Action_Data_Catalogue.pdf")
-hazard_text = original.pages[5].extract_text()
+original = PdfReader(ROOT / "data_catalogue/archive/SEMA_Mine_Action_Data_Catalogue_v1.1.pdf")
+hazard_text = next(p.extract_text() for p in original.pages
+                   if all(label in p.extract_text() for label in ["Open", "Closed", "Cancelled", "Suspended"]))
 statuses = [(label, int(re.search(re.escape(label) + r"\s+(\d+)", hazard_text).group(1)))
             for label in ["Open", "Closed", "Cancelled", "Released", "Suspended", "In progress"]]
 assert sum(value for _, value in statuses) == 477
@@ -47,17 +48,18 @@ assert sum(number(row[9]) for row in regions[1:]) == sum(dict(statuses)[key] for
 
 W, H = 595.276, 841.89
 M, CW = 43, W - 86
-NAVY = colors.HexColor("#14343E")
-TEAL = colors.HexColor("#008D95")
-GREEN = colors.HexColor("#197A5B")
-INK = colors.HexColor("#243B44")
-MUTED = colors.HexColor("#587078")
-PALE = colors.HexColor("#EDF5F3")
-LINE = colors.HexColor("#D6E3E6")
-ORANGE = colors.HexColor("#A45815")
+# Match app/globals.css: navy / blue, pale blue panels and restrained red accents.
+NAVY = colors.HexColor("#08375A")
+TEAL = colors.HexColor("#007C7A")
+BLUE = colors.HexColor("#126AA4")
+INK = colors.HexColor("#111827")
+MUTED = colors.HexColor("#5F6B76")
+PALE = colors.HexColor("#E8F4FB")
+LINE = colors.HexColor("#DBE7EF")
+RED = colors.HexColor("#C1121F")
 WHITE = colors.white
 C = canvas.Canvas(str(OUT), pagesize=(W, H), pageCompression=1)
-C.setTitle("SEMA Mine Action Data Catalogue | 6 October 2026")
+C.setTitle("SEMA Mine Action Data Catalogue | Version 1.2 | 7 October 2026")
 C.setAuthor("Somalia Explosive Management Authority")
 C.setSubject("Public metadata guide based on supplied IMSMA reference, 6 October 2026")
 C.setCreator("SEMA catalogue publication workflow")
@@ -85,7 +87,7 @@ def tag(text, top, x=M, color=TEAL):
     return para(text.upper(), x, top, CW, 8, color, True, 11)
 
 
-def note(title, text, top, height=90, fill=PALE, color=GREEN):
+def note(title, text, top, height=90, fill=PALE, color=BLUE):
     box(M, top, CW, height, fill)
     y = para(title.upper(), M+16, top+14, CW-32, 8.2, color, True)
     end = para(text, M+16, y+7, CW-32, 10)
@@ -97,13 +99,13 @@ def page(title, eyebrow, index, source="Source: supplied IMSMA reference [1]; ed
     C.bookmarkPage(f"page-{index}")
     C.addOutlineEntry(title, f"page-{index}", level=0)
     C.setFillColor(NAVY); C.rect(0, H-99, W, 99, fill=1, stroke=0)
-    C.setFillColor(GREEN); C.rect(0, H-99, 8, 99, fill=1, stroke=0)
-    para(eyebrow.upper(), M, 25, CW-38, 8, colors.HexColor("#94D8C0"), True)
+    C.setFillColor(RED); C.rect(0, H-99, 8, 99, fill=1, stroke=0)
+    para(eyebrow.upper(), M, 25, CW-38, 8, colors.HexColor("#B8DEF4"), True)
     para(title, M, 45, CW-22, 23, WHITE, True, 27)
     C.setStrokeColor(LINE); C.line(M, 59, W-M, 59)
     C.setFont("Arial", 8); C.setFillColor(MUTED)
-    C.drawString(M, 39, "SEMA Mine Action Data Catalogue | v1.1")
-    C.setFont("Arial-Bold", 9); C.setFillColor(GREEN); C.drawRightString(W-M, 39, f"{index:02d} / 10")
+    C.drawString(M, 39, "SEMA Mine Action Data Catalogue | v1.2")
+    C.setFont("Arial-Bold", 9); C.setFillColor(BLUE); C.drawRightString(W-M, 39, f"{index:02d} / 10")
     C.setFont("Arial", 7.2); C.setFillColor(MUTED); C.drawString(M, 67, source)
 
 
@@ -132,20 +134,20 @@ def finish():
 # 1 - Cover. The document describes a dated source snapshot, not a live feed.
 C.bookmarkPage("page-1"); C.addOutlineEntry("SEMA Mine Action Data Catalogue", "page-1", level=0)
 C.setFillColor(NAVY); C.rect(0, 0, W, H, fill=1, stroke=0)
-C.setFillColor(colors.HexColor("#1A4C55")); C.circle(W+110, H-150, 290, fill=1, stroke=0)
-C.setFillColor(GREEN); C.rect(0, 0, 12, H, fill=1, stroke=0)
+C.setFillColor(BLUE); C.circle(W+110, H-150, 290, fill=1, stroke=0)
+C.setFillColor(RED); C.rect(0, 0, 12, H, fill=1, stroke=0)
 box(M, 48, 64, 64, WHITE, radius=10)
 C.drawImage(str(ROOT / "public/images/sema-logo.png"), M+7, H-105, 50, 50, preserveAspectRatio=True, anchor="c", mask="auto")
 para("SOMALIA EXPLOSIVE<br/>MANAGEMENT AUTHORITY", M+82, 58, 350, 12, WHITE, True)
-para("PUBLIC INFORMATION REFERENCE", M, 187, CW, 9, colors.HexColor("#94D8C0"), True)
+para("PUBLIC INFORMATION REFERENCE", M, 187, CW, 9, colors.HexColor("#B8DEF4"), True)
 para("MINE ACTION<br/>DATA CATALOGUE", M, 226, CW, 38, WHITE, True, 44)
 para("Know what information is recorded.<br/>Understand its limits.<br/>Submit a focused request.", M, 345, 420, 17, WHITE, leading=26)
-box(M, 487, CW, 114, colors.HexColor("#20505A"))
+box(M, 487, CW, 114, BLUE)
 for x, value, label in [(M+20, "6", "dataset categories"), (M+186, "54,371", "point records"), (M+363, "478", "hazard records")]:
     para(value, x, 511, 140, 28, WHITE, True)
-    para(label, x, 551, 140, 9, colors.HexColor("#BFE3DC"))
-para("Source snapshot: 6 October 2026<br/>Revised public edition: 6 October 2026 | Version 1.1", M, 651, CW, 10, WHITE)
-para("Metadata for discovery. Data release remains subject to SEMA review.", M, 708, CW, 10, colors.HexColor("#BFE3DC"))
+    para(label, x, 551, 140, 9, WHITE)
+para("Source snapshot: 6 October 2026<br/>Revised public edition: 7 October 2026 | Version 1.2", M, 651, CW, 10, WHITE)
+para("Metadata for discovery. Data release remains subject to SEMA review.", M, 708, CW, 10, colors.HexColor("#B8DEF4"))
 para('<link href="https://sema.org.so" color="#FFFFFF">sema.org.so</link>', M, 768, CW, 11, WHITE, True)
 finish()
 
@@ -158,7 +160,7 @@ for top, number_, title, body in [
     (433, "03", "Submit an information request", "Use the website form described on page 10. Enter the dataset, location, dates, level of detail and purpose yourself; this PDF does not prefill the form."),
 ]:
     box(M, top, CW, 98, WHITE, LINE)
-    para(number_, M+15, top+18, 45, 21, GREEN, True)
+    para(number_, M+15, top+18, 45, 21, BLUE, True)
     para(title, M+73, top+15, CW-89, 12, NAVY, True)
     para(body, M+73, top+40, CW-89, 10)
 note("No record is not evidence of no contamination", "No records identified in the currently available catalogue does not mean a hazard or activity does not exist. Data availability requires verification.", 553, 94)
@@ -169,10 +171,10 @@ finish()
 page("National data snapshot", "Counts in the supplied source", 3)
 para("Four populated point datasets reconcile to <b>54,371 records</b> in both the state and region tables. Hazard records are a separate layer and should not be added to the point records as a count of unique incidents or locations.", M, 127, CW, 11)
 cards = [
-    ("3,341", "Non-Technical Survey", "Survey records", GREEN),
-    ("1,641", "Mine / ERW Accidents", "Accident records, not a victim count", ORANGE),
+    ("3,341", "Non-Technical Survey", "Survey records", BLUE),
+    ("1,641", "Mine / ERW Accidents", "Accident records, not a victim count", RED),
     ("11,233", "Explosive Ordnance Disposal", "Task records, not a device count", TEAL),
-    ("38,156", "Risk Education", "Activity records, not people reached", GREEN),
+    ("38,156", "Risk Education", "Activity records, not people reached", BLUE),
     ("478", "Hazardous Areas", "478 records; 477 spatially attributed", TEAL),
     ("0*", "Clearance / Land Release", "No shared records identified", MUTED),
 ]
@@ -271,7 +273,7 @@ para("This catalogue helps identify what SEMA may be able to provide. It does no
 left=["Dataset names and descriptions", "Aggregate record counts", "Broad geographic coverage", "Qualified date coverage", "Recorded status categories", "Quality and access limitations", "Source snapshot and revision date"]
 right=["Personal or informant details", "Sensitive victim or survivor information", "Exact sensitive hazard coordinates", "Unpublished operational records", "Partner-restricted information", "Internal access details or credentials", "Unapproved record-level exports"]
 cw=(CW-18)/2
-for x,title,items,color in [(M,"PUBLIC METADATA",left,GREEN),(M+cw+18,"CONTROLLED INFORMATION",right,ORANGE)]:
+for x,title,items,color in [(M,"PUBLIC METADATA",left,BLUE),(M+cw+18,"CONTROLLED INFORMATION",right,RED)]:
     box(x,219,cw,329,WHITE,LINE)
     box(x,219,cw,42,color,radius=8)
     para(title,x+13,233,cw-26,8.4,WHITE,True)
@@ -283,20 +285,30 @@ note("SEMA review determines the response", "Requests are reviewed for availabil
 para("Approved delivery may use email, a secure download, dashboard access or a formal data-sharing agreement. Submission and acknowledgement do not constitute approval, and this catalogue does not promise a response deadline.",M,705,CW,10)
 finish()
 
-# 10 - Working request route, transparent sources and version control.
-page("From catalogue to request", "Next steps and sources", 10,"Editorial revision: 6 October 2026 | Source snapshot remains 6 October 2026.")
-tag("Include these details",127)
-para("<b>Dataset and indicators</b> - identify the topic and fields or summary required.<br/><b>Geography</b> - name the region and any district or settlement of interest.<br/><b>Period</b> - give start and end dates and the date concept you mean.<br/><b>Purpose and detail</b> - explain the intended use and who will access the output.<br/><b>Format and deadline</b> - state your preference and any time constraint.",M,152,CW,11,leading=19)
-box(M,276,CW,123,NAVY)
-para("SUBMIT AN INFORMATION REQUEST",M+18,293,CW-36,9,colors.HexColor("#94D8C0"),True)
-para(f'<link href="{REQUEST}" color="#FFFFFF">sema.org.so/en/data-request</link>',M+18,318,CW-36,17,WHITE,True)
-para('For follow-up: <link href="mailto:dahiru@sema.org.so" color="#FFFFFF">dahiru@sema.org.so</link><br/>Keep the reference displayed after successful submission.',M+18,353,CW-36,10,WHITE)
-para("The current route is a manually completed information request form. The catalogue does not promise an interactive map, combined filters or automatic form prefilling.",M,420,CW,10.5)
-tag("Sources and editorial method",486)
-para("<b>[1] IMSMA Core Geographic Data Catalogue.</b> Supplied reference dated 6 October 2026. State and region tables were used to reconcile the four point-dataset totals, CHA/SHA totals and regional aggregates. District and settlement detail is not supplied in those tables.",M,511,CW,9.5)
-para("<b>[2] SEMA Mine Action Data Catalogue.</b> Supplied nine-page October 2026 overview. Source of the individual hazard status breakdown and reported empty shared clearance layers. These items were not independently re-queried for this edition.",M,581,CW,9.5)
-para("<b>[3] SEMA website information-request workflow.</b> Form fields and review steps checked against the current website project on 6 October 2026. The request URL returned successfully during this review.",M,638,CW,9.5)
-para("<b>Version 1.1 | 6 October 2026.</b> This revision corrects interpretation, reconciles supplied totals and aligns instructions with the website. It makes no claim of a new IMSMA extraction. Refresh figures and source dates when a new validated extract is available.",M,697,CW,9.5)
+# 10 - Request route, source trail and partner marks.
+page("From catalogue to request", "Next steps and sources", 10,"Design revision: 7 October 2026 | Source snapshot: 6 October 2026.")
+tag("Include these details",121)
+para("<b>Dataset and indicators</b> - identify the topic and fields or summary required.<br/><b>Geography</b> - name the region and any district or settlement of interest.<br/><b>Period</b> - give start and end dates and the date concept you mean.<br/><b>Purpose and detail</b> - explain the intended use and who will access the output.<br/><b>Format and deadline</b> - state your preference and any time constraint.",M,144,CW,10,leading=17)
+box(M,244,CW,98,NAVY)
+para("SUBMIT AN INFORMATION REQUEST",M+18,257,CW-36,8.5,colors.HexColor("#B8DEF4"),True)
+para(f'<link href="{REQUEST}" color="#FFFFFF">sema.org.so/en/data-request</link>',M+18,279,CW-36,16,WHITE,True)
+para('For follow-up: <link href="mailto:dahiru@sema.org.so" color="#FFFFFF">dahiru@sema.org.so</link><br/>Keep the reference displayed after successful submission.',M+18,309,CW-36,9,WHITE,leading=12)
+para("The current route is a manually completed information request form. The catalogue does not promise an interactive map, combined filters or automatic form prefilling.",M,356,CW,9.2)
+tag("Sources and editorial method",396)
+para("<b>[1] IMSMA Core Geographic Data Catalogue.</b> Supplied reference dated 6 October 2026. State and region tables reconcile point-dataset totals, CHA/SHA totals and regional aggregates. District and settlement detail is not supplied in those tables.",M,419,CW,9.1)
+para("<b>[2] SEMA Mine Action Data Catalogue.</b> Original October 2026 overview: source of the individual hazard status breakdown and reported empty shared clearance layers. These items were not independently re-queried for this edition.",M,471,CW,9.1)
+para("<b>[3] SEMA website information-request workflow.</b> Form fields, review steps and the request URL were checked against the website project on 6 October 2026.",M,522,CW,9.1)
+para("<b>Version 1.2 | 7 October 2026.</b> Website branding, partner logos and disclaimer added. Figures and source qualifications are unchanged from v1.1; no new IMSMA extraction. Refresh figures and source dates after a validated extract.",M,559,CW,8.7)
+# Preserve original logos and their proportions. Clip only the surrounding white
+# asset canvas to the placement band; never recolour or redraw the marks.
+C.setStrokeColor(LINE); C.line(M,H-607,W-M,H-607)
+C.saveState()
+logo_clip=C.beginPath(); logo_clip.rect(M,H-705,CW,94)
+C.clipPath(logo_clip,stroke=0,fill=0)
+C.drawImage(str(ROOT / "assets/catalogue/immap.png"),M+25,H-702,88,88,preserveAspectRatio=True,mask="auto")
+C.drawImage(str(ROOT / "assets/catalogue/netherlands-mfa.png"),M+205,H-797,250,250,preserveAspectRatio=True,mask="auto")
+C.restoreState()
+para("<b>Disclaimer.</b> The information in this catalogue is provided for reference. Its contents do not necessarily reflect the views of iMMAP or the Netherlands Ministry of Foreign Affairs. Data release remains subject to SEMA review.",M,714,CW,8.2,MUTED,leading=11.5)
 finish()
 C.save()
 print(f"Created {OUT}")
