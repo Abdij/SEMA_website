@@ -33,7 +33,6 @@
   }
   header h1 { margin: 0 0 4px; font-size: 26px; font-weight: 700; }
   header p { margin: 0; font-size: 14px; color: #9FB4C4; }
-  #status { font-size: 13px; color: #D97706; margin-top: 8px; }
   main { padding: 28px 36px 60px; max-width: 1600px; margin: 0 auto; }
   .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 28px; }
   .kpi-card {
@@ -65,8 +64,7 @@
 <body>
 <header>
   <h1>SEMA Survey Coverage Dashboard</h1>
-  <p>Non-Technical Survey (NTS) coverage across Somalia &mdash; live from IMSMA Core</p>
-  <div id="status">Loading live data from IMSMA&hellip;</div>
+  <p>Non-Technical Survey (NTS) coverage across Somalia</p>
 </header>
 <main>
 
@@ -137,12 +135,6 @@ async function fetchAllSurveys() {
   return (data.features || []).map(f => f.attributes);
 }
 
-function setStatus(text, isError) {
-  const el = document.getElementById('status');
-  el.textContent = text;
-  el.style.color = isError ? '#f87171' : '#9FB4C4';
-}
-
 function kpiCard(label, value, sub) {
   const div = document.createElement('div');
   div.className = 'kpi-card';
@@ -154,9 +146,9 @@ async function init() {
   let rows;
   try {
     rows = await fetchAllSurveys();
-    setStatus('Live data loaded &middot; ' + rows.length + ' NTS survey records &middot; ' + new Date().toLocaleString());
   } catch (err) {
-    setStatus('Could not load live IMSMA data (' + err.message + ').', true);
+    console.error('Could not load survey data:', err);
+    document.querySelector('main').innerHTML = '<p style="padding:40px;color:#64748B">This dashboard is temporarily unavailable. Please try again shortly.</p>';
     return;
   }
 
