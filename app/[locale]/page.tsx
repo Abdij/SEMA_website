@@ -69,7 +69,7 @@ export default async function Home() {
           </div>
           <div className="indicators-grid">
             {indicators.map((indicator, i) => (
-              <article className="indicator-card" key={i}>
+              <article className={`indicator-card indicator-card--${indicator.accent}`} key={i}>
                 <span className={`indicator-icon indicator-icon--${indicator.accent}`}>
                   <indicator.icon aria-hidden="true" size={22} />
                 </span>
