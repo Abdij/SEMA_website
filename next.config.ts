@@ -9,6 +9,14 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
+      // The Survey Coverage Dashboard is embedded in an iframe on this same
+      // site's own /dashboards page (via DashboardAccessGate). The blanket
+      // X-Frame-Options: DENY above blocks that too - same-origin framing
+      // needs an explicit override here. This path is a static file under
+      // public/, so next-intl's middleware (which sets the stricter
+      // frame-ancestors CSP) never runs on it - see middleware.ts's matcher,
+      // which excludes any path with a file extension.
+      { source: "/dashboards/:path*", headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }] },
       { source: "/api/admin/:path*", headers: [{ key: "Cache-Control", value: "no-store" }] },
       { source: "/api/catalogue/:path*", headers: [{ key: "Cache-Control", value: "no-store" }] },
       { source: "/api/:path*", headers: [{ key: "Content-Security-Policy", value: "default-src 'none'; frame-ancestors 'none'; base-uri 'none'" }] },

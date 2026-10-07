@@ -5,7 +5,9 @@ export function contentSecurityPolicy(nonce: string, development: boolean) {
     "style-src 'self' 'unsafe-inline'", "img-src 'self' data: https:", "font-src 'self' data:",
     `connect-src 'self'${development ? " ws: wss:" : ""}`,
     // Embeds remain isolated documents; parent scripts cannot load from these origins.
-    "frame-src https://*.arcgis.com https://*.arcgisonline.com https://app.powerbi.com https://*.powerbi.com",
+    // 'self' covers the Survey Coverage Dashboard (public/dashboards/*.html,
+    // same-origin static page embedded via DashboardAccessGate).
+    "frame-src 'self' https://*.arcgis.com https://*.arcgisonline.com https://app.powerbi.com https://*.powerbi.com",
     ...(development ? [] : ["upgrade-insecure-requests"]),
   ].join("; ");
 }
