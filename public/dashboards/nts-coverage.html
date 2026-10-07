@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEMA Survey Coverage Dashboard</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --navy: #122A3D;
+    --navy-light: #17344A;
+    --amber: #D97706;
+    --teal: #2F9D81;
+    --red: #B91C1C;
+    --bg: #F4F6F5;
+    --card: #FFFFFF;
+    --muted: #64748B;
+    --border: #E2E6E4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--bg);
+    color: #1A2733;
+  }
+  header {
+    background: linear-gradient(135deg, #0D2235 0%, #122A3D 60%, #163449 100%);
+    color: #F7F8F5;
+    padding: 28px 36px;
+  }
+  header h1 { margin: 0 0 4px; font-size: 26px; font-weight: 700; }
+  header p { margin: 0; font-size: 14px; color: #9FB4C4; }
+  #status { font-size: 13px; color: #D97706; margin-top: 8px; }
+  main { padding: 28px 36px 60px; max-width: 1600px; margin: 0 auto; }
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 28px; }
+  .kpi-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 22px 24px;
+  }
+  .kpi-card .label { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 8px; }
+  .kpi-card .value { font-size: 36px; font-weight: 700; color: var(--navy); }
+  .kpi-card .sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .grid-2 { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 20px; margin-bottom: 20px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px; }
+  .panel {
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 20px 22px;
+  }
+  .panel h3 { margin: 0 0 14px; font-size: 16px; font-weight: 700; color: var(--navy); }
+  .panel .note { font-size: 12px; color: var(--muted); margin-top: 10px; }
+  #map { height: 420px; border-radius: 10px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; }
+  tr.zero-coverage td { color: var(--red); font-weight: 600; }
+  .legend-box { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); margin-top: 10px; flex-wrap: wrap; }
+  .legend-swatch { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+  canvas { max-height: 320px; }
+  footer { padding: 24px 36px 40px; font-size: 12px; color: var(--muted); text-align: center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>SEMA Survey Coverage Dashboard</h1>
+  <p>Non-Technical Survey (NTS) coverage across Somalia &mdash; live from IMSMA Core</p>
+  <div id="status">Loading live data from IMSMA&hellip;</div>
+</header>
+<main>
+
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <h3>Survey coverage by region</h3>
+      <div id="map"></div>
+      <div class="legend-box">
+        <span class="legend-swatch" style="background:#D6DCE0"></span> No surveys
+        <span class="legend-swatch" style="background:#BFD8D5"></span> 1&ndash;100
+        <span class="legend-swatch" style="background:#6FAE9C"></span> 101&ndash;300
+        <span class="legend-swatch" style="background:#2F9D81"></span> 301&ndash;450
+        <span class="legend-swatch" style="background:#15614E"></span> 450+
+      </div>
+      <p class="note">Regions outlined in red have zero recorded NTS surveys &mdash; a coverage gap, not necessarily the absence of contamination.</p>
+    </div>
+    <div class="panel">
+      <h3>Surveys conducted per year</h3>
+      <canvas id="yearChart"></canvas>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div class="panel">
+      <h3>Survey outcome</h3>
+      <canvas id="outcomeChart"></canvas>
+    </div>
+    <div class="panel">
+      <h3>Surveys by implementing partner</h3>
+      <canvas id="orgChart"></canvas>
+    </div>
+    <div class="panel">
+      <h3>Survey vs re-survey</h3>
+      <canvas id="typeChart"></canvas>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Coverage by region &mdash; detail</h3>
+    <table id="regionTable">
+      <thead>
+        <tr><th>Region</th><th>Surveys</th><th>Hazard confirmed</th><th>No hazard found</th><th>Last survey date</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+</main>
+<footer>
+  Data source: SEMA IMSMA Core (NTS survey layer, nts_main), queried live via this site's own server-side proxy.
+  Built for Activity 2.2 (iMMAP &middot; SEMA).
+</footer>
+
+<script>
+const BACKEND = '/api/dashboards/nts-coverage';
+const REGION_GEOJSON = '/dashboards/data/som_admin1.geojson';
+
+function normRegion(name) {
+  return (name || '').trim().toLowerCase().replace(/\s+/g, '_');
+}
+
+async function fetchAllSurveys() {
+  const res = await fetch(BACKEND);
+  if (!res.ok) throw new Error('Backend returned ' + res.status);
+  const data = await res.json();
+  return (data.features || []).map(f => f.attributes);
+}
+
+function setStatus(text, isError) {
+  const el = document.getElementById('status');
+  el.textContent = text;
+  el.style.color = isError ? '#f87171' : '#9FB4C4';
+}
+
+function kpiCard(label, value, sub) {
+  const div = document.createElement('div');
+  div.className = 'kpi-card';
+  div.innerHTML = '<div class="label">' + label + '</div><div class="value">' + value + '</div>' + (sub ? '<div class="sub">' + sub + '</div>' : '');
+  return div;
+}
+
+async function init() {
+  let rows;
+  try {
+    rows = await fetchAllSurveys();
+    setStatus('Live data loaded &middot; ' + rows.length + ' NTS survey records &middot; ' + new Date().toLocaleString());
+  } catch (err) {
+    setStatus('Could not load live IMSMA data (' + err.message + ').', true);
+    return;
+  }
+
+  const regionGeo = await fetch(REGION_GEOJSON).then(r => r.json());
+  const allRegionNames = regionGeo.features.map(f => f.properties.adm1_name);
+
+  // ---- Aggregate ----
+  const byRegion = {};
+  allRegionNames.forEach(name => { byRegion[normRegion(name)] = { name, count: 0, hazard: 0, noHazard: 0, lastDate: null }; });
+  const byYear = {};
+  const byOrg = {};
+  const byType = { survey: 0, re_survey: 0 };
+  let hazardTotal = 0, noHazardTotal = 0;
+
+  rows.forEach(r => {
+    const key = normRegion(r.region);
+    if (!byRegion[key]) byRegion[key] = { name: r.region, count: 0, hazard: 0, noHazard: 0, lastDate: null };
+    const rec = byRegion[key];
+    rec.count++;
+    if (r.nts_result === 'yes') { rec.hazard++; hazardTotal++; }
+    if (r.nts_result === 'no') { rec.noHazard++; noHazardTotal++; }
+    if (r.report_dt && (!rec.lastDate || r.report_dt > rec.lastDate)) rec.lastDate = r.report_dt;
+
+    if (r.report_dt) {
+      const yr = new Date(r.report_dt).getFullYear();
+      byYear[yr] = (byYear[yr] || 0) + 1;
+    }
+    if (r.org) byOrg[r.org] = (byOrg[r.org] || 0) + 1;
+    if (r.survey_type === 're_survey') byType.re_survey++;
+    else if (r.survey_type === 'survey') byType.survey++;
+  });
+
+  const regionsCovered = Object.values(byRegion).filter(r => r.count > 0).length;
+  const totalRegions = allRegionNames.length;
+
+  // ---- KPI row ----
+  const kpiRow = document.getElementById('kpiRow');
+  kpiRow.appendChild(kpiCard('Total NTS surveys', rows.length.toLocaleString(), 'All recorded survey + re-survey events'));
+  kpiRow.appendChild(kpiCard('Regions with coverage', regionsCovered + ' / ' + totalRegions, Math.round(100 * regionsCovered / totalRegions) + '% of Somalia\'s regions'));
+  kpiRow.appendChild(kpiCard('Hazard confirmation rate', Math.round(100 * hazardTotal / (hazardTotal + noHazardTotal)) + '%', hazardTotal.toLocaleString() + ' of ' + (hazardTotal + noHazardTotal).toLocaleString() + ' surveys with a result'));
+  kpiRow.appendChild(kpiCard('Implementing partners', Object.keys(byOrg).length, 'Organisations reporting NTS surveys'));
+
+  // ---- Map ----
+  const map = L.map('map', { zoomControl: true, attributionControl: false }).setView([5.5, 46.5], 5.3);
+  function colorFor(count) {
+    if (count === 0) return '#D6DCE0';
+    if (count <= 100) return '#BFD8D5';
+    if (count <= 300) return '#6FAE9C';
+    if (count <= 450) return '#2F9D81';
+    return '#15614E';
+  }
+  L.geoJSON(regionGeo, {
+    style: feature => {
+      const rec = byRegion[normRegion(feature.properties.adm1_name)];
+      const count = rec ? rec.count : 0;
+      return {
+        fillColor: colorFor(count),
+        fillOpacity: 0.85,
+        color: count === 0 ? '#B91C1C' : '#4A5568',
+        weight: count === 0 ? 2 : 1
+      };
+    },
+    onEachFeature: (feature, layer) => {
+      const rec = byRegion[normRegion(feature.properties.adm1_name)];
+      const count = rec ? rec.count : 0;
+      layer.bindTooltip(feature.properties.adm1_name + ': ' + count + ' survey' + (count === 1 ? '' : 's'));
+    }
+  }).addTo(map);
+
+  // ---- Year chart ----
+  const years = Object.keys(byYear).sort();
+  new Chart(document.getElementById('yearChart'), {
+    type: 'bar',
+    data: { labels: years, datasets: [{ label: 'Surveys', data: years.map(y => byYear[y]), backgroundColor: '#D97706' }] },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+
+  // ---- Outcome donut ----
+  new Chart(document.getElementById('outcomeChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Hazard confirmed', 'No hazard found'],
+      datasets: [{ data: [hazardTotal, noHazardTotal], backgroundColor: ['#B91C1C', '#2F9D81'] }]
+    },
+    options: { plugins: { legend: { position: 'bottom' } } }
+  });
+
+  // ---- Org chart ----
+  const orgEntries = Object.entries(byOrg).sort((a, b) => b[1] - a[1]);
+  new Chart(document.getElementById('orgChart'), {
+    type: 'bar',
+    data: { labels: orgEntries.map(e => e[0]), datasets: [{ label: 'Surveys', data: orgEntries.map(e => e[1]), backgroundColor: '#122A3D' }] },
+    options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
+  });
+
+  // ---- Type chart ----
+  new Chart(document.getElementById('typeChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Initial survey', 'Re-survey'],
+      datasets: [{ data: [byType.survey, byType.re_survey], backgroundColor: ['#D97706', '#6FAE9C'] }]
+    },
+    options: { plugins: { legend: { position: 'bottom' } } }
+  });
+
+  // ---- Region table ----
+  const tbody = document.querySelector('#regionTable tbody');
+  Object.values(byRegion).sort((a, b) => b.count - a.count).forEach(rec => {
+    const tr = document.createElement('tr');
+    if (rec.count === 0) tr.className = 'zero-coverage';
+    const lastDateStr = rec.lastDate ? new Date(rec.lastDate).toLocaleDateString() : '—';
+    tr.innerHTML = '<td>' + rec.name + '</td><td>' + rec.count + '</td><td>' + rec.hazard + '</td><td>' + rec.noHazard + '</td><td>' + lastDateStr + '</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+init();
+</script>
+</body>
+</html>
