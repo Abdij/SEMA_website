@@ -1,17 +1,12 @@
 # Catalogue logo assets
 
-Used without recolouring or changing proportions on page 10 of the catalogue.
-The user requested both marks and approved the accompanying neutral disclaimer.
-No funding or authorship assertion has been added.
+All three PNGs were supplied and approved by the user on 7 October 2026.
+They are preserved without recolouring, cropping or changing proportions.
 
-- `immap.png`: https://seeklogo.com/vector-logo/263890/immap
-  Image: https://images.seeklogo.com/logo-png/26/1/immap-logo-png_seeklogo-263890.png
-- `netherlands-mfa.png`: https://seeklogo.com/vector-logo/517390/ministry-of-foreign-affairs-of-the-netherlands
-  Image: https://images.seeklogo.com/logo-png/51/1/ministry-of-foreign-affairs-of-the-netherlands-logo-png_seeklogo-517390.png
+- `netherlands-mfa.png`: supplied `DMoFA logo.png`; placed first on page 10.
+- `immap.png`: supplied `iMMAP logo.png`, including the 20-year anniversary mark; placed second on page 10.
+- `sema-transparent.png`: supplied `SEMA_Logo.png`; replaces the cover logo, without a white background panel.
 
-Retrieved 7 October 2026. The English Ministry mark uses the Dutch government
-blue ribbon and ministry name. Original image canvases are retained; the PDF
-placement clips excess surrounding whitespace without clipping either mark.
-
-Website colours are taken from `app/globals.css`. The PDF remains a dated
-6 October data snapshot; version 1.2 changes presentation and adds the disclaimer.
+The final disclaimer uses the user's approved MACM III project attribution and
+Netherlands Ministry of Foreign Affairs (DMOFA) wording. Website colours come
+from `app/globals.css`; the data snapshot remains 6 October 2026.
