@@ -2041,6 +2041,23 @@ textarea {
   font-size: 0.9rem;
 }
 
+.chat-widget-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+.chat-widget-suggestions button {
+  border: 1px solid var(--line);
+  background: var(--soft);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
 .chat-widget-bubble {
   max-width: 85%;
   padding: 0.55rem 0.8rem;

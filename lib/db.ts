@@ -2180,16 +2180,6 @@ export async function touchChatSession(sessionId: string) {
   await pool.query(`update chat_sessions set last_active_at = now() where id = $1`, [sessionId]);
 }
 
-export async function getRecentChatMessages(sessionId: string, limit = 10): Promise<ChatMessage[]> {
-  const pool = getPool();
-  const result = await pool.query(
-    `select id, role, content, created_at from chat_messages
-     where session_id = $1 order by created_at desc limit $2`,
-    [sessionId, limit],
-  );
-  return result.rows.reverse();
-}
-
 export async function insertChatMessage(sessionId: string, role: "user" | "assistant", content: string): Promise<ChatMessage> {
   const pool = getPool();
   const result = await pool.query(

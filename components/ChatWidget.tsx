@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { MessageCircle, Send, X } from "lucide-react";
+import { SUGGESTED_QUESTIONS } from "@/lib/chatbot-faq";
 
 type ChatTurn = { role: "user" | "assistant"; content: string };
 
@@ -31,7 +32,11 @@ export function ChatWidget() {
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const message = input.trim();
+    void sendMessage(input);
+  }
+
+  async function sendMessage(value: string) {
+    const message = value.trim();
     if (!message || sending) return;
 
     setTurns((prev) => [...prev, { role: "user", content: message }]);
@@ -76,9 +81,16 @@ export function ChatWidget() {
           </div>
           <div className="chat-widget-messages" ref={listRef}>
             {turns.length === 0 ? (
-              <p className="chat-widget-intro">
-                Ask me about SEMA&apos;s mandate, public dashboards, or how to request data.
-              </p>
+              <div className="chat-widget-intro">
+                <p>Ask me about SEMA&apos;s mandate, public dashboards, or how to request data.</p>
+                <div className="chat-widget-suggestions">
+                  {SUGGESTED_QUESTIONS.map((question) => (
+                    <button key={question} type="button" onClick={() => sendMessage(question)}>
+                      {question}
+                    </button>
+                  ))}
+                </div>
+              </div>
             ) : null}
             {turns.map((turn, index) => (
               <div key={index} className={`chat-widget-bubble chat-widget-bubble--${turn.role}`}>
