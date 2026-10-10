@@ -2159,3 +2159,67 @@ export async function updateCatalogueSyncLog(
   if (!result.rows.length) throw new Error("Sync log not found");
   return mapSyncLogRow(result.rows[0]);
 }
+
+export type ChatMessage = { id: string; role: "user" | "assistant"; content: string; created_at: string };
+export type ChatSessionSummary = {
+  id: string;
+  created_at: string;
+  last_active_at: string;
+  message_count: number;
+  first_message?: string;
+};
+
+export async function createChatSession(): Promise<string> {
+  const pool = getPool();
+  const result = await pool.query(`insert into chat_sessions default values returning id`);
+  return result.rows[0].id;
+}
+
+export async function touchChatSession(sessionId: string) {
+  const pool = getPool();
+  await pool.query(`update chat_sessions set last_active_at = now() where id = $1`, [sessionId]);
+}
+
+export async function getRecentChatMessages(sessionId: string, limit = 10): Promise<ChatMessage[]> {
+  const pool = getPool();
+  const result = await pool.query(
+    `select id, role, content, created_at from chat_messages
+     where session_id = $1 order by created_at desc limit $2`,
+    [sessionId, limit],
+  );
+  return result.rows.reverse();
+}
+
+export async function insertChatMessage(sessionId: string, role: "user" | "assistant", content: string): Promise<ChatMessage> {
+  const pool = getPool();
+  const result = await pool.query(
+    `insert into chat_messages (session_id, role, content) values ($1, $2, $3) returning id, role, content, created_at`,
+    [sessionId, role, content],
+  );
+  return result.rows[0];
+}
+
+export async function listChatSessionsForAdmin(limit = 50, offset = 0): Promise<ChatSessionSummary[]> {
+  const pool = getPool();
+  const result = await pool.query(
+    `select s.id, s.created_at, s.last_active_at,
+            count(m.id)::int as message_count,
+            (array_agg(m.content order by m.created_at) filter (where m.role = 'user'))[1] as first_message
+     from chat_sessions s
+     left join chat_messages m on m.session_id = s.id
+     group by s.id, s.created_at, s.last_active_at
+     order by s.last_active_at desc
+     limit $1 offset $2`,
+    [limit, offset],
+  );
+  return result.rows;
+}
+
+export async function getChatSessionMessages(sessionId: string): Promise<ChatMessage[]> {
+  const pool = getPool();
+  const result = await pool.query(
+    `select id, role, content, created_at from chat_messages where session_id = $1 order by created_at asc`,
+    [sessionId],
+  );
+  return result.rows;
+}

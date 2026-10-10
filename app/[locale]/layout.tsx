@@ -9,6 +9,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { UsefulLinksBar } from "@/components/UsefulLinksBar";
 import { PageViewTracker } from "@/components/PageViewTracker";
+import { ChatWidget } from "@/components/ChatWidget";
 import { routing } from "@/i18n/routing";
 
 export async function generateMetadata({
@@ -59,6 +60,7 @@ export default async function LocaleLayout({
           <main>{children}</main>
           <UsefulLinksBar />
           <Footer />
+          {locale === "en" ? <ChatWidget /> : null}
         </NextIntlClientProvider>
       </body>
     </html>

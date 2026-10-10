@@ -12,7 +12,8 @@ type AdminTab =
   | "requests"
   | "reports"
   | "analytics"
-  | "access";
+  | "access"
+  | "chatlogs";
 
 type ReportExportType =
   | "data-requests"
@@ -70,6 +71,21 @@ type ContactMessage = {
   status: string;
   created_at: string;
   updated_at: string;
+};
+
+type ChatSessionSummary = {
+  id: string;
+  created_at: string;
+  last_active_at: string;
+  message_count: number;
+  first_message?: string;
+};
+
+type ChatLogMessage = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  created_at: string;
 };
 
 type DataRequest = {
@@ -237,6 +253,7 @@ const adminTabs: AdminTab[] = [
   "reports",
   "analytics",
   "access",
+  "chatlogs",
 ];
 
 const adminTabLabels: Record<AdminTab, string> = {
@@ -248,6 +265,7 @@ const adminTabLabels: Record<AdminTab, string> = {
   reports: "reports",
   analytics: "analytics",
   access: "access",
+  chatlogs: "chat logs",
 };
 
 const reportExports: Array<{ type: ReportExportType; label: string }> = [
@@ -354,6 +372,9 @@ export default function AdminPage() {
     emptyDashboardAccessFilters,
   );
   const [dashboardAccessPage, setDashboardAccessPage] = useState(1);
+  const [chatSessions, setChatSessions] = useState<ChatSessionSummary[]>([]);
+  const [chatTranscriptId, setChatTranscriptId] = useState<string | null>(null);
+  const [chatTranscript, setChatTranscript] = useState<ChatLogMessage[]>([]);
   const [editingNews, setEditingNews] = useState<NewsItem>(emptyNews);
   const [editingPublication, setEditingPublication] = useState<PublicationItem>(emptyPublication);
   const [publicationFile, setPublicationFile] = useState<File | null>(null);
@@ -462,6 +483,7 @@ export default function AdminPage() {
 
       void loadAnalytics(emptyAnalyticsFilters);
       void loadDashboardAccess(emptyDashboardAccessFilters, 1);
+      void loadChatSessions();
     } catch {
       setMessage("Unable to load admin data.");
     } finally {
@@ -513,6 +535,37 @@ export default function AdminPage() {
 
   function handleApplyAnalyticsFilters() {
     void loadAnalytics(analyticsFilters);
+  }
+
+  async function loadChatSessions() {
+    try {
+      const response = await fetch("/api/admin/chat-logs", {});
+      if (response.status === 401) {
+        setAuthenticated(false);
+        return;
+      }
+      if (!response.ok) return;
+      const data = await response.json();
+      setChatSessions(Array.isArray(data) ? data : []);
+    } catch {
+      // best-effort
+    }
+  }
+
+  async function loadChatTranscript(sessionId: string) {
+    setChatTranscriptId(sessionId);
+    try {
+      const response = await fetch(`/api/admin/chat-logs?sessionId=${encodeURIComponent(sessionId)}`, {});
+      if (response.status === 401) {
+        setAuthenticated(false);
+        return;
+      }
+      if (!response.ok) return;
+      const data = await response.json();
+      setChatTranscript(Array.isArray(data) ? data : []);
+    } catch {
+      // best-effort
+    }
   }
 
   function handleApplyDashboardAccessFilters() {
@@ -1273,6 +1326,42 @@ export default function AdminPage() {
                     </div>
                   </article>
                 ))}
+              </div>
+            </section>
+          ) : null}
+
+          {tab === "chatlogs" ? (
+            <section className="admin-section">
+              <h2>Chat logs</h2>
+              <div className="admin-list">
+                {chatSessions.map((session) => (
+                  <article key={session.id} className="admin-list-card">
+                    <strong>{session.first_message || "(no message)"}</strong>
+                    <p>
+                      {session.message_count} message{session.message_count === 1 ? "" : "s"} • last active{" "}
+                      {new Date(session.last_active_at).toLocaleString()}
+                    </p>
+                    <div className="button-row">
+                      <button
+                        className="button"
+                        type="button"
+                        onClick={() => loadChatTranscript(session.id)}
+                      >
+                        View transcript
+                      </button>
+                    </div>
+                    {chatTranscriptId === session.id ? (
+                      <div className="admin-list">
+                        {chatTranscript.map((entry) => (
+                          <p key={entry.id}>
+                            <strong>{entry.role}:</strong> {entry.content}
+                          </p>
+                        ))}
+                      </div>
+                    ) : null}
+                  </article>
+                ))}
+                {chatSessions.length === 0 ? <p>No chat sessions yet.</p> : null}
               </div>
             </section>
           ) : null}
