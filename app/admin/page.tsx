@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { LogOut } from "lucide-react";
 import { ACTIVITY_TYPES, ORGANIZATION_TYPES } from "@/lib/dashboard-access-options";
 
@@ -375,6 +375,13 @@ export default function AdminPage() {
   const [chatSessions, setChatSessions] = useState<ChatSessionSummary[]>([]);
   const [chatTranscriptId, setChatTranscriptId] = useState<string | null>(null);
   const [chatTranscript, setChatTranscript] = useState<ChatLogMessage[]>([]);
+  const [chatPage, setChatPage] = useState(0);
+  const [chatListLoading, setChatListLoading] = useState(false);
+  const [chatListError, setChatListError] = useState("");
+  const [chatTranscriptLoading, setChatTranscriptLoading] = useState(false);
+  const [chatTranscriptError, setChatTranscriptError] = useState("");
+  const chatListSequence = useRef(0);
+  const chatTranscriptSequence = useRef(0);
   const [editingNews, setEditingNews] = useState<NewsItem>(emptyNews);
   const [editingPublication, setEditingPublication] = useState<PublicationItem>(emptyPublication);
   const [publicationFile, setPublicationFile] = useState<File | null>(null);
@@ -537,34 +544,40 @@ export default function AdminPage() {
     void loadAnalytics(analyticsFilters);
   }
 
-  async function loadChatSessions() {
+  async function loadChatSessions(page = 0) {
+    const sequence = ++chatListSequence.current;
+    ++chatTranscriptSequence.current;
+    setChatListLoading(true); setChatListError(""); setChatSessions([]);
+    setChatTranscriptId(null); setChatTranscript([]); setChatPage(page);
     try {
-      const response = await fetch("/api/admin/chat-logs", {});
-      if (response.status === 401) {
-        setAuthenticated(false);
-        return;
-      }
-      if (!response.ok) return;
+      const response = await fetch(`/api/admin/chat-logs?limit=50&offset=${page * 50}`);
+      if (sequence !== chatListSequence.current) return;
+      if (response.status === 401) { setAuthenticated(false); return; }
+      if (!response.ok) throw new Error("Unable to load chat logs. Please retry.");
       const data = await response.json();
-      setChatSessions(Array.isArray(data) ? data : []);
+      if (sequence === chatListSequence.current) setChatSessions(Array.isArray(data) ? data : []);
     } catch {
-      // best-effort
+      if (sequence === chatListSequence.current) setChatListError("Unable to load chat logs. Please retry.");
+    } finally {
+      if (sequence === chatListSequence.current) setChatListLoading(false);
     }
   }
 
   async function loadChatTranscript(sessionId: string) {
-    setChatTranscriptId(sessionId);
+    const sequence = ++chatTranscriptSequence.current;
+    setChatTranscriptId(sessionId); setChatTranscript([]);
+    setChatTranscriptLoading(true); setChatTranscriptError("");
     try {
-      const response = await fetch(`/api/admin/chat-logs?sessionId=${encodeURIComponent(sessionId)}`, {});
-      if (response.status === 401) {
-        setAuthenticated(false);
-        return;
-      }
-      if (!response.ok) return;
+      const response = await fetch(`/api/admin/chat-logs?sessionId=${encodeURIComponent(sessionId)}`);
+      if (sequence !== chatTranscriptSequence.current) return;
+      if (response.status === 401) { setAuthenticated(false); return; }
+      if (!response.ok) throw new Error("Unable to load transcript.");
       const data = await response.json();
-      setChatTranscript(Array.isArray(data) ? data : []);
+      if (sequence === chatTranscriptSequence.current) setChatTranscript(Array.isArray(data) ? data : []);
     } catch {
-      // best-effort
+      if (sequence === chatTranscriptSequence.current) setChatTranscriptError("Unable to load transcript. Select View transcript to retry.");
+    } finally {
+      if (sequence === chatTranscriptSequence.current) setChatTranscriptLoading(false);
     }
   }
 
@@ -1332,7 +1345,16 @@ export default function AdminPage() {
 
           {tab === "chatlogs" ? (
             <section className="admin-section">
-              <h2>Chat logs</h2>
+              <h2>Previous chat logs</h2>
+              <p>The FAQ no longer saves new transcripts on the server. These records are from the previous version.</p>
+              {chatListLoading ? <p role="status">Loading chat logs…</p> : null}
+              {chatListError ? <p role="alert">{chatListError}</p> : null}
+              <div className="button-row">
+                <button type="button" disabled={chatListLoading || chatPage === 0} onClick={() => void loadChatSessions(chatPage - 1)}>Previous</button>
+                <span>Page {chatPage + 1}</span>
+                <button type="button" disabled={chatListLoading || chatSessions.length < 50} onClick={() => void loadChatSessions(chatPage + 1)}>Next</button>
+                <button type="button" disabled={chatListLoading} onClick={() => void loadChatSessions(chatPage)}>Refresh</button>
+              </div>
               <div className="admin-list">
                 {chatSessions.map((session) => (
                   <article key={session.id} className="admin-list-card">
@@ -1352,6 +1374,8 @@ export default function AdminPage() {
                     </div>
                     {chatTranscriptId === session.id ? (
                       <div className="admin-list">
+                        {chatTranscriptLoading ? <p role="status">Loading transcript…</p> : null}
+                        {chatTranscriptError ? <p role="alert">{chatTranscriptError}</p> : null}
                         {chatTranscript.map((entry) => (
                           <p key={entry.id}>
                             <strong>{entry.role}:</strong> {entry.content}
@@ -1361,7 +1385,7 @@ export default function AdminPage() {
                     ) : null}
                   </article>
                 ))}
-                {chatSessions.length === 0 ? <p>No chat sessions yet.</p> : null}
+                {!chatListLoading && !chatListError && chatSessions.length === 0 ? <p>No previous chat sessions on this page.</p> : null}
               </div>
             </section>
           ) : null}

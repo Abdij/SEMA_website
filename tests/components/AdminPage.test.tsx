@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import AdminPage from "@/app/admin/page";
 
 const article = {
@@ -43,7 +43,7 @@ describe("admin data loading", () => {
     expect(window.localStorage.getItem("sema_admin_password")).toBeNull();
     for (const [url, options] of fetchMock.mock.calls) {
       expect(new Headers(options?.headers).get("authorization")).toBeNull();
-      if (String(url) !== "/api/admin/auth") expect(JSON.stringify(options)).not.toContain("test-password");
+      if (String(url) !== "/api/admin/auth") expect(JSON.stringify(options ?? {})).not.toContain("test-password");
     }
   });
   it.each(["server", "network"] as const)("preserves login and existing data after a %s failure, then recovers on refresh", async (failure) => {
@@ -77,4 +77,27 @@ describe("admin data loading", () => {
     expect(screen.getByRole("heading", { name: "News posts" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Sign out" })).toBeInTheDocument();
   });
+});
+
+
+it("never shows a late transcript response under a different session", async () => {
+  let resolveFirst!: (response: Response) => void;
+  const deferred = new Promise<Response>(resolve => { resolveFirst = resolve; });
+  vi.spyOn(global, "fetch").mockImplementation(async (url, options) => {
+    const path = String(url);
+    if (path === "/api/admin/auth") return Response.json({}, { status: options?.method === "POST" ? 200 : 401 });
+    if (path.includes("sessionId=first")) return deferred;
+    if (path.includes("sessionId=second")) return Response.json([{ id: "m2", role: "user", content: "Second transcript" }]);
+    if (path.startsWith("/api/admin/chat-logs")) return Response.json(["first", "second"].map(id => ({ id, first_message: id, message_count: 1, last_active_at: "2026-10-11" })));
+    if (path.includes("analytics") || path.includes("dashboard-access")) return Response.json({}, { status: 503 });
+    return Response.json([]);
+  });
+  await signIn(); await screen.findByText("Data loaded.");
+  fireEvent.click(screen.getByRole("button", { name: "chat logs" }));
+  const buttons = await screen.findAllByRole("button", { name: "View transcript" });
+  fireEvent.click(buttons[0]); fireEvent.click(buttons[1]);
+  expect(await screen.findByText("Second transcript", { exact: false })).toBeInTheDocument();
+  await act(async () => resolveFirst(Response.json([{ id: "m1", role: "user", content: "First transcript" }])));
+  expect(screen.queryByText("First transcript", { exact: false })).not.toBeInTheDocument();
+  expect(screen.getByText("Second transcript", { exact: false })).toBeInTheDocument();
 });

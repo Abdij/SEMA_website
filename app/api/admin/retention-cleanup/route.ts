@@ -34,7 +34,7 @@ async function runCleanup() {
 
   await pool.query("delete from security_rate_limits where expires_at < now()");
   await pool.query("delete from admin_sessions where expires_at < now()");
-  const [eventsResult, accessResult] = await Promise.all([
+  const [eventsResult, accessResult, chatResult] = await Promise.all([
     pool.query(
       `delete from analytics_events where created_at < now() - ($1 || ' days')::interval`,
       [eventRetentionDays],
@@ -43,9 +43,12 @@ async function runCleanup() {
       `delete from dashboard_accesses where created_at < now() - ($1 || ' days')::interval`,
       [accessRetentionDays],
     ),
+    pool.query("delete from chat_sessions where last_active_at < now() - interval '30 days'"),
   ]);
 
   return {
+    chatSessionsDeleted: chatResult.rowCount ?? 0,
+    chatRetentionDays: 30,
     analyticsEventsDeleted: eventsResult.rowCount ?? 0,
     dashboardAccessesDeleted: accessResult.rowCount ?? 0,
     eventRetentionDays,

@@ -2116,3 +2116,18 @@ textarea {
   opacity: 0.5;
   cursor: default;
 }
+
+/* FAQ conversation controls and narrow-screen layout. */
+.chat-widget-panel { height: min(600px, calc(100dvh - 7rem)); }
+.chat-widget-messages { min-height: 0; }
+.chat-widget-form input { min-width: 0; }
+.chat-widget-form { flex-shrink: 0; }
+.chat-widget-log { display: flex; flex-direction: column; gap: .6rem; }
+.chat-widget-bubble { overflow-wrap: anywhere; }
+.chat-widget-privacy { font-size: .8rem; }
+.chat-widget-speaker { font-weight: 600; }
+.chat-widget-actions { margin: .6rem 0 0; padding-left: 1.1rem; white-space: normal; }
+.chat-widget-actions li + li { margin-top: .4rem; }
+.chat-widget a { text-decoration: underline; }
+.chat-widget button:focus-visible, .chat-widget a:focus-visible, .chat-widget input:focus-visible { outline: 3px solid var(--teal); outline-offset: 2px; }
+.chat-widget button:disabled { opacity: .5; cursor: default; }
