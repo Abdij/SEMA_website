@@ -27,6 +27,7 @@
   .grid-2 { display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 20px; margin-bottom: 20px; }
   .panel { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; }
   .panel h3 { margin: 0 0 14px; font-size: 16px; font-weight: 700; color: var(--navy); }
+  .panel .note { font-size: 12px; color: var(--muted); margin-top: 10px; }
   canvas { max-height: 340px; }
 </style>
 </head>
@@ -49,6 +50,7 @@
     <div class="panel">
       <h3>Accidents per year</h3>
       <canvas id="yearChart"></canvas>
+      <p class="note">Accident years are taken directly from IMSMA Core's recorded date field and have not been independently verified. A small number of records carry implausible dates (e.g. years in the 1800s) that are almost certainly data-entry errors rather than real accident dates; treat outlier years with caution until the underlying records are corrected.</p>
     </div>
     <div class="panel">
       <h3>Accident type</h3>
