@@ -405,7 +405,8 @@
     },
     "gateLockedMessage": "Bixi macluumaadka ururkaaga si aad u aragto dashboordkan.",
     "gateProviderArcgis": "Dashboord ArcGIS ah — macluumaadka ururka ayaa loo baahan yahay.",
-    "gateProviderPowerbi": "Dashboord Power BI ah — macluumaadka ururka ayaa loo baahan yahay."
+    "gateProviderPowerbi": "Dashboord Power BI ah — macluumaadka ururka ayaa loo baahan yahay.",
+    "gateProviderOther": "Macluumaadka ururka ayaa loo baahan yahay si aad u aragto dashboordkan."
   },
   "privacy": {
     "eyebrow": "Asturnaanta",

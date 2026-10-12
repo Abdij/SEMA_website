@@ -214,7 +214,13 @@ export function DashboardAccessGate({ dashboardId, title, description, provider 
           <div className="embed-placeholder embed-locked">
             <Lock aria-hidden="true" size={28} />
             <span>{t("gateLockedMessage")}</span>
-            <small>{provider === "arcgis" ? t("gateProviderArcgis") : t("gateProviderPowerbi")}</small>
+            <small>
+              {provider === "arcgis"
+                ? t("gateProviderArcgis")
+                : provider === "powerbi"
+                  ? t("gateProviderPowerbi")
+                  : t("gateProviderOther")}
+            </small>
           </div>
         )}
       </div>

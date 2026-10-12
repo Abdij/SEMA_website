@@ -410,7 +410,8 @@
     },
     "gateLockedMessage": "Provide your organization details to view this dashboard.",
     "gateProviderArcgis": "ArcGIS dashboard — organization details required.",
-    "gateProviderPowerbi": "Power BI dashboard — organization details required."
+    "gateProviderPowerbi": "Power BI dashboard — organization details required.",
+    "gateProviderOther": "Organization details required to view this dashboard."
   },
   "privacy": {
     "eyebrow": "Privacy",
