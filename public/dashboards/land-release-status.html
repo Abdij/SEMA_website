@@ -12,9 +12,11 @@
   }
   * { box-sizing: border-box; }
   body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: #1A2733; }
-  header { background: linear-gradient(135deg, #0D2235 0%, #122A3D 60%, #163449 100%); color: #F7F8F5; padding: 28px 36px; }
+  header { background: linear-gradient(135deg, #0D2235 0%, #122A3D 60%, #163449 100%); color: #F7F8F5; padding: 28px 36px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
   header h1 { margin: 0 0 4px; font-size: 26px; font-weight: 700; }
   header p { margin: 0; font-size: 14px; color: #9FB4C4; }
+  .header-logo { background: #FFFFFF; border-radius: 10px; padding: 6px 12px; display: flex; align-items: center; flex-shrink: 0; }
+  .header-logo img { height: 42px; width: auto; display: block; }
   .scope-note { background: #FFF7ED; border: 1px solid #FED7AA; color: #92400E; font-size: 13px; padding: 12px 36px; }
   main { padding: 28px 36px 60px; max-width: 1600px; margin: 0 auto; }
   .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 28px; }
@@ -34,8 +36,11 @@
 </head>
 <body>
 <header>
-  <h1>SEMA Land Release Status Dashboard</h1>
-  <p>Current status of recorded hazardous areas across Somalia</p>
+  <div>
+    <h1>SEMA Land Release Status Dashboard</h1>
+    <p>Current status of recorded hazardous areas across Somalia</p>
+  </div>
+  <div class="header-logo"><img src="/images/sema-logo-dashboard.svg" alt="SEMA logo"></div>
 </header>
 <div class="scope-note">
   <strong>Scope note:</strong> this view shows hazard-area status (open vs. closed/cancelled/released) from IMSMA Core's hazard polygon layer. Detailed clearance-method and devices-destroyed tracking (dog/manual/mechanical teams, items found) is not yet available &mdash; GICHD's mine/IED data migration into IMSMA Core is still in progress. This dashboard will be extended once that data lands.
