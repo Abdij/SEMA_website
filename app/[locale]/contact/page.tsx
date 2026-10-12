@@ -16,8 +16,8 @@ export default async function ContactPage() {
             <ul className="content-list">
               <li>
                 Email:{" "}
-                <a href="mailto:mainoffice@sema.org.so" style={{ color: "inherit" }}>
-                  mainoffice@sema.org.so
+                <a href="mailto:akedir@immap.org" style={{ color: "inherit" }}>
+                  akedir@immap.org
                 </a>
               </li>
               <li>{t("location")}</li>
