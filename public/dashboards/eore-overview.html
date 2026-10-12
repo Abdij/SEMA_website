@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SEMA EORE Overview Dashboard</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
   :root {
@@ -28,6 +30,9 @@
   .panel { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; }
   .panel h3 { margin: 0 0 14px; font-size: 16px; font-weight: 700; color: var(--navy); }
   .panel .note { font-size: 12px; color: var(--muted); margin-top: 10px; }
+  #map { height: 420px; border-radius: 10px; }
+  .legend-box { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); margin-top: 10px; flex-wrap: wrap; }
+  .legend-swatch { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
   canvas { max-height: 320px; }
 </style>
 </head>
@@ -42,6 +47,20 @@
 <main>
 
   <div class="kpi-row" id="kpiRow"></div>
+
+  <div class="panel">
+    <h3>Beneficiaries by region</h3>
+    <div id="map"></div>
+    <div class="legend-box" id="mapLegend">
+      <span class="legend-swatch" style="background:#D6DCE0"></span> No beneficiaries recorded
+      <span class="legend-swatch" style="background:#FCE7C6"></span> Up to 20,000
+      <span class="legend-swatch" style="background:#F6C177"></span> 20,001&ndash;75,000
+      <span class="legend-swatch" style="background:#E79A3D"></span> 75,001&ndash;150,000
+      <span class="legend-swatch" style="background:#C97A1F"></span> 150,001&ndash;300,000
+      <span class="legend-swatch" style="background:#8B4D0A"></span> 300,000+
+    </div>
+    <p class="note">Beneficiary totals by region, from the same EORE reports as the rest of this dashboard. A region with no shading had no EORE reports recorded against it &mdash; a reporting gap, not necessarily the absence of EORE activity.</p>
+  </div>
 
   <div class="grid-2">
     <div class="panel">
@@ -97,6 +116,25 @@ function formatPercent(part, total) {
   return (pct < 1 && pct > 0 ? pct.toFixed(1) : Math.round(pct)) + '% of all beneficiaries';
 }
 
+const REGION_GEOJSON = '/dashboards/data/som_admin1.geojson';
+// IMSMA's "region" field is a free-text/legacy spelling in a few cases;
+// map those onto the GeoJSON's canonical admin1 name before matching.
+const REGION_ALIASES = { nugal: 'nugaal' };
+
+function normRegion(name) {
+  const key = (name || '').trim().toLowerCase().replace(/\s+/g, '_');
+  return REGION_ALIASES[key] || key;
+}
+
+function regionColorFor(total) {
+  if (!total) return '#D6DCE0';
+  if (total <= 20000) return '#FCE7C6';
+  if (total <= 75000) return '#F6C177';
+  if (total <= 150000) return '#E79A3D';
+  if (total <= 300000) return '#C97A1F';
+  return '#8B4D0A';
+}
+
 async function init() {
   let data;
   try {
@@ -116,6 +154,28 @@ async function init() {
   kpiRow.appendChild(kpiCard('Implementing partners', data.byOrg.length, 'Organisations reporting EORE activity'));
   kpiRow.appendChild(kpiCard('Girls & boys reached', (t.girls + t.boys).toLocaleString(), formatPercent(t.girls + t.boys, t.beneficiaries)));
   kpiRow.appendChild(kpiCard('Beneficiaries with disability', t.peopleWithDisability.toLocaleString(), formatPercent(t.peopleWithDisability, t.beneficiaries)));
+
+  // ---- Map ----
+  const regionGeo = await fetch(REGION_GEOJSON).then(r => r.json());
+  const byRegion = {};
+  data.byRegion.forEach(r => { byRegion[normRegion(r.key)] = r.value; });
+
+  const map = L.map('map', { zoomControl: true, attributionControl: false }).setView([5.5, 46.5], 5.3);
+  L.geoJSON(regionGeo, {
+    style: feature => {
+      const total = byRegion[normRegion(feature.properties.adm1_name)] || 0;
+      return {
+        fillColor: regionColorFor(total),
+        fillOpacity: 0.85,
+        color: total === 0 ? '#B91C1C' : '#4A5568',
+        weight: total === 0 ? 2 : 1,
+      };
+    },
+    onEachFeature: (feature, layer) => {
+      const total = byRegion[normRegion(feature.properties.adm1_name)] || 0;
+      layer.bindTooltip(feature.properties.adm1_name + ': ' + total.toLocaleString() + ' beneficiaries');
+    },
+  }).addTo(map);
 
   new Chart(document.getElementById('yearChart'), {
     type: 'bar',

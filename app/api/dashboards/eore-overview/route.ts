@@ -72,7 +72,7 @@ export async function GET() {
   try {
     const token = await getToken();
 
-    const [overall, byOrg, byMethod, byState, dates] = await Promise.all([
+    const [overall, byOrg, byMethod, byState, byRegion, dates] = await Promise.all([
       query(token, {
         outStatistics: JSON.stringify([
           { statisticType: "sum", onStatisticField: "girls", outStatisticFieldName: "girls" },
@@ -99,6 +99,10 @@ export async function GET() {
       }),
       query(token, {
         groupByFieldsForStatistics: "fed_state",
+        outStatistics: JSON.stringify([{ statisticType: "sum", onStatisticField: "total", outStatisticFieldName: "total" }]),
+      }),
+      query(token, {
+        groupByFieldsForStatistics: "region",
         outStatistics: JSON.stringify([{ statisticType: "sum", onStatisticField: "total", outStatisticFieldName: "total" }]),
       }),
       query(token, { outFields: "report_date,total", resultRecordCount: "50000" }),
@@ -131,6 +135,7 @@ export async function GET() {
       byOrg: groupedSum(byOrg, "org", "total"),
       byMethod: groupedSum(byMethod, "activity_method", "total"),
       byState: groupedSum(byState, "fed_state", "total"),
+      byRegion: groupedSum(byRegion, "region", "total"),
       byYear: Object.entries(byYear).map(([year, total]) => ({ year, total })).sort((a, b) => a.year.localeCompare(b.year)),
     });
   } catch (error) {
