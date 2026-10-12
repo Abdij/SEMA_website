@@ -91,6 +91,12 @@ function topN(arr, n) {
   return arr.slice().sort((a, b) => b.value - a.value).slice(0, n);
 }
 
+function formatPercent(part, total) {
+  if (!total) return '';
+  const pct = 100 * part / total;
+  return (pct < 1 && pct > 0 ? pct.toFixed(1) : Math.round(pct)) + '% of all beneficiaries';
+}
+
 async function init() {
   let data;
   try {
@@ -108,8 +114,8 @@ async function init() {
   kpiRow.appendChild(kpiCard('Total beneficiaries reached', t.beneficiaries.toLocaleString(), 'Across ' + t.records.toLocaleString() + ' EORE reports'));
   kpiRow.appendChild(kpiCard('Total sessions delivered', t.sessions.toLocaleString(), ''));
   kpiRow.appendChild(kpiCard('Implementing partners', data.byOrg.length, 'Organisations reporting EORE activity'));
-  kpiRow.appendChild(kpiCard('Girls & boys reached', (t.girls + t.boys).toLocaleString(), Math.round(100 * (t.girls + t.boys) / t.beneficiaries) + '% of all beneficiaries'));
-  kpiRow.appendChild(kpiCard('Beneficiaries with disability', t.peopleWithDisability.toLocaleString(), t.beneficiaries ? Math.round(100 * t.peopleWithDisability / t.beneficiaries) + '% of all beneficiaries' : ''));
+  kpiRow.appendChild(kpiCard('Girls & boys reached', (t.girls + t.boys).toLocaleString(), formatPercent(t.girls + t.boys, t.beneficiaries)));
+  kpiRow.appendChild(kpiCard('Beneficiaries with disability', t.peopleWithDisability.toLocaleString(), formatPercent(t.peopleWithDisability, t.beneficiaries)));
 
   new Chart(document.getElementById('yearChart'), {
     type: 'bar',
