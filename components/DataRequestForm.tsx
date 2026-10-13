@@ -7,6 +7,10 @@ import { trackEvent } from "@/lib/analytics-client";
 
 type FormState = "idle" | "submitting" | "success" | "error";
 
+function Required() {
+  return <span className="required-mark" aria-hidden="true"> *</span>;
+}
+
 const SUBCATEGORIES_BY_CATEGORY: Record<string, string[]> = {
   eore: ["coverageMap", "gapMap", "generalMap", "beneficiaryData", "materialsResources"],
   otherMineAction: ["accidentData", "landRelease", "surveyCoverage", "qaqcMonitoring", "humanitarianImpact", "victimAssistance"],
@@ -74,19 +78,19 @@ export function DataRequestForm() {
     <form className="form" onSubmit={onSubmit}>
       <div className="form-grid">
         <label>
-          {t("name")}
+          {t("name")}<Required />
           <input name="name" required autoComplete="name" />
         </label>
         <label>
-          {t("organization")}
+          {t("organization")}<Required />
           <input name="organization" required autoComplete="organization" />
         </label>
         <label>
-          {t("roleLabel")}
+          {t("roleLabel")}<Required />
           <input name="role" required />
         </label>
         <label>
-          {t("requesterType")}
+          {t("requesterType")}<Required />
           <select name="requesterType" required defaultValue="">
             <option value="" disabled>{t("selectType")}</option>
             <option>{t("requesterTypes.gov")}</option>
@@ -100,7 +104,7 @@ export function DataRequestForm() {
           </select>
         </label>
         <label>
-          {t("email")}
+          {t("email")}<Required />
           <input name="email" type="email" required autoComplete="email" />
         </label>
         <label>
@@ -116,7 +120,7 @@ export function DataRequestForm() {
           <input name="timePeriod" placeholder={t("timePeriodPlaceholder")} />
         </label>
         <label>
-          {t("format")}
+          {t("format")}<Required />
           <select name="preferredFormat" required defaultValue="">
             <option value="" disabled>{t("selectFormat")}</option>
             <option>{t("formats.pdf")}</option>
@@ -134,7 +138,7 @@ export function DataRequestForm() {
       </div>
       <div className="form-grid">
         <label>
-          {t("category")}
+          {t("category")}<Required />
           <select
             name="dataCategory"
             required
@@ -147,7 +151,7 @@ export function DataRequestForm() {
           </select>
         </label>
         <label>
-          {t("subcategory")}
+          {t("subcategory")}<Required />
           <select name="dataSubcategory" required defaultValue="" key={categoryKey}>
             <option value="" disabled>{t("selectSubcategory")}</option>
             {(SUBCATEGORIES_BY_CATEGORY[categoryKey] || []).map((key) => (
@@ -157,11 +161,11 @@ export function DataRequestForm() {
         </label>
       </div>
       <label>
-        {t("dataRequested")}
+        {t("dataRequested")}<Required />
         <textarea name="dataRequested" rows={5} required placeholder={t("dataRequestedPlaceholder")} />
       </label>
       <label>
-        {t("intendedUse")}
+        {t("intendedUse")}<Required />
         <textarea name="intendedUse" rows={5} required placeholder={t("intendedUsePlaceholder")} />
       </label>
       <label className="check-row">
