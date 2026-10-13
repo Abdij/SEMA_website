@@ -283,7 +283,7 @@
     "submitting": "Submitting",
     "successRef": "Your request was submitted. Reference: {ref}.",
     "successNoRef": "Your request was submitted for review.",
-    "emailSent": "A confirmation email has been sent to the email address you provided.",
+    "emailSent": "A confirmation email has been sent to the email address you provided. If you don't see it, please check your spam or junk folder.",
     "emailFailed": "We could not send your confirmation email. Your request is saved; please keep your reference and do not resubmit.",
     "errorFallback": "Unable to submit the request."
   },

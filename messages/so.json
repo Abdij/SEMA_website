@@ -278,7 +278,7 @@
     "submitting": "La gudbinayaa",
     "successRef": "Codsigu waa la gudbiyay. Tixraaca: {ref}.",
     "successNoRef": "Codsigu waa la gudbiyay si loo dib-u-eego.",
-    "emailSent": "Farriin xaqiijin ah ayaa loo diray cinwaanka iimaylka aad bixisay.",
+    "emailSent": "Farriin xaqiijin ah ayaa loo diray cinwaanka iimaylka aad bixisay. Haddii aadan arag, fadlan hubi foostada spam-ka ama junk-ka.",
     "emailFailed": "Ma awoodin inaan dirno iimaylka xaqiijinta. Codsigaaga waa la kaydiyay; fadlan hayso lambarka tixraaca hana soo gudbin mar kale.",
     "errorFallback": "Kuma guulaysan in la gudbiyo codsiga."
   },
