@@ -45,8 +45,8 @@ export async function sendDataRequestEmails(input: RequestInput, requestRef: str
       from: SMTP_FROM,
       to: input.email,
       replyTo: notificationEmail,
-      subject: `SEMA information request submitted — ${requestRef}`,
-      text: `Dear ${input.name},\n\nYour information request has been submitted to SEMA for review. Please keep your reference: ${requestRef}.\n\nSubmission does not mean the request has been approved. For enquiries, reply to this email and include your reference.\n\nSEMA`,
+      subject: `SEMA information request received — ${requestRef}`,
+      text: `Dear ${input.name},\n\nWe have received your information request. A member of our team will review it and reply soon. Please keep your reference: ${requestRef}.\n\nReceipt does not mean the request has been approved. For enquiries, reply to this email and include your reference.\n\nSEMA`,
     }),
     transport.sendMail({
       from: SMTP_FROM,
