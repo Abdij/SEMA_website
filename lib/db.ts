@@ -822,7 +822,7 @@ export async function insertContactMessage(input: {
 }
 
 export async function insertDataRequest(input: {
-  name: string;
+  name?: string;
   organization: string;
   role: string;
   email: string;
@@ -844,7 +844,7 @@ export async function insertDataRequest(input: {
      values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
      returning *`,
     [
-      input.name,
+      input.name || null,
       input.organization,
       input.role,
       input.email,
@@ -929,7 +929,7 @@ export async function getDataRequests() {
   return result.rows.map((row: any) => ({
     id: row.id,
     requestRef: row.request_ref,
-    name: row.name,
+    name: row.name || undefined,
     organization: row.organization || undefined,
     role: row.role || undefined,
     email: row.email,
@@ -1000,7 +1000,7 @@ export async function updateDataRequestStatus(
   return {
     id: row.id,
     requestRef: row.request_ref,
-    name: row.name,
+    name: row.name || undefined,
     organization: row.organization || undefined,
     role: row.role || undefined,
     email: row.email,

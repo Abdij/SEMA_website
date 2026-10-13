@@ -25,7 +25,7 @@ export async function sendDataRequestEmails(input: RequestInput, requestRef: str
   });
   const details = [
     `Reference: ${requestRef}`,
-    `Name: ${input.name}`,
+    `Name: ${input.name || "Not provided"}`,
     `Organization: ${input.organization || "Not provided"}`,
     `Role: ${input.role || "Not provided"}`,
     `Email: ${input.email}`,
@@ -46,7 +46,7 @@ export async function sendDataRequestEmails(input: RequestInput, requestRef: str
       to: input.email,
       replyTo: notificationEmail,
       subject: `SEMA information request received — ${requestRef}`,
-      text: `Dear ${input.name},\n\nWe have received your information request. A member of our team will review it and reply soon. Please keep your reference: ${requestRef}.\n\nReceipt does not mean the request has been approved. For enquiries, reply to this email and include your reference.\n\nSEMA`,
+      text: `${input.name ? `Dear ${input.name},` : "Hello,"}\n\nWe have received your information request. A member of our team will review it and reply soon. Please keep your reference: ${requestRef}.\n\nReceipt does not mean the request has been approved. For enquiries, reply to this email and include your reference.\n\nSEMA`,
     }),
     transport.sendMail({
       from: SMTP_FROM,

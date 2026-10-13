@@ -73,6 +73,12 @@ describe("information request notifications", () => {
     expect(sendMail).not.toHaveBeenCalled();
   });
 
+  it("accepts a submission with no full name", async () => {
+    const response = await submit({ name: "" });
+    expect(response.status).toBe(200);
+    expect(insertDataRequest).toHaveBeenCalledWith(expect.objectContaining({ name: "" }));
+  });
+
   it("does not email when saving fails", async () => {
     vi.mocked(insertDataRequest).mockRejectedValue(new Error("Database unavailable"));
     expect((await submit()).status).toBe(503);

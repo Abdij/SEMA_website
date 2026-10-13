@@ -91,7 +91,7 @@ type ChatLogMessage = {
 type DataRequest = {
   id: string;
   requestRef: string;
-  name: string;
+  name?: string;
   organization?: string;
   role?: string;
   email: string;
@@ -1400,7 +1400,7 @@ export default function AdminPage() {
                   <article key={request.id} className="admin-list-card">
                     <strong>{request.requestRef}</strong>
                     <p>
-                      {request.name} • {request.email}
+                      {request.name || "(no name provided)"} • {request.email}
                     </p>
                     {request.organization ? <p>{request.organization}</p> : null}
                     <p>{request.requesterType}</p>

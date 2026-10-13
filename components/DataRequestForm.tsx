@@ -78,8 +78,8 @@ export function DataRequestForm() {
     <form className="form" onSubmit={onSubmit}>
       <div className="form-grid">
         <label>
-          {t("name")}<Required />
-          <input name="name" required autoComplete="name" />
+          {t("name")}
+          <input name="name" autoComplete="name" />
         </label>
         <label>
           {t("organization")}<Required />

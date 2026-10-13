@@ -19,7 +19,8 @@ export async function POST(request: Request) {
     }
 
     const fields = z.object({
-      name: z.string().trim().min(1).max(200), organization: z.string().trim().min(1).max(200),
+      name: z.string().trim().max(200).optional(),
+      organization: z.string().trim().min(1).max(200),
       role: z.string().trim().min(1).max(200), requesterType: z.string().trim().min(1).max(200),
       dataCategory: z.string().trim().min(1).max(200), dataSubcategory: z.string().trim().min(1).max(200),
       dataRequested: z.string().trim().min(1).max(10000), intendedUse: z.string().trim().min(1).max(10000),
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
     }
 
     const input = {
-      name: requireString(body.name, "Full name"),
+      name: typeof body.name === "string" ? body.name.trim() : undefined,
       organization: requireString(body.organization, "Organization"),
       role: requireString(body.role, "Role"),
       email: email.data,

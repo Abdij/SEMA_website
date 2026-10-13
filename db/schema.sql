@@ -78,7 +78,7 @@ create table if not exists contact_messages (
 create table if not exists data_requests (
   id uuid primary key default gen_random_uuid(),
   request_ref text unique not null default ('DR-' || upper(substr(md5(random()::text || clock_timestamp()::text), 1, 10))),
-  name text not null,
+  name text,
   organization text not null,
   role text not null,
   email text not null,
