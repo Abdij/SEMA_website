@@ -19,7 +19,9 @@ export async function POST(request: Request) {
     }
 
     const fields = z.object({
-      name: z.string().trim().min(1).max(200), requesterType: z.string().trim().min(1).max(200),
+      name: z.string().trim().min(1).max(200), organization: z.string().trim().min(1).max(200),
+      role: z.string().trim().min(1).max(200), requesterType: z.string().trim().min(1).max(200),
+      dataCategory: z.string().trim().min(1).max(200), dataSubcategory: z.string().trim().min(1).max(200),
       dataRequested: z.string().trim().min(1).max(10000), intendedUse: z.string().trim().min(1).max(10000),
       preferredFormat: z.string().trim().min(1).max(200),
       deadline: z.union([z.literal(""), z.iso.date()]).optional(),
@@ -32,11 +34,13 @@ export async function POST(request: Request) {
 
     const input = {
       name: requireString(body.name, "Full name"),
-      organization: typeof body.organization === "string" ? body.organization.trim() : undefined,
-      role: typeof body.role === "string" ? body.role.trim() : undefined,
+      organization: requireString(body.organization, "Organization"),
+      role: requireString(body.role, "Role"),
       email: email.data,
       phone: typeof body.phone === "string" ? body.phone.trim() : undefined,
       requesterType: requireString(body.requesterType, "Requester type"),
+      dataCategory: requireString(body.dataCategory, "Data category"),
+      dataSubcategory: requireString(body.dataSubcategory, "Data subcategory"),
       dataRequested: requireString(body.dataRequested, "Data requested"),
       geography: typeof body.geography === "string" ? body.geography.trim() : undefined,
       timePeriod: typeof body.timePeriod === "string" ? body.timePeriod.trim() : undefined,

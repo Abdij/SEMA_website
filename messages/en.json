@@ -274,6 +274,27 @@
       "agreement": "Formal data-sharing agreement"
     },
     "deadline": "Deadline",
+    "category": "Type of data requested",
+    "selectCategory": "Select category",
+    "categories": {
+      "eore": "EORE (Explosive Ordnance Risk Education)",
+      "otherMineAction": "Other mine action data"
+    },
+    "subcategory": "Subcategory",
+    "selectSubcategory": "Select subcategory",
+    "subcategories": {
+      "coverageMap": "Coverage map",
+      "gapMap": "Gap (analysis) map",
+      "generalMap": "General map",
+      "beneficiaryData": "Beneficiary / reach data",
+      "materialsResources": "Materials & resources",
+      "accidentData": "Accident / casualty data",
+      "landRelease": "Land release & clearance",
+      "surveyCoverage": "Survey coverage (NTS/TS)",
+      "qaqcMonitoring": "QA/QC monitoring",
+      "humanitarianImpact": "Humanitarian impact",
+      "victimAssistance": "Victim assistance"
+    },
     "dataRequested": "Data requested",
     "dataRequestedPlaceholder": "Describe the data, indicators, geography, period, and level of detail requested.",
     "intendedUse": "Intended use",

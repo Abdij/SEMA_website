@@ -7,12 +7,19 @@ import { trackEvent } from "@/lib/analytics-client";
 
 type FormState = "idle" | "submitting" | "success" | "error";
 
+const SUBCATEGORIES_BY_CATEGORY: Record<string, string[]> = {
+  eore: ["coverageMap", "gapMap", "generalMap", "beneficiaryData", "materialsResources"],
+  otherMineAction: ["accidentData", "landRelease", "surveyCoverage", "qaqcMonitoring", "humanitarianImpact", "victimAssistance"],
+};
+
 export function DataRequestForm() {
   const t = useTranslations("dataRequest");
   const locale = useLocale();
   const [state, setState] = useState<FormState>("idle");
   const [message, setMessage] = useState("");
+  const [category, setCategory] = useState("");
   const startTracked = useRef(false);
+  const categoryKey = category === t("categories.eore") ? "eore" : category === t("categories.otherMineAction") ? "otherMineAction" : "";
 
   useEffect(() => {
     if (startTracked.current) return;
@@ -44,6 +51,7 @@ export function DataRequestForm() {
       }
 
       form.reset();
+      setCategory("");
       setState("success");
       setMessage(
         (data.requestRef
@@ -71,11 +79,11 @@ export function DataRequestForm() {
         </label>
         <label>
           {t("organization")}
-          <input name="organization" autoComplete="organization" />
+          <input name="organization" required autoComplete="organization" />
         </label>
         <label>
           {t("roleLabel")}
-          <input name="role" />
+          <input name="role" required />
         </label>
         <label>
           {t("requesterType")}
@@ -122,6 +130,30 @@ export function DataRequestForm() {
         <label>
           {t("deadline")}
           <input name="deadline" type="date" />
+        </label>
+      </div>
+      <div className="form-grid">
+        <label>
+          {t("category")}
+          <select
+            name="dataCategory"
+            required
+            value={category}
+            onChange={(event) => setCategory(event.target.value)}
+          >
+            <option value="" disabled>{t("selectCategory")}</option>
+            <option value={t("categories.eore")}>{t("categories.eore")}</option>
+            <option value={t("categories.otherMineAction")}>{t("categories.otherMineAction")}</option>
+          </select>
+        </label>
+        <label>
+          {t("subcategory")}
+          <select name="dataSubcategory" required defaultValue="" key={categoryKey}>
+            <option value="" disabled>{t("selectSubcategory")}</option>
+            {(SUBCATEGORIES_BY_CATEGORY[categoryKey] || []).map((key) => (
+              <option key={key}>{t(`subcategories.${key}`)}</option>
+            ))}
+          </select>
         </label>
       </div>
       <label>

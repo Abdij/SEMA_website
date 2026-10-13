@@ -97,6 +97,8 @@ type DataRequest = {
   email: string;
   phone?: string;
   requesterType: string;
+  dataCategory: string;
+  dataSubcategory: string;
   dataRequested: string;
   geography?: string;
   timePeriod?: string;
@@ -1402,6 +1404,7 @@ export default function AdminPage() {
                     </p>
                     {request.organization ? <p>{request.organization}</p> : null}
                     <p>{request.requesterType}</p>
+                    <p>Category: {request.dataCategory} / {request.dataSubcategory}</p>
                     <p>Preferred format: {request.preferredFormat}</p>
                     <p>Requested data: {request.dataRequested}</p>
                     <label>

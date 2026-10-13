@@ -22,7 +22,11 @@ afterEach(() => {
   vi.unstubAllEnvs();
   vi.restoreAllMocks();
 });
-const body = { terms: true, name: "Test Requester", email: "requester@example.org", requesterType: "Researcher", dataRequested: "Summary data", intendedUse: "Research", preferredFormat: "CSV" };
+const body = {
+  terms: true, name: "Test Requester", organization: "Test Org", role: "Analyst", email: "requester@example.org",
+  requesterType: "Researcher", dataCategory: "EORE", dataSubcategory: "Coverage map",
+  dataRequested: "Summary data", intendedUse: "Research", preferredFormat: "CSV",
+};
 const submit = (overrides = {}) => POST(new Request("http://localhost/api/data-requests", {
   method: "POST", body: JSON.stringify({ ...body, ...overrides }),
 }));
@@ -56,6 +60,15 @@ describe("information request notifications", () => {
   it("rejects invalid email and missing consent without saving or emailing", async () => {
     expect((await submit({ email: "invalid" })).status).toBe(400);
     expect((await submit({ terms: false })).status).toBe(400);
+    expect(insertDataRequest).not.toHaveBeenCalled();
+    expect(sendMail).not.toHaveBeenCalled();
+  });
+
+  it("rejects missing organization, role, or data category/subcategory without saving or emailing", async () => {
+    expect((await submit({ organization: "" })).status).toBe(400);
+    expect((await submit({ role: "" })).status).toBe(400);
+    expect((await submit({ dataCategory: "" })).status).toBe(400);
+    expect((await submit({ dataSubcategory: "" })).status).toBe(400);
     expect(insertDataRequest).not.toHaveBeenCalled();
     expect(sendMail).not.toHaveBeenCalled();
   });

@@ -823,11 +823,13 @@ export async function insertContactMessage(input: {
 
 export async function insertDataRequest(input: {
   name: string;
-  organization?: string;
-  role?: string;
+  organization: string;
+  role: string;
   email: string;
   phone?: string;
   requesterType: string;
+  dataCategory: string;
+  dataSubcategory: string;
   dataRequested: string;
   geography?: string;
   timePeriod?: string;
@@ -838,16 +840,18 @@ export async function insertDataRequest(input: {
   const pool = getPool();
 
   const result = await pool.query(
-    `insert into data_requests (name, organization, role, email, phone, requester_type, data_requested, geography, time_period, intended_use, preferred_format, deadline)
-     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+    `insert into data_requests (name, organization, role, email, phone, requester_type, data_category, data_subcategory, data_requested, geography, time_period, intended_use, preferred_format, deadline)
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
      returning *`,
     [
       input.name,
-      input.organization || null,
-      input.role || null,
+      input.organization,
+      input.role,
       input.email,
       input.phone || null,
       input.requesterType,
+      input.dataCategory,
+      input.dataSubcategory,
       input.dataRequested,
       input.geography || null,
       input.timePeriod || null,
@@ -916,7 +920,7 @@ export async function updateContactMessageStatus(id: string, status: string) {
 export async function getDataRequests() {
   const pool = getPool();
   const result = await pool.query(
-    `select id, request_ref, name, organization, role, email, phone, requester_type, data_requested, geography, time_period, intended_use, preferred_format, deadline, status, sensitivity_level, created_at, updated_at
+    `select id, request_ref, name, organization, role, email, phone, requester_type, data_category, data_subcategory, data_requested, geography, time_period, intended_use, preferred_format, deadline, status, sensitivity_level, created_at, updated_at
      from data_requests
      order by created_at desc`,
   );
@@ -931,6 +935,8 @@ export async function getDataRequests() {
     email: row.email,
     phone: row.phone || undefined,
     requesterType: row.requester_type,
+    dataCategory: row.data_category,
+    dataSubcategory: row.data_subcategory,
     dataRequested: row.data_requested,
     geography: row.geography || undefined,
     timePeriod: row.time_period || undefined,
@@ -978,7 +984,7 @@ export async function updateDataRequestStatus(
       sensitivity_level = coalesce($2, sensitivity_level),
       updated_at = now()
      where id = $3
-     returning id, request_ref, name, organization, role, email, phone, requester_type, data_requested, geography, time_period, intended_use, preferred_format, deadline, status, sensitivity_level, created_at, updated_at`,
+     returning id, request_ref, name, organization, role, email, phone, requester_type, data_category, data_subcategory, data_requested, geography, time_period, intended_use, preferred_format, deadline, status, sensitivity_level, created_at, updated_at`,
     [status || null, sensitivityLevel || null, id],
   );
 
@@ -1000,6 +1006,8 @@ export async function updateDataRequestStatus(
     email: row.email,
     phone: row.phone || undefined,
     requesterType: row.requester_type,
+    dataCategory: row.data_category,
+    dataSubcategory: row.data_subcategory,
     dataRequested: row.data_requested,
     geography: row.geography || undefined,
     timePeriod: row.time_period || undefined,

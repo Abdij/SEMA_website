@@ -269,6 +269,27 @@
       "agreement": "Heshiis rasmi ee wadaagga xogta"
     },
     "deadline": "Maalmaha ugu dambeeyay",
+    "category": "Nooca xogta la codsanayo",
+    "selectCategory": "Dooro qaybta",
+    "categories": {
+      "eore": "EORE (Waxyaabaha Khatarta ah ee Wacyigelinta)",
+      "otherMineAction": "Xog kale oo falcelinta miinada"
+    },
+    "subcategory": "Qayb hoosaad",
+    "selectSubcategory": "Dooro qayb hoosaad",
+    "subcategories": {
+      "coverageMap": "Khariidadda daboolka",
+      "gapMap": "Khariidadda farqiga (gap analysis)",
+      "generalMap": "Khariidad guud",
+      "beneficiaryData": "Xogta faa'iidaystayaasha",
+      "materialsResources": "Agabka iyo ilaha",
+      "accidentData": "Xogta shilalka/dhaawacyada",
+      "landRelease": "Sii deynta dhulka iyo nadiifinta",
+      "surveyCoverage": "Daboolka sahanka (NTS/TS)",
+      "qaqcMonitoring": "Kormeerka tayada (QA/QC)",
+      "humanitarianImpact": "Saamaynta bani'aadminimo",
+      "victimAssistance": "Caawinta dhibanayaasha"
+    },
     "dataRequested": "Xogta la codsanayaa",
     "dataRequestedPlaceholder": "Sharax xogta, tilmaamayaasha, juqraafiga, muddada, iyo heerka faahfaahinta la codsanayaa.",
     "intendedUse": "Isticmaalka loogu talagalay",
