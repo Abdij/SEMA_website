@@ -86,7 +86,6 @@ export async function GET() {
           { statisticType: "sum", onStatisticField: "boys_wd", outStatisticFieldName: "boys_wd" },
           { statisticType: "sum", onStatisticField: "women_wd", outStatisticFieldName: "women_wd" },
           { statisticType: "sum", onStatisticField: "men_wd", outStatisticFieldName: "men_wd" },
-          { statisticType: "sum", onStatisticField: "no_pwd", outStatisticFieldName: "pwd" },
         ]),
       }),
       query(token, {
@@ -109,6 +108,10 @@ export async function GET() {
     ]);
 
     const overallAttrs = overall.features[0]?.attributes || {};
+    const girlsWithDisability = overallAttrs.girls_wd || 0;
+    const boysWithDisability = overallAttrs.boys_wd || 0;
+    const womenWithDisability = overallAttrs.women_wd || 0;
+    const menWithDisability = overallAttrs.men_wd || 0;
 
     const byYear: Record<string, number> = {};
     for (const f of dates.features as { attributes: { report_date: number | null; total: number | null } }[]) {
@@ -126,11 +129,11 @@ export async function GET() {
         beneficiaries: overallAttrs.total || 0,
         sessions: overallAttrs.sessions || 0,
         records: overallAttrs.records || 0,
-        girlsWithDisability: overallAttrs.girls_wd || 0,
-        boysWithDisability: overallAttrs.boys_wd || 0,
-        womenWithDisability: overallAttrs.women_wd || 0,
-        menWithDisability: overallAttrs.men_wd || 0,
-        peopleWithDisability: overallAttrs.pwd || 0,
+        girlsWithDisability,
+        boysWithDisability,
+        womenWithDisability,
+        menWithDisability,
+        peopleWithDisability: girlsWithDisability + boysWithDisability + womenWithDisability + menWithDisability,
       },
       byOrg: groupedSum(byOrg, "org", "total"),
       byMethod: groupedSum(byMethod, "activity_method", "total"),
